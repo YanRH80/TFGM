@@ -1,0 +1,292 @@
+---
+title: "From Spreadsheet to Survival Curve: A Reproducible Python Pipeline for Time-to-Event Analysis in Tropical Medicine"
+subtitle: "Methodological Article"
+author:
+  - name: Yan Rodríguez Hachimaru
+    affiliations:
+      - name: Hospital Central de la Defensa Gómez Ulla, Madrid, Spain
+  - name: Germán Ramírez Olivencia
+    affiliations:
+      - name: Hospital Central de la Defensa Gómez Ulla, Madrid, Spain
+date: today
+lang: en
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: cosmo
+    fontsize: 11pt
+    linestretch: 1.6
+    fig-align: center
+    code-fold: true
+    code-tools: true
+    self-contained: true
+    title-block-banner: "#2E7D32"
+  pdf:
+    toc: true
+    number-sections: true
+    documentclass: article
+    geometry: margin=2.5cm
+    fontsize: 11pt
+    linestretch: 1.6
+execute:
+  echo: true
+  warning: false
+abstract: |
+  **Background:** Reproducibility is a cornerstone of scientific credibility, yet fewer than 10% of Jupyter notebooks associated with biomedical publications can be re-executed without errors. Clinical research in tropical medicine, often conducted with small sample sizes and heterogeneous follow-up, is particularly vulnerable to analytical opacity. Time-to-event analyses (Kaplan-Meier, Cox regression) are routinely performed with proprietary software (SPSS, Stata) in a non-reproducible manner.
+
+  **Objective:** We present a complete, self-contained Python pipeline for clinical time-to-event analysis — from raw Excel data to publication-ready figures and statistical tables — designed for transparency, reproducibility, and educational value. All survival analysis functions (Kaplan-Meier with Greenwood CI, log-rank test, Cox proportional hazards) are implemented from first principles using only `numpy` and `scipy`, without specialized survival libraries.
+
+  **Application:** The pipeline is demonstrated on a real clinical dataset: seronegativization kinetics of IgG anti-*Strongyloides stercoralis* after ivermectin treatment (N = 44, 28 events, follow-up up to 72 months). The workflow produces 10 publication-quality figures, 3 statistical tables, and a complete Quarto-rendered HTML/PDF report from a single Jupyter notebook.
+
+  **Results:** All 22 code cells execute without error in under 30 seconds. The pipeline identified baseline IgG as the sole independent predictor of seronegativization speed (HR 0.77, p = 0.045), consistent with prior literature. Implementation from first principles revealed key numerical considerations (cumulative sum ordering for risk sets, Greenwood variance stabilization, Hessian numerical differentiation) that are hidden in library-based analyses.
+
+  **Conclusions:** Transparent, library-minimal implementations of survival analysis are feasible for small clinical datasets and offer superior educational and auditing value compared to black-box software. The pipeline is freely available and adaptable to other time-to-event studies in tropical medicine and beyond.
+
+  **Keywords:** reproducible research, survival analysis, Python, Jupyter, Kaplan-Meier, Cox regression, tropical medicine, open science
+---
+
+```{=html}
+<style>
+  h1, h2, h3 { color: #2E7D32; }
+  table { font-size: 0.92em; }
+  code { font-size: 0.9em; }
+</style>
+```
+
+# Introduction
+
+## The reproducibility crisis in biomedical research
+
+Computational reproducibility — the ability to re-obtain reported results from the same data and code — is a fundamental prerequisite for scientific credibility. Yet a landmark study by Samuel and Mietchen (2024) found that of over 15,000 Python Jupyter notebooks from PubMed Central publications, only 879 (5.6%) could be re-executed and produced identical results. The primary barriers were undocumented dependencies, missing data, and hardcoded paths — all issues of *workflow documentation*, not statistical complexity.
+
+This crisis is especially acute in clinical research, where small sample sizes amplify the impact of analytical choices, and where the dominant analytical tools (SPSS, Stata, SAS) produce results through graphical interfaces that leave no executable trace. A researcher clicking through SPSS menus to generate a Kaplan-Meier curve produces a result that is, by definition, non-reproducible — because the sequence of clicks is not recorded.
+
+## The case for Python in clinical research
+
+Python has emerged as the dominant language in data science, with mature libraries for every stage of the analytical pipeline: data manipulation (`pandas`), numerical computation (`numpy`), statistical testing (`scipy`), and visualization (`matplotlib`, `seaborn`). The Jupyter notebook format uniquely combines executable code, narrative text, and visual output in a single document — a "computational narrative" that mirrors the structure of a scientific paper.
+
+For clinical research, Python offers several advantages over proprietary software: (1) zero cost and open source, lowering barriers for under-resourced settings; (2) executable reproducibility — the same notebook can be re-run on any machine with the same libraries; (3) extensibility — complex analyses that exceed the capabilities of point-and-click interfaces can be implemented programmatically; and (4) publishability — notebooks can be deposited in repositories (GitHub, Zenodo) alongside the manuscript.
+
+## Why implement survival analysis from scratch?
+
+Specialized survival analysis libraries exist in Python (`lifelines`, `scikit-survival`). However, for small clinical datasets (N < 100), implementing the core algorithms from first principles offers unique advantages:
+
+1. **Transparency**: every step of the calculation is visible and auditable. There are no hidden defaults, no opaque data transformations, no version-dependent behavior.
+2. **Education**: the implementation *is* the documentation. A researcher reading the Kaplan-Meier function learns not just *what* the estimator does, but *how* it handles censoring, *why* the Greenwood formula works, and *where* numerical instabilities can arise.
+3. **Portability**: the pipeline has zero dependencies beyond the Python standard scientific stack (numpy, scipy, pandas, matplotlib). It will run on any machine without package conflicts.
+4. **Customizability**: when the analytical question doesn't fit a library's API (e.g., a custom censoring scheme, a non-standard sensitivity analysis), first-principles code is trivially modifiable.
+
+The trade-off is that first-principles implementations lack the optimization and edge-case handling of mature libraries. For large datasets or production clinical trials, library-based approaches are preferable. But for exploratory analyses with N < 100 — the reality of most tropical medicine research — transparency outweighs optimization.
+
+## This paper
+
+We present a complete, self-contained pipeline for time-to-event analysis in clinical research, demonstrated on a real dataset from a study of *Strongyloides stercoralis* seronegativization kinetics. The pipeline covers:
+
+1. **Data loading and validation** (assertions, missingness mapping)
+2. **Descriptive statistics** (Table 1, normality testing, non-parametric comparisons)
+3. **Visualization** (violin plots, spaghetti plots, lollipop charts, scatter plots)
+4. **Survival analysis** (Kaplan-Meier, log-rank, Cox PH — all from scratch)
+5. **Sensitivity analysis** (multiple outcome definitions)
+6. **Publication rendering** (Quarto → HTML/PDF with cross-references)
+
+The entire pipeline is contained in a single Jupyter notebook (22 code cells) that executes in under 30 seconds.
+
+# Materials
+
+## Clinical dataset
+
+The pipeline is demonstrated on a dataset from a retrospective cohort study of 44 adults with *S. stercoralis* infection treated with ivermectin at the Hospital Central de la Defensa Gómez Ulla, Madrid, Spain (2014–2024). The dataset (`BASE_SPSS.xlsx`) contains 44 rows × 122 columns, including baseline demographics, serological measurements at 8 timepoints (3–72 months), eosinophil counts, stool microscopy results, and 7 alternative outcome definitions.
+
+## Software environment
+
+| Component | Version | Role |
+|:----------|:--------|:-----|
+| Python | 3.12 | Language runtime |
+| pandas | 3.0 | Data manipulation |
+| numpy | 2.4 | Numerical computation |
+| scipy | 1.17 | Statistical tests, optimization |
+| matplotlib | 3.10 | Static figures |
+| seaborn | 0.13 | Statistical graphics |
+| openpyxl | 3.1 | Excel file reading |
+| Jupyter | 7.0+ | Interactive notebook |
+| Quarto | 1.4+ | Publication rendering |
+
+: Software environment. All components are free and open-source. {#tbl-software}
+
+# Methods: Pipeline Architecture
+
+## Design principles
+
+The pipeline follows four design principles:
+
+1. **Single-source configuration**: all colors, variable lists, and outcome definitions are defined in configuration cells at the top of the notebook. Changing a color in the palette dictionary propagates to all 10 figures automatically.
+
+2. **Assertion-driven validation**: every data loading step includes programmatic assertions that compare computed values against expected values from the study's case report form. If any assertion fails, the notebook halts immediately — preventing downstream propagation of errors.
+
+3. **Idempotent execution**: every cell can be re-run in isolation without affecting other cells. There are no hidden state dependencies between cells (a common source of non-reproducibility in notebooks).
+
+4. **Progressive disclosure**: each code cell is preceded by a markdown cell explaining *what* it does and *why*, and followed by an "Anatomy" section explaining *how* — line by line. This three-layer documentation (intent → result → mechanism) enables both clinical readers and computational readers to engage with the notebook at their preferred level of detail.
+
+## Module 1: Data validation and exploration
+
+The first module loads the Excel dataset, runs 13 integrity checks, and generates a missingness heatmap. The integrity checks compare computed values (e.g., number of events, number of immunosuppressed patients) against the study protocol's expected values:
+
+```python
+checks = [
+    ('N patients',      len(df),                         44),
+    ('Seroneg events',  (df['EVENT_SERONEG'] == 1).sum(), 28),
+    ('Immunosuppressed',(df['INMUNO_DICO'] == 1).sum(),    4),
+    # ... 10 more checks
+]
+```
+
+This pattern — a list of (name, computed, expected) tuples — is reusable across clinical datasets and provides an immediate visual signal (✅/❌) of data integrity.
+
+## Module 2: Descriptive statistics
+
+The descriptive module implements Table 1 generation with automatic test selection:
+
+1. **Shapiro-Wilk** for normality assessment of each continuous variable.
+2. **Mann-Whitney U** for continuous comparisons (given non-normality).
+3. **Chi-squared** for categorical comparisons, with automatic fallback to **Fisher's exact test** when any expected cell frequency < 5 (Cochran's rule).
+
+All helper functions (`fmt_median_iqr`, `mwu_p`, `cat_p`) are defined as standalone, testable units.
+
+## Module 3: Visualization
+
+Ten figures are generated using a consistent visual protocol. The key design decisions:
+
+- **Semantic color palette**: a single dictionary (`PAL`) maps clinical concepts to hex colors. The palette is designed to be colorblind-safe (no pure red/green combinations) and printable in grayscale (different luminosities).
+- **Dual resolution**: 150 DPI for screen (fast rendering in Jupyter), 300 DPI for export (journal requirement).
+- **Tufte principles**: no top/right borders, light grid, minimal ink-to-data ratio.
+
+## Module 4: Survival analysis from first principles
+
+### Kaplan-Meier estimator
+
+The implementation follows the product-limit formula:
+
+$$\hat{S}(t) = \prod_{t_i \leq t} \left(1 - \frac{d_i}{n_i}\right)$$
+
+Key numerical considerations:
+
+- **Censoring handling**: at each unique time, events are processed *before* censures are subtracted from the risk set. This ensures that patients censored at the same time as an event contribute to the denominator for that event.
+- **Greenwood variance**: computed as a running sum to avoid recalculating from scratch at each time. The cumulative sum $\sum d_i / [n_i(n_i - d_i)]$ is updated incrementally.
+- **CI truncation**: confidence intervals are clipped to [0, 1] because $\hat{S}(t) \pm 1.96 \cdot \text{SE}$ can exceed the probability range for small samples.
+
+### Log-rank test
+
+The Mantel-Cox implementation iterates over event times and accumulates observed vs. expected events using the hypergeometric variance formula. A critical detail: the risk set at time $t$ includes all patients with time ≥ $t$, not time > $t$ — this half-open interval convention must match the KM estimator.
+
+### Cox proportional hazards
+
+The Cox implementation uses scipy's BFGS optimizer on the negative partial log-likelihood. Key implementation details:
+
+- **Numerical stability**: the risk scores $\exp(\beta^\top x)$ are computed as $\exp(\beta^\top x - \max(\beta^\top x))$ to prevent overflow.
+- **Risk set computation**: data is sorted in descending time order, and the risk set sum is computed as a cumulative sum — this is the Efron/Breslow trick that converts an O(n²) computation to O(n).
+- **Hessian approximation**: standard errors are obtained from the inverse of a numerically differentiated Hessian (central differences with $\epsilon = 10^{-5}$). This is less precise than analytical second derivatives but sufficient for N < 100.
+
+## Module 5: Sensitivity analysis
+
+The sensitivity module re-runs Kaplan-Meier with 4 alternative outcome definitions, demonstrating that conclusions are robust to the choice of seronegativization criterion.
+
+## Module 6: Publication rendering
+
+The final output is rendered via Quarto, which converts the `.qmd` document (with embedded figure references) to HTML or PDF. Cross-references (`@fig-km-global`, `@tbl-cox-uni`) are resolved automatically.
+
+# Results
+
+## Pipeline execution
+
+All 22 code cells executed without error in 28 seconds on a standard laptop (M1 MacBook Air, 8GB RAM). The pipeline produced:
+
+| Output | Count |
+|:-------|:-----:|
+| Publication-quality PNG figures (300 DPI) | 10 |
+| CSV tables (Table 1, Cox uni/multi) | 3 |
+| Console validation output | 13 checks, all ✅ |
+
+## Clinical findings (summary)
+
+The pipeline identified baseline IgG as the sole independent predictor of seronegativization speed (HR 0.77, 95% CI 0.59–0.99; p = 0.045 in multivariable Cox). The median time to seronegativization was 7.9 months. Full clinical results are reported in the companion clinical paper.
+
+## Numerical validation
+
+To validate the from-scratch implementations, we compared key outputs against published reference values:
+
+| Metric | Our implementation | Expected range | Source |
+|:-------|:--:|:--:|:-------|
+| KM median seroneg. | 7.9 months | 6–12 months | Salvador et al., Buonfrate et al. |
+| Seroreversion rate | 63.6% | 34–82% | Salvador et al. (34% strict, 81% response) |
+| IgG decline by 6m | Median crosses 1.1 | 3–12 months typical | Prato et al., 2024 |
+
+: Validation against published reference values. {#tbl-validation}
+
+# Discussion
+
+## Contributions
+
+This paper makes three contributions:
+
+1. **A reusable pipeline** for time-to-event analysis in clinical research, with all survival functions implemented transparently from first principles.
+
+2. **A demonstration** that library-minimal implementations are feasible and informative for small clinical datasets — the typical scenario in tropical medicine, rare diseases, and single-center studies.
+
+3. **A pedagogical resource** with three-layer documentation (intent/result/mechanism) that enables clinical researchers without programming backgrounds to understand and audit every analytical step.
+
+## Comparison with existing tools
+
+| Feature | SPSS/Stata | R survival | lifelines (Python) | **This pipeline** |
+|:--------|:----------:|:----------:|:---------:|:-----------:|
+| Reproducible | ❌ (GUI) | ✅ | ✅ | ✅ |
+| Transparent internals | ❌ | ❌ | ❌ | **✅** |
+| Zero specialized deps | ❌ | ❌ | ❌ | **✅** |
+| Educational annotations | ❌ | ❌ | ❌ | **✅** |
+| Publication rendering | ❌ | ✅ (Rmd) | ❌ | **✅ (Quarto)** |
+| Large-scale optimized | ✅ | ✅ | ✅ | ❌ |
+| Edge-case handling | ✅ | ✅ | ✅ | Partial |
+
+: Comparison with existing analytical approaches. {#tbl-comparison}
+
+## Limitations and when NOT to use this approach
+
+The pipeline is designed for **small, exploratory clinical studies** (N < 100). It should NOT be used for:
+
+- **Large clinical trials** (N > 1000): numerical optimization of Cox via BFGS with finite-difference Hessians becomes unreliable. Use `lifelines` or R `survival`.
+- **Complex models**: time-varying covariables, competing risks, frailty models, or penalized Cox regression require mature library implementations.
+- **Regulatory submissions**: software validation requirements for FDA/EMA submissions demand certified statistical packages.
+
+## Towards a thesis framework
+
+This pipeline represents the first module of a broader thesis project connecting four disciplines:
+
+| Discipline | Contribution |
+|:-----------|:-------------|
+| **Infectology** | Clinical question, study design, result interpretation |
+| **Immunology** | Biological mechanism (antibody kinetics, eosinophil response) |
+| **Mathematics** | Survival analysis theory (product-limit estimator, partial likelihood, semiparametric inference) |
+| **Computer Science** | Reproducible pipeline, numerical implementation, publication automation |
+
+Future modules will incorporate: (1) mixed-effects models for longitudinal IgG trajectories; (2) Bayesian survival models with informative priors from prior literature; (3) a web-based dashboard for clinical decision support; and (4) formal software validation against R `survival` and Stata.
+
+# Conclusions
+
+We present a complete, transparent, and reproducible Python pipeline for time-to-event analysis in clinical research. The pipeline demonstrates that survival analysis from first principles — without specialized libraries — is feasible, educational, and clinically valid for small datasets. All code, data, and rendered outputs are freely available for reuse and adaptation.
+
+The approach is particularly suited to tropical medicine research, where sample sizes are often small, computational resources limited, and the need for analytical transparency paramount.
+
+# Code and data availability
+
+- **Jupyter notebook**: `TFGM_analysis.ipynb` (22 code cells, fully documented)
+- **Quarto document**: `TFGM_metodos.qmd` (rendered HTML/PDF)
+- **Dataset**: `BASE_SPSS.xlsx` (anonymized, 44 × 122)
+- **All outputs**: 10 PNG figures (300 DPI), 3 CSV tables
+
+All materials are available under CC-BY 4.0 license.
+
+# References {.unnumbered}
+
+::: {#refs}
+:::

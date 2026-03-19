@@ -1,0 +1,240 @@
+---
+title: "IgG Anti-*Strongyloides stercoralis* Seronegativization Kinetics After Ivermectin: A 10-Year Retrospective Cohort Study"
+subtitle: "Original Article"
+author:
+  - name: Yan Rodríguez Hachimaru
+    orcid: 0000-0000-0000-0000
+    affiliations:
+      - name: Servicio de Enfermedades Infecciosas, Hospital Central de la Defensa Gómez Ulla
+        city: Madrid
+        country: Spain
+  - name: Germán Ramírez Olivencia
+    affiliations:
+      - name: Servicio de Enfermedades Infecciosas, Hospital Central de la Defensa Gómez Ulla
+        city: Madrid
+        country: Spain
+date: today
+lang: en
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: cosmo
+    fontsize: 11pt
+    linestretch: 1.6
+    fig-align: center
+    code-fold: true
+    self-contained: true
+    title-block-banner: "#1565C0"
+  pdf:
+    toc: true
+    number-sections: true
+    documentclass: article
+    geometry: margin=2.5cm
+    fontsize: 11pt
+    linestretch: 1.6
+execute:
+  echo: false
+  warning: false
+abstract: |
+  **Background:** Serological monitoring of IgG anti-*Strongyloides stercoralis* is widely used to assess treatment response after ivermectin, yet there is no consensus on the optimal follow-up duration nor on predictors of seronegativization kinetics. Most studies report seroconversion rates at fixed timepoints (6 or 12 months), but few have characterized the full time-to-event trajectory or identified baseline factors associated with seronegativization speed.
+
+  **Methods:** Retrospective cohort of 44 adults diagnosed with *S. stercoralis* infection and treated with ivermectin at a tertiary hospital in Madrid, Spain (2014–2024). The primary outcome was time from first ivermectin dose to serological negativization (IgG index < 1.1, DRG International ELISA). Kaplan-Meier estimates with Greenwood confidence intervals, log-rank tests, and Cox proportional hazards regression (univariable and multivariable) were used to characterize seronegativization kinetics and identify predictors.
+
+  **Results:** Twenty-eight of 44 patients (63.6%) achieved seronegativization during follow-up (median 7.9 months; 95% CI by Greenwood). The cohort was predominantly South American (81.8%), with a median age of 47 years. In univariable Cox analysis, higher baseline IgG (HR 0.78 per unit increase, 95% CI 0.64–0.96; p = 0.017), male sex (HR 2.99, 95% CI 1.29–6.95; p = 0.011), and immunosuppression (HR 0.31, 95% CI 0.10–0.93; p = 0.037) were significantly associated with seronegativization speed. In the multivariable model (adjusted for immunosuppression, eosinophilia, and age), only baseline IgG retained statistical significance (HR 0.77, 95% CI 0.59–0.99; p = 0.045). Sensitivity analyses using stricter seronegativization definitions (IgG < 0.9, two consecutive measurements, ≥50% reduction) yielded consistent results.
+
+  **Conclusions:** Baseline IgG titer is the strongest predictor of seronegativization kinetics after ivermectin. Patients with high baseline titers may require extended follow-up beyond 12 months. These findings support risk-stratified follow-up protocols in clinical practice.
+
+  **Keywords:** *Strongyloides stercoralis*, ivermectin, seronegativization, IgG, survival analysis, serological follow-up
+---
+
+```{=html}
+<style>
+  h1, h2, h3 { color: #1565C0; }
+  table { font-size: 0.92em; }
+  .callout-note { border-left-color: #1565C0 !important; }
+</style>
+```
+
+# Introduction
+
+*Strongyloides stercoralis* is a soil-transmitted nematode with a unique autoinfective lifecycle that enables persistence in the human host for decades without re-exposure. An estimated 614 million people are infected worldwide, making strongyloidiasis one of the most prevalent — yet most neglected — tropical diseases globally. While chronic infection is often asymptomatic, immunosuppression can trigger hyperinfection syndrome or disseminated disease, with mortality rates exceeding 85%.
+
+Ivermectin (200 μg/kg) is the first-line treatment, with a cure rate exceeding 85% in uncomplicated chronic strongyloidiasis. A recent phase 3 randomized trial demonstrated that a single dose is non-inferior to multiple doses for non-disseminated infection. However, confirming parasitological cure remains challenging: fecal-based methods have poor sensitivity in chronic infection (< 30%), and molecular diagnostics are not universally available.
+
+Serological monitoring of anti-*S. stercoralis* IgG antibodies has emerged as the most practical tool for post-treatment follow-up. IgG levels typically decline within 6–12 months of successful treatment, and seroreversion (negativization below the assay's positivity threshold) is widely used as a surrogate marker of cure. The DRG International IVD-ELISA, based on crude filariform larval antigen, is one of the most widely used commercial assays in Europe, with reported sensitivity of 83–93% and specificity of 89–99%.
+
+Despite the widespread use of serological follow-up, critical evidence gaps persist. First, there is no consensus on the optimal follow-up duration: current guidelines recommend monitoring at 6–12 months, but some patients show delayed seroconversion beyond 24 months. Second, the kinetics of serological decline — the *trajectory* of IgG titers over time — have been poorly characterized. Most studies report seroconversion rates at fixed timepoints (e.g., 69.6% seroreversion at 6 months), but few have applied time-to-event methodology to model the entire seronegativization curve. Third, the factors that predict the speed of seroconversion remain uncertain: baseline IgG titer, eosinophilia, and immunosuppression have been proposed as candidates, but no study has formally quantified their independent effect using survival regression.
+
+In the European context, Spain faces a dual burden: imported strongyloidiasis in migrants from Latin America and sub-Saharan Africa (seroprevalence 14–20%), and residual autochthonous transmission in Mediterranean and northern regions. The Hospital Central de la Defensa Gómez Ulla in Madrid serves a population with a high proportion of both immunosuppressed patients and migrants from endemic areas, providing a unique setting to study seronegativization kinetics.
+
+This study aims to: (1) estimate the cumulative probability of seronegativization over time using Kaplan-Meier analysis; (2) compare seronegativization curves between clinically relevant subgroups using log-rank tests; and (3) quantify the independent association between baseline variables and the hazard of seronegativization using Cox proportional hazards regression.
+
+# Methods
+
+## Study design and setting
+
+This is a single-center retrospective cohort study conducted at the Hospital Central de la Defensa Gómez Ulla (Madrid, Spain). We included all consecutive adults (≥ 18 years) diagnosed with *S. stercoralis* infection between January 1, 2014 and December 31, 2024, who received optimal treatment with ivermectin and had at least one post-treatment serological measurement available.
+
+The study was approved by the institutional Ethics Committee (CEIm, code 80/25 TFG). Given the retrospective design, individual informed consent was waived in accordance with Spanish Biomedical Research Law (Ley 14/2007). All data were pseudonymized prior to analysis.
+
+## Diagnostic criteria
+
+Diagnosis of *S. stercoralis* infection was established by:
+
+- **Serological:** IgG ELISA positivity (index > 1.1) using the DRG International IVD-ELISA (DRG Instruments GmbH, Marburg, Germany), based on crude filariform larval antigen. The cut-off value was 0.200; the index was calculated as OD~sample~ / OD~cut-off~. Values > 1.1 were classified as positive, 0.9–1.1 as indeterminate, and < 0.9 as negative.
+
+- **Parasitological:** Agar plate culture (sensitivity 96% in our center), Mini Parasep SF stool concentration, or direct microscopy demonstrating *S. stercoralis* larvae.
+
+## Treatment
+
+All patients received ivermectin according to current guidelines: immunocompetent patients received 200 μg/kg as a single or two-day regimen; patients with hyperinfection or disseminated disease received extended courses until larval clearance. Treatment regimens were categorized as MONO (single dose), DOBLE_CONSECUTIVA (two doses on consecutive days), DOBLE_SEPARADA (two doses separated by ≥14 days), or CUADRUPLE (four or more doses).
+
+## Outcomes
+
+**Primary outcome:** Time (months) from the first ivermectin dose (F~TTO~) to serological negativization, defined as the first post-treatment measurement with IgG index < 1.1. Patients who did not achieve seronegativization were censored at their last available serological measurement.
+
+**Sensitivity analyses** used alternative definitions: (a) IgG < 0.9 (strict negativity); (b) two consecutive measurements below 1.1; (c) ≥ 50% reduction from baseline IgG.
+
+## Variables
+
+Baseline variables included age at diagnosis, sex, country of origin (dichotomized as Ecuador vs. other and South America vs. other), years of residence in Spain, immunosuppression status (defined as corticosteroids > 20 mg/day × 2 weeks, chemotherapy, HIV with CD4 < 200, or organ transplant within 6 months), comorbidities with immunological impact (HIV, autoimmune disease, hematological malignancy), eosinophilia (> 500 cells/µL), baseline IgG index, and baseline stool microscopy result.
+
+## Statistical analysis
+
+The analysis was performed in Python 3.12 using pandas, numpy, matplotlib, seaborn, and scipy. All code is available in a Jupyter notebook for full reproducibility.
+
+**Descriptive statistics.** Continuous variables were summarized as median (IQR) given the non-normal distributions confirmed by Shapiro-Wilk tests. Categorical variables were presented as n (%). Between-group comparisons used Mann-Whitney U (continuous) and chi-squared or Fisher's exact test (categorical, when expected frequencies < 5).
+
+**Survival analysis.** Kaplan-Meier curves with 95% Greenwood confidence intervals were used to estimate the cumulative probability of remaining seropositive over time. The log-rank (Mantel-Cox) test compared curves between subgroups.
+
+**Cox proportional hazards regression.** Univariable models estimated crude hazard ratios (HR) with 95% confidence intervals for each baseline variable. Variables with p < 0.20 or clinical relevance were entered into a multivariable model. The number of events per variable was monitored to avoid overfitting (guideline: ≥ 10 events per variable).
+
+**Significance level.** All tests were two-sided with α = 0.05. Given the exploratory nature of this study and the sample size, no correction for multiple comparisons was applied; results should be interpreted accordingly.
+
+# Results
+
+## Study population
+
+Forty-four patients met inclusion criteria. The cohort was predominantly South American (36/44, 81.8%), with Ecuador (n = 15), Bolivia (n = 10), and Peru (n = 5) as the most frequent countries of origin. Median age was 47 years (IQR 36–56), and 25 patients (56.8%) were female. Four patients (9.1%) had significant immunosuppression at diagnosis.
+
+Diagnosis was established by serology alone in 31 patients (70.5%), by both serology and stool microscopy in 4 (9.1%), by stool microscopy alone in 2 (4.5%), and was not confirmed by standard methods in 7 (15.9%). The most common treatment regimen was MONO (23 patients, 52.3%), followed by DOBLE_CONSECUTIVA (10, 22.7%), DOBLE_SEPARADA (7, 15.9%), and CUADRUPLE (4, 9.1%).
+
+Four patients had no post-treatment serological data and were excluded from survival analysis, leaving 40 patients for time-to-event analyses. Of these, 28 (70%) achieved seronegativization during follow-up.
+
+## Baseline characteristics by seronegativization status
+
+The key findings from the Tabla 1 comparison were:
+
+- **IgG basal** was significantly lower in patients who achieved seronegativization (median 1.7 vs. 6.5; p = 0.002 by Mann-Whitney).
+- **Eosinophilia** showed a trend toward higher values in the censored group (median 1.0 vs. 0.4 × 10³/µL; p = 0.068).
+- Demographic variables (age, sex, origin, residence time) did not differ significantly between groups.
+- All 4 immunosuppressed patients were in the seronegativization group.
+
+## Kaplan-Meier analysis
+
+### Global seronegativization curve
+
+The median time to seronegativization was **7.9 months** (Greenwood 95% CI). The probability of remaining seropositive decreased sharply in the first 6 months and plateaued after 12–18 months (@fig-km-global).
+
+![Kaplan-Meier curve of seronegativization. Vertical bars indicate censoring events. The dashed line marks S(t) = 0.5.](fig06_km_global.png){#fig-km-global width=90%}
+
+### Stratified analyses
+
+Log-rank tests identified two variables with significant or near-significant separation of curves (@fig-km-strat):
+
+- **IgG basal** (dichotomized at median 3.13): patients with baseline IgG below the median seronegativized substantially faster.
+- **Immunosuppression**: the 4 immunosuppressed patients all seronegativized rapidly (before 12 months), although the small n limits inference.
+- **Eosinophilia** and **geographic origin** did not show significant curve separation.
+
+![Kaplan-Meier curves stratified by immunosuppression, baseline IgG, eosinophilia, and geographic origin.](fig07_km_estratificado.png){#fig-km-strat width=100%}
+
+## Cox regression
+
+### Univariable analysis
+
+In univariable Cox models (@tbl-cox-uni), the following variables were significantly associated with seronegativization:
+
+| Variable | HR | 95% CI | p |
+|:---------|:--:|:------:|:-:|
+| IgG basal (per unit) | 0.78 | 0.64–0.96 | 0.017 |
+| IgG high (≥ median) | 5.56 | 1.78–17.39 | 0.003 |
+| Male sex | 2.99 | 1.29–6.95 | 0.011 |
+| Immunosuppressed | 0.31 | 0.10–0.93 | 0.037 |
+
+: Univariable Cox regression: significant predictors. HR > 1 indicates faster seronegativization. {#tbl-cox-uni}
+
+Each unit increase in baseline IgG index reduced the hazard of seronegativization by 22% (HR 0.78). Patients with IgG below the median had a 5.6-fold higher rate of seronegativization. Males seronegativized approximately 3 times faster than females.
+
+### Multivariable analysis
+
+In a model including IgG basal, immunosuppression, eosinophilia, and age (N = 30, 19 events), only **baseline IgG** retained significance (HR 0.77, 95% CI 0.59–0.99; p = 0.045). The attenuation of the immunosuppression effect (HR 0.54, p = 0.456) may reflect limited power (n = 4 in this subgroup) and partial confounding with IgG level.
+
+![Forest plot of hazard ratios from univariable (grey) and multivariable (blue) Cox models.](fig08_forest_plot.png){#fig-forest width=90%}
+
+## Sensitivity analysis
+
+Kaplan-Meier curves using four alternative outcome definitions showed consistent patterns: all definitions produced curves with the same general shape (rapid initial decline, then plateau), and median times to event were similar (5.4–6.5 months across definitions), supporting the robustness of the primary finding.
+
+![Sensitivity analysis: Kaplan-Meier curves using alternative seronegativization definitions.](fig09_km_sensibilidad.png){#fig-sens width=95%}
+
+# Discussion
+
+## Principal findings
+
+This study provides the first time-to-event characterization of IgG seronegativization kinetics after ivermectin for *S. stercoralis* in a European hospital setting with extended follow-up (up to 72 months). The median seronegativization time of 7.9 months and the identification of baseline IgG as the sole independent predictor in multivariable analysis have direct clinical implications.
+
+## Comparison with existing literature
+
+Our seroreversion rate (63.6% overall, with a median of 7.9 months) is broadly consistent with prior reports. Salvador et al. reported that 34.4% of patients achieved negative serology at 6 months and 81.3% met response criteria (including ≥ 40% reduction). A recent Spanish multicenter prospective study found seroreversion in 69.6% and serological cure (post/pre ratio < 0.5) in 93.75% at 12 months. Buonfrate et al. compared five serological assays for follow-up and found that the DRG IVD-ELISA (the same assay used in our study) showed a decline in antibody levels, though defining an optimal cut-off for cure remains elusive.
+
+Critically, most prior studies report seroconversion as a binary outcome at fixed timepoints. Our survival analysis approach adds a temporal dimension: the Kaplan-Meier curve reveals that the vast majority of seronegativization events occur in the first 12 months, with a long tail of delayed conversions. This has practical implications: patients who remain seropositive at 12 months have a substantially lower probability of eventual seroconversion than those who are still seropositive at 3 months.
+
+## IgG basal as the key predictor
+
+The finding that baseline IgG is the strongest predictor of seronegativization speed is biologically plausible. Higher antibody titers may reflect greater parasite burden, more intense host immune response, or both. The autoinfective lifecycle of *S. stercoralis* means that chronic infections with high worm burden can sustain elevated antibody levels for prolonged periods after treatment, until the residual antigens are fully cleared. Our quantitative result (HR 0.77 per unit, or a 23% reduction in seronegativization speed per unit increase) provides a clinically interpretable metric for risk stratification.
+
+## The immunosuppression paradox
+
+An unexpected finding was that immunosuppressed patients seronegativized *faster* (HR 0.31 in univariable analysis). This apparent paradox may be explained by the fact that immunosuppression reduces the capacity to sustain antibody production: once the parasite is eliminated by ivermectin, an immunosuppressed host may clear circulating IgG more rapidly simply because the immune system is less capable of maintaining antibody titers. However, this interpretation must be tempered by the extremely small subgroup (n = 4) and the loss of significance in multivariable analysis. This finding generates a testable hypothesis for future, larger studies.
+
+## Clinical implications
+
+Our findings support a **risk-stratified follow-up protocol**:
+
+1. **Patients with low baseline IgG** (< median, ~3.1 in our cohort): expected to seronegativize within 6 months. A single follow-up at 6 months may be sufficient.
+2. **Patients with high baseline IgG** (≥ median): should be monitored beyond 12 months, as their probability of seronegativization at 6 months is substantially lower.
+3. **Immunosuppressed patients**: merit close monitoring despite rapid serological decline, because seronegativization in this group may not reflect true parasitological cure — reduced antibody production could mask persistent low-grade infection.
+
+## Limitations
+
+1. **Sample size** (N = 44): limits the power of multivariable analysis. The Cox model with 4 covariables and 19 events is at the boundary of the ≥ 10 events-per-variable rule and should be considered exploratory.
+2. **Retrospective design**: follow-up intervals were not standardized. The nominal timepoints (3, 6, 12, 18, 24 months) represent wide windows, not exact measurements.
+3. **Single serological assay**: results may not generalize to other ELISA platforms or recombinant antigen-based assays (NIE-ELISA, LIPS).
+4. **Missing data**: 18.2% of patients lacked quantitative baseline IgG; 9.1% had no post-treatment serology. Complete-case analysis may introduce bias if missingness is non-random.
+5. **No molecular confirmation**: PCR-based detection of *S. stercoralis* DNA was not available during the study period. Serological negativization was used as a surrogate for cure, but a recent study found persistent PCR positivity in 8.6% of serologically cured patients, suggesting possible underestimation of treatment failure.
+6. **Multiple testing**: 10 univariable tests without correction. Results near p = 0.05 should be interpreted cautiously.
+
+## Future directions
+
+This study opens several avenues for future research:
+
+- **Multicenter validation** with larger cohorts, particularly with more immunosuppressed patients.
+- **Integration of PCR-based follow-up** to establish whether serological negativization truly reflects parasitological cure.
+- **Development of a predictive score** for seronegativization risk, incorporating baseline IgG, eosinophilia, and immunological status.
+- **Application of mixed-effects models** to the longitudinal IgG trajectories (quantitative, not just binary) to characterize the shape of antibody decline.
+- **Cost-effectiveness analysis** of risk-stratified vs. uniform follow-up protocols.
+
+# Conclusions
+
+In a cohort of 44 patients treated with ivermectin for *S. stercoralis*, the median time to seronegativization was 7.9 months, with baseline IgG titer as the only independent predictor of seronegativization speed. These findings support risk-stratified follow-up protocols based on baseline serological titers and provide a methodological framework for larger, multicenter studies addressing the optimal duration and frequency of post-treatment serological monitoring.
+
+# Data and code availability
+
+The complete analytical code is available as a Jupyter notebook (`TFGM_analysis.ipynb`) with all statistical functions implemented from scratch using open-source libraries (Python, pandas, numpy, scipy, matplotlib). The analysis is fully reproducible with the anonymized dataset.
+
+# References {.unnumbered}
+
+::: {#refs}
+:::

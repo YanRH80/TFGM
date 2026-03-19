@@ -1,0 +1,390 @@
+---
+title: "Materiales y Métodos — Análisis Computacional"
+subtitle: "Cinética de seronegativización de IgG anti-*Strongyloides stercoralis* tras ivermectina"
+author:
+  - name: Yan Rodríguez Hachimaru
+    affiliation: Hospital Central de la Defensa Gómez Ulla
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    theme: cosmo
+    fontsize: 11pt
+    fig-width: 8
+    fig-height: 5
+    fig-dpi: 300
+  pdf:
+    toc: true
+    number-sections: true
+    documentclass: article
+    geometry: margin=2.5cm
+    fontsize: 11pt
+    fig-width: 7
+    fig-height: 4.5
+    fig-dpi: 300
+bibliography: references.bib
+csl: vancouver.csl
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Introducción
+
+Este documento detalla los **materiales y métodos computacionales** empleados en el análisis de la cinética de seronegativización de IgG anti-*Strongyloides stercoralis* tras tratamiento con ivermectina en una cohorte retrospectiva (N = 44) del Hospital Central de la Defensa Gómez Ulla (2014–2024).
+
+El objetivo es documentar el proceso analítico con el nivel de detalle necesario para:
+
+1. **Reproducibilidad completa** — cualquier investigador con acceso al dataset puede replicar los resultados ejecutando la notebook.
+2. **Transparencia metodológica** — cada decisión estadística (test elegido, punto de corte, manejo de datos faltantes) está justificada.
+3. **Publicación doble** — este material sirve tanto para la sección de Materiales y Métodos del artículo clínico como para una publicación metodológica independiente sobre el uso de Python/Jupyter en investigación biomédica.
+
+## Entorno computacional
+
+El análisis se realizó en **Python 3.12** dentro de **Jupyter Notebook**, utilizando las siguientes librerías:
+
+| Librería | Versión | Propósito |
+|----------|---------|-----------|
+| `pandas` | 3.0+ | Manipulación de datos tabulares |
+| `numpy` | 2.4+ | Operaciones numéricas |
+| `matplotlib` | 3.10+ | Generación de figuras |
+| `seaborn` | 0.13+ | Gráficos estadísticos |
+| `scipy` | 1.17+ | Tests estadísticos y optimización |
+
+El renderizado final del presente documento se realizó con **Quarto** (sistema de publicación científica basado en Pandoc), que permite integrar código ejecutable, prosa académica y referencias bibliográficas en un único flujo de trabajo.
+
+::: {.callout-note}
+## Reproducibilidad
+Todo el código fuente está disponible en la notebook `TFGM_analysis.ipynb`. Para ejecutarla, se necesita únicamente el archivo `BASE_SPSS.xlsx` (dataset analítico) en el mismo directorio.
+:::
+
+# Fuente de datos
+
+## Dataset analítico
+
+El dataset de trabajo (`BASE_SPSS.xlsx`) contiene **44 filas × 122 columnas** — una fila por paciente. Fue construido a partir de 5 hojas de datos crudos (`BASAL`, `SERO`, `EOS`, `MICRO`, `SEG`) mediante un pipeline de ETL (Extracción, Transformación y Carga) documentado en una notebook separada.
+
+Las 122 variables incluyen:
+
+- **Demográficas y clínicas basales** (20 variables): edad al diagnóstico, sexo, país de origen, tiempo de residencia en España, estado inmunológico, comorbilidades, pauta de ivermectina.
+- **Serología longitudinal** (24 variables): IgG cuantitativa y cualitativa en 8 timepoints nominales (3, 6, 12, 18, 24, 36, 48, 72 meses post-tratamiento).
+- **Eosinófilos longitudinales** (24 variables): recuento y clasificación binaria en los mismos timepoints.
+- **Microbiología longitudinal** (16 variables): resultado y mes real de pruebas parasitológicas.
+- **Variables de outcome** (16 variables): eventos y tiempos para 7 definiciones diferentes de seronegativización.
+- **Variables auxiliares** (22 variables): dicotomizaciones, labels, flags de calidad.
+
+## Validación de integridad
+
+Al cargar el dataset, se verificaron mediante *assertions* programáticas:
+
+```{python}
+#| label: validacion
+#| echo: true
+
+import pandas as pd
+import numpy as np
+
+df = pd.read_excel('BASE_SPSS.xlsx')
+
+# Verificaciones de integridad
+assert len(df) == 44,              f"Se esperan 44 filas, hay {len(df)}"
+assert df['ID'].nunique() == 44,   "IDs duplicados"
+assert (df['EVENT_SERONEG'] == 1).sum() == 28, "Se esperan 28 eventos"
+
+print(f"✅ Dataset validado: {df.shape[0]} pacientes × {df.shape[1]} variables")
+```
+
+Los conteos esperados (28 eventos de seronegativización, 15 pacientes de origen ecuatoriano, 4 inmunodeprimidos, etc.) se contrastaron con el cuaderno de variables del estudio.
+
+## Datos faltantes
+
+La estrategia de manejo de datos faltantes fue **análisis de casos completos** (*complete case analysis*) para cada análisis específico:
+
+- **IgG basal**: disponible en 36/44 pacientes (81.8%). Los 8 pacientes sin IgG basal numérica tenían resultado cualitativo (POS/NEG) sin valor cuantitativo.
+- **Tiempo de seguimiento**: disponible en 40/44 (90.9%). Los 4 pacientes sin tiempo se excluyeron del análisis de supervivencia (IDs sin serología post-tratamiento).
+- **Eosinófilos basales**: disponible en 42/44 (95.5%). Se marcaron como dudosas las mediciones realizadas >365 días antes del tratamiento.
+
+Se generó un mapa visual de completitud (@fig-missing) para documentar la estructura de missingness.
+
+# Estadística descriptiva
+
+## Tabla 1 — Características basales
+
+La Tabla 1 presenta las características basales de la cohorte estratificadas por el outcome principal (seronegativización sí/no).
+
+### Elección de estadísticos descriptivos
+
+La decisión entre estadísticos paramétricos (media ± DE) y no paramétricos (mediana, IQR) se basó en el **test de Shapiro-Wilk** para normalidad, el más potente para muestras pequeñas (n < 50).
+
+```{python}
+#| label: shapiro
+#| echo: true
+
+from scipy import stats as scipy_stats
+
+cont_vars = [
+    ('EDAD_DX',           'Edad al diagnóstico'),
+    ('T_RESIDENCIA',      'Tiempo residencia España'),
+    ('IGG_BASAL',         'IgG basal'),
+    ('EOS_BASAL',         'Eosinófilos basales'),
+    ('TIME_TO_SERONEG_M', 'Tiempo hasta seroneg.'),
+]
+
+for col, label in cont_vars:
+    vals = df[col].dropna()
+    W, p = scipy_stats.shapiro(vals)
+    dist = 'Normal' if p > 0.05 else 'No normal'
+    print(f"{label:<30}  W={W:.4f}  p={p:.4f}  → {dist}")
+```
+
+**Resultado:** solo la edad al diagnóstico superó el umbral de normalidad (p = 0.74). Todas las demás variables mostraron distribuciones no normales (p < 0.05), justificando el uso sistemático de mediana (IQR) y tests no paramétricos.
+
+### Tests de comparación entre grupos
+
+| Tipo de variable | Estadístico descriptivo | Test inferencial | Condiciones |
+|------------------|------------------------|------------------|-------------|
+| Continua, no normal | Mediana (Q1–Q3) | Mann-Whitney U bilateral | n₁ ≥ 2 y n₂ ≥ 2 |
+| Categórica, celdas ≥ 5 | n (%) | Chi-cuadrado de Pearson | Tabla ≥ 2×2 |
+| Categórica, alguna celda < 5 | n (%) | Test exacto de Fisher | Solo para tablas 2×2 |
+
+La regla de Cochran (todas las frecuencias esperadas ≥ 5) se verificó automáticamente: si alguna celda esperada era < 5 en una tabla 2×2, se sustituyó chi-cuadrado por Fisher exacto.
+
+# Visualización de datos
+
+## Principios de diseño
+
+Todas las figuras siguen un protocolo visual uniforme:
+
+1. **Paleta semántica centralizada**: cada grupo clínico tiene un color fijo definido en un único diccionario (`PAL`). Cambiar un color lo propaga a todas las figuras.
+2. **Estilo editorial**: fuente sans-serif (Arial), sin bordes superior ni derecho, grid semitransparente. Sigue las recomendaciones de Tufte (*The Visual Display of Quantitative Information*) de minimizar la ratio tinta/dato.
+3. **Resolución dual**: 150 DPI en pantalla (Jupyter), 300 DPI al guardar (requisito de journals).
+4. **Accesibilidad**: colores seleccionados para ser distinguibles en daltonismo (evitando rojo/verde puros juntos) y en impresión en escala de grises (diferentes luminosidades).
+
+## Catálogo de figuras
+
+### Figura 1 — Distribución de variables continuas
+
+**Tipo:** violin plot + boxplot superpuesto.
+
+El violin plot muestra la *densidad de probabilidad empírica* (equivalente a un histograma suavizado rotado 90°). El boxplot superpuesto (más estrecho, `widths=0.13`) añade la mediana, cuartiles y outliers con precisión numérica. Sobre cada panel se indica el p-valor de Mann-Whitney.
+
+### Figura 2 — Cinética de IgG post-tratamiento
+
+**Tipo:** spaghetti plot con línea de tendencia central.
+
+Cada línea semitransparente (α = 0.12) representa la trayectoria individual de un paciente. La línea gruesa muestra la mediana del grupo en cada timepoint. Se anotan las `n` disponibles en cada punto temporal — obligatorio en estudios longitudinales, ya que el número de pacientes con seguimiento disminuye con el tiempo.
+
+Las líneas horizontales de corte (1.1 para positividad según DRG International; 0.9 para negatividad estricta según protocolo) sirven como referencia clínica.
+
+### Figura 3 — Comparativa de definiciones de outcome
+
+**Tipo:** lollipop chart horizontal, paneles pareados.
+
+Alternativa al gráfico de barras que reduce el "área de tinta" siguiendo el principio de Tufte. Compara 7 definiciones de seronegativización (desde la más sensible hasta la más específica) en dos dimensiones: número de eventos y tiempo mediano al evento.
+
+### Figura 4 — Distribución geográfica
+
+**Tipo:** barras horizontales + donut chart anidado.
+
+Panel A: barras por país de origen con superposición de los que tuvieron seroneg. Panel B: anillo externo (Sudamérica vs. Otros) y anillo interno (desglose por país).
+
+### Figura 5 — Correlación IgG basal–tiempo
+
+**Tipo:** scatter plot con Spearman ρ.
+
+Se eligió Spearman sobre Pearson porque la IgG basal no es normal (Shapiro p < 0.001) y la relación no es necesariamente lineal. Se etiquetan selectivamente los outliers (P90 en X o Y) para su inspección visual.
+
+# Análisis de supervivencia
+
+## Estimador de Kaplan-Meier
+
+### Definición del evento y el tiempo
+
+| Componente | Definición |
+|------------|------------|
+| **Tiempo cero** | Fecha de la primera dosis de ivermectina (`F_TTO`) |
+| **Evento** | Primera medición serológica post-TTO con IgG < 1.1 (cualitativa = negativa) |
+| **Censura** | Última medición serológica disponible, si no hubo seronegativización |
+| **Unidad temporal** | Meses (días / 30.44) |
+
+### Implementación
+
+El estimador de Kaplan-Meier se implementó desde cero (sin dependencias externas) siguiendo la formulación clásica:
+
+$$
+\hat{S}(t) = \prod_{t_i \leq t} \left(1 - \frac{d_i}{n_i}\right)
+$$
+
+donde $d_i$ es el número de eventos en el tiempo $t_i$ y $n_i$ es el número de pacientes a riesgo (ni evento ni censura) inmediatamente antes de $t_i$.
+
+Los **intervalos de confianza al 95%** se calcularon mediante la **fórmula de Greenwood**:
+
+$$
+\widehat{\text{Var}}[\hat{S}(t)] = \hat{S}(t)^2 \sum_{t_i \leq t} \frac{d_i}{n_i(n_i - d_i)}
+$$
+
+$$
+\text{IC}_{95\%} = \hat{S}(t) \pm 1.96 \times \sqrt{\widehat{\text{Var}}[\hat{S}(t)]}
+$$
+
+truncado al intervalo [0, 1].
+
+La **mediana de supervivencia** se definió como el primer tiempo $t$ en que $\hat{S}(t) \leq 0.5$.
+
+### Tablas de riesgo (*numbers at risk*)
+
+Debajo de cada curva KM se muestra el número de pacientes a riesgo en timepoints predefinidos (0, 3, 6, 12, 18, 24, 36, 48, 72 meses), siguiendo las recomendaciones CONSORT y STROBE para estudios de supervivencia.
+
+## Test log-rank
+
+### Formulación
+
+Para comparar curvas de supervivencia entre dos grupos se empleó el test log-rank (Mantel-Cox), implementado desde cero:
+
+$$
+\chi^2_{\text{LR}} = \frac{\left(\sum_i O_{1i} - \sum_i E_{1i}\right)^2}{\sum_i V_i}
+$$
+
+donde, en cada tiempo de evento $t_i$:
+
+- $O_{1i}$ = eventos observados en el grupo 1
+- $E_{1i} = n_{1i} \times d_i / n_i$ = eventos esperados bajo $H_0$ (proporcional al tamaño del grupo)
+- $V_i = \frac{n_{1i} \cdot n_{2i} \cdot d_i \cdot (n_i - d_i)}{n_i^2 \cdot (n_i - 1)}$ = varianza hipergeométrica
+
+Bajo $H_0$ (curvas iguales), el estadístico sigue una distribución $\chi^2$ con 1 grado de libertad.
+
+### Variables de estratificación
+
+Se evaluaron las siguientes estratificaciones:
+
+1. **Estado inmunológico**: inmunodeprimido vs. inmunocompetente
+2. **IgG basal**: alta (≥ mediana) vs. baja (< mediana)
+3. **Eosinofilia basal**: sí (> 0.5 × 10³/µL) vs. no
+4. **Origen geográfico**: Sudamérica vs. otro
+
+## Regresión de Cox
+
+### Modelo de riesgos proporcionales
+
+Se empleó el modelo semiparamétrico de Cox:
+
+$$
+h(t \mid \mathbf{X}) = h_0(t) \cdot \exp(\beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p)
+$$
+
+donde $h_0(t)$ es la función de riesgo basal (no estimada explícitamente) y $\exp(\beta_i)$ es el **hazard ratio** (HR) de la variable $X_i$.
+
+### Estimación de parámetros
+
+Los coeficientes $\hat{\beta}$ se obtuvieron maximizando la **log-verosimilitud parcial** de Cox:
+
+$$
+\ell(\beta) = \sum_{i: \delta_i=1} \left[ \beta^\top \mathbf{x}_i - \log\left(\sum_{j \in \mathcal{R}(t_i)} \exp(\beta^\top \mathbf{x}_j)\right) \right]
+$$
+
+donde $\mathcal{R}(t_i)$ es el *risk set* (conjunto de pacientes a riesgo) en el tiempo $t_i$ y $\delta_i = 1$ indica evento.
+
+La optimización se realizó mediante el algoritmo **BFGS** (Broyden-Fletcher-Goldfarb-Shanno) implementado en `scipy.optimize.minimize`. Los **errores estándar** se obtuvieron de la raíz cuadrada de la diagonal de la inversa de la matriz Hessiana, calculada por diferencias finitas.
+
+### Interpretación del Hazard Ratio
+
+| HR | Interpretación |
+|----|---------------|
+| HR > 1 | Factor de riesgo: acelera la seronegativización |
+| HR = 1 | Sin efecto |
+| HR < 1 | Factor protector: retrasa la seronegativización |
+| IC 95% incluye 1 | Efecto no estadísticamente significativo |
+
+### Estrategia de selección de variables
+
+1. **Análisis univariable**: se evaluaron 10 covariables individualmente.
+2. **Criterio de selección**: variables con p < 0.20 en univariable o con relevancia clínica *a priori*.
+3. **Modelo multivariable**: se ajustó un modelo con las variables seleccionadas, evitando colinealidad (ej: no incluir simultáneamente `INMUNO_DICO` y `COMORB_INMUNO`).
+
+## Análisis de sensibilidad
+
+Para evaluar la robustez de los resultados, se repitió el análisis de Kaplan-Meier con definiciones alternativas del outcome:
+
+| Definición | Criterio de evento | Denominador |
+|------------|-------------------|-------------|
+| **Primaria** | IgG < 1.1 en ≥ 1 medición | N = 44 |
+| Estricta temporal | IgG < 1.1 en ≥ 2 mediciones consecutivas | N = 44 |
+| Corte bajo | IgG < 0.9 en ≥ 1 medición | N = 44 |
+| Reducción relativa | Descenso ≥ 50% respecto a IgG basal | N = 36 |
+
+# Reproducibilidad y publicación
+
+## Estructura de archivos
+
+```
+proyecto/
+├── BASE_SPSS.xlsx              ← Dataset analítico (44 × 122)
+├── TFGM_analysis.ipynb         ← Notebook completa (bloques 00–04)
+├── TFGM_metodos.qmd            ← Este documento (Quarto)
+└── outputs/
+    ├── figures/
+    │   ├── fig00_missing_map.png
+    │   ├── fig01_continuas_por_evento.png
+    │   ├── fig02_cinetica_igg.png
+    │   ├── fig03_outcomes_comparativa.png
+    │   ├── fig04_origen_geografico.png
+    │   ├── fig05_scatter_igg_tiempo.png
+    │   ├── fig06_km_global.png
+    │   ├── fig07_km_estratificado.png
+    │   ├── fig08_forest_plot.png
+    │   └── fig09_km_sensibilidad.png
+    └── tables/
+        ├── tabla1_descriptiva.csv
+        ├── cox_univariable.csv
+        └── cox_multivariable.csv
+```
+
+## Flujo de renderizado
+
+```{mermaid}
+flowchart LR
+    A[BASE_SPSS.xlsx] --> B[TFGM_analysis.ipynb]
+    B --> C[Figuras PNG 300 DPI]
+    B --> D[Tablas CSV]
+    C --> E[TFGM_metodos.qmd]
+    D --> E
+    E --> F[HTML / PDF]
+```
+
+## Cómo reproducir el análisis
+
+1. Instalar Python 3.10+ con: `pip install pandas numpy matplotlib seaborn scipy openpyxl`
+2. Colocar `BASE_SPSS.xlsx` en el directorio de trabajo.
+3. Abrir `TFGM_analysis.ipynb` en Jupyter y ejecutar todas las celdas (`Kernel → Restart & Run All`).
+4. Renderizar este documento: `quarto render TFGM_metodos.qmd`
+
+## Puntos de configuración centralizada
+
+La notebook está diseñada para facilitar ajustes sin modificar la lógica:
+
+| Qué modificar | Dónde | Celda |
+|----------------|-------|-------|
+| Colores de las figuras | Diccionario `PAL` | 00-B |
+| Tipografía y estilo | `plt.rcParams.update()` | 00-C |
+| Variables de la Tabla 1 | Listas `CONT_VARS` y `CAT_VARS` | 02-A, 02-B |
+| Definiciones de outcome | Lista `OUTCOME_DEFS` | 03-C |
+| Estratificaciones KM | Lista `STRAT_VARS` | 04-E |
+| Covariables Cox univariable | Lista `COX_UNIVAR` | 04-F |
+| Covariables Cox multivariable | Lista `MULTI_VARS` | 04-G |
+
+# Limitaciones metodológicas
+
+1. **Tamaño muestral**: N = 44 limita la potencia estadística, especialmente en subgrupos (ej: solo 4 inmunodeprimidos). Los resultados del modelo multivariable de Cox con 4 covariables y 19–28 eventos se sitúan en el límite de la regla de ≥10 eventos por variable.
+2. **Implementación de Cox propia**: la optimización numérica (BFGS con Hessiana por diferencias finitas) puede diferir ligeramente de implementaciones de referencia (`lifelines`, `R survival`). Se recomienda validar los resultados con una librería establecida antes de la publicación final.
+3. **Definición del tiempo cero**: se usó la fecha de primera dosis como `F_TTO`. Pacientes con múltiples ciclos se anclan al primero.
+4. **Análisis de casos completos**: los pacientes sin IgG basal numérica (n = 8) se excluyen de los análisis que requieren esta variable, lo cual podría introducir sesgo si el *missingness* no es completamente aleatorio.
+
+# Referencias
+
+::: {#refs}
+:::

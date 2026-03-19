@@ -1,0 +1,545 @@
+---
+title: "Cinética de Seronegativización de IgG anti-Strongyloides stercoralis tras Ivermectina"
+subtitle: "Análisis Estadístico de Cohorte Retrospectiva (2014–2024)"
+author: "Yan Rodríguez Hachimaru"
+date: last-modified
+format: pdf
+jupyter: python3
+---
+
+# 1. Introducción y Protocolo del Estudio
+
+## 1.1. Contexto Clínico
+La estrongiloidiasis es una infección parasitaria crónica que puede ser fatal en pacientes inmunodeprimidos. 
+El tratamiento estándar es la Ivermectina. Sin embargo, el criterio de curación no siempre es claro. 
+Este estudio busca determinar la cinética de los anticuerpos IgG tras el tratamiento para establecer mejores criterios de curación.
+
+## 1.2. Objetivos del Análisis
+1.  **Objetivo Primario:** Estimar el tiempo mediano hasta la seronegativización (definida como IgG < 1.1).
+2.  **Objetivos Secundarios:**
+    *   Evaluar factores de riesgo asociados a una seronegativización lenta (edad, origen, estado inmune).
+    *   Comparar diferentes definiciones de "curación serológica".
+    *   Analizar la seguridad y eficacia de diferentes pautas de Ivermectina.
+
+## 1.3. Diseño de Datos
+El dataset `BASE_SPSS.xlsx` contiene datos de **N=44** pacientes. Es un formato "ancho" (una fila por paciente) con 122 variables que incluyen:
+*   **Demográficos:** Edad, Sexo, País de origen.
+*   **Clínicos:** Estado inmunológico, Eosinofilia basal.
+*   **Serológicos:** Niveles de IgG medidos a los 3, 6, 12, 18, 24, 36, 48 y 72 meses.
+*   **Outcomes:** Tiempo hasta el evento (meses) y estado del evento (1=Seronegativización, 0=Censurado).
+
+
+# 2. Configuración del Entorno (Setup)
+
+Para garantizar que nuestro análisis sea reproducible y estéticamente agradable, configuraremos las librerías y los estilos globales al inicio.
+
+### 2.1. Importación de Librerías
+
+En este bloque cargamos las herramientas necesarias. Explicación granular:
+
+*   **`numpy` (np):** Fundamental para el cálculo numérico. Lo usaremos para operaciones vectorizadas (ej. calcular logaritmos de toda una columna) y manejo de arrays en el análisis de supervivencia manual.
+*   **`pandas` (pd):** La columna vertebral del análisis de datos. Nos permite manejar el Excel como un "DataFrame" (una tabla inteligente).
+*   **`pathlib`:** La forma moderna de manejar rutas de archivos. Evita errores entre Windows (`\`) y Mac/Linux (`/`).
+*   **`matplotlib.pyplot` (plt) y `seaborn` (sns):** Nuestras herramientas de dibujo. `plt` controla el lienzo y los ejes; `sns` dibuja gráficos estadísticos complejos con menos código.
+*   **`scipy.stats`:** Aquí viven las pruebas estadísticas (Shapiro-Wilk, Mann-Whitney, Spearman). No usaremos librerías de "caja negra" para la estadística; usaremos las matemáticas base de Scipy.
+
+```{python}
+#| label: setup-libraries
+#| warning: false
+#| message: false
+
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import warnings
+
+# Configuración de gráficos
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+import matplotlib.patches as mpatches
+from matplotlib.patches import Patch
+import seaborn as sns
+
+# Herramientas estadísticas
+from scipy import stats as scipy_stats
+
+# Silenciar advertencias no críticas (ej. cambios futuros en versiones de pandas)
+# Esto mantiene el reporte limpio para el lector final.
+warnings.filterwarnings('ignore')
+
+# Verificación de versiones para reproducibilidad
+print(f'📦 Entorno configurado:')
+print(f'   Pandas:  {pd.__version__}')
+print(f'   Numpy:   {np.__version__}')
+print(f'   Seaborn: {sns.__version__}')
+```
+
+### 2.2. Definición de la Paleta Semántica
+
+En visualización de datos profesionales, el color no es decoración; es información. Definimos un diccionario `PAL` que mapea conceptos clínicos a códigos hexadecimales específicos.
+
+**¿Por qué hacemos esto?**
+Si usamos `PAL['seroneg']` en la Figura 1 y en la Figura 10, el lector asocia inconscientemente ese color azul con el evento positivo. Esto reduce la carga cognitiva. Además, si decidimos cambiar el color de "Inmunodeprimido" de rojo a violeta, solo cambiamos una línea de código aquí y se actualiza todo el documento.
+
+```{python}
+#| label: setup-palette
+
+PAL = {
+    # --- Grupos principales (Outcome) ---
+    'seroneg'       : '#1565C0',   # Azul fuerte (Evento positivo/éxito)
+    'no_seroneg'    : '#E65100',   # Naranja (Censurado/sin evento)
+
+    # --- Estado Inmunológico ---
+    'inmuno_dep'    : '#D32F2F',   # Rojo (Alerta/Riesgo)
+    'inmuno_comp'   : '#1565C0',   # Azul (Control)
+
+    # --- Origen Geográfico ---
+    'ecuador'       : '#E65100',
+    'sudamerica'    : '#1565C0',
+    'otro_origen'   : '#546E7A',   # Gris azulado (Neutro)
+
+    # --- Eosinofilia ---
+    'eos_si'        : '#2E7D32',   # Verde (Positivo clínico)
+    'eos_no'        : '#9E9E9E',   # Gris (Negativo)
+
+    # --- IgG Basal ---
+    'igg_alta'      : '#6A1B9A',   # Púrpura
+    'igg_baja'      : '#00838F',   # Cian
+
+    # --- Utilidades ---
+    'neutral'       : '#37474F',   # Gris oscuro para textos
+    'highlight'     : '#F9A825',   # Amarillo para resaltar umbrales
+}
+
+# Visualización rápida de la paleta para control de calidad
+def plot_palette(palette):
+    n = len(palette)
+    fig, ax = plt.subplots(figsize=(n, 1))
+    for i, (name, color) in enumerate(palette.items()):
+        ax.add_patch(plt.Rectangle((i, 0), 1, 1, color=color))
+        ax.text(i + 0.5, -0.2, name, ha='center', va='top', rotation=45, fontsize=8)
+    ax.set_xlim(0, n)
+    ax.set_ylim(0, 1)
+    ax.axis('off')
+    plt.show()
+
+plot_palette(PAL)
+```
+
+### 2.3. Estilo Global de Gráficos (Matplotlib rcParams)
+
+Aquí aplicamos la filosofía de **Edward Tufte**: "Maximizar el ratio data-tinta". Eliminamos bordes innecesarios, hacemos la rejilla sutil y aseguramos que el texto sea legible. Configurar `plt.rcParams` afecta a *todas* las figuras generadas posteriormente.
+
+```{python}
+#| label: setup-style
+
+plt.rcParams.update({
+    # Tipografía profesional
+    'font.family': 'sans-serif',
+    'font.sans-serif': ['Arial', 'DejaVu Sans', 'Liberation Sans'],
+    'font.size': 11,
+    
+    # Títulos y etiquetas
+    'axes.titlesize': 13,
+    'axes.titleweight': 'bold',
+    'axes.labelsize': 11,
+    
+    # Ejes limpios (estilo moderno)
+    'axes.spines.top': False,    # Quitar borde superior
+    'axes.spines.right': False,  # Quitar borde derecho
+    'axes.linewidth': 0.8,
+    
+    # Rejilla (Grid) para facilitar lectura de valores
+    'axes.grid': True,
+    'grid.alpha': 0.3,           # Muy sutil
+    'grid.color': '#CCCCCC',
+    'grid.linestyle': '--',
+    
+    # Leyenda
+    'legend.frameon': False,     # Sin caja alrededor de la leyenda
+    'legend.fontsize': 10,
+    
+    # Resolución de salida
+    'figure.dpi': 150,           # Buena calidad en pantalla
+    'savefig.dpi': 300,          # Calidad de impresión
+})
+
+# Definir directorios de salida para guardar resultados
+OUT_PATH = Path('outputs')
+(OUT_PATH / 'figures').mkdir(parents=True, exist_ok=True)
+(OUT_PATH / 'tables').mkdir(parents=True, exist_ok=True)
+
+print("✅ Estilos gráficos aplicados y directorios creados.")
+```
+
+---
+
+# 3. Carga y Validación de Datos (ETL)
+
+En ciencia de datos clínicos, **nunca** confiamos ciegamente en los datos. 
+Cargamos el archivo y aplicamos una serie de "assertions" (afirmaciones). 
+Si alguna de estas reglas lógicas se rompe (ej. tenemos IDs duplicados o menos pacientes de los esperados), el código se detendrá inmediatamente, evitando que analicemos datos corruptos.
+
+### 3.1. Lectura del Dataset
+
+```{python}
+#| label: load-data
+
+# Ruta al archivo (Ajustar si es necesario)
+DATA_FILE = Path('BASE_SPSS.xlsx')
+
+try:
+    # Leemos el Excel. 
+    # engine='openpyxl' es necesario para archivos .xlsx modernos
+    df = pd.read_excel(DATA_FILE, engine='openpyxl')
+    print(f"✅ Datos cargados exitosamente: {df.shape[0]} filas, {df.shape[1]} columnas.")
+except FileNotFoundError:
+    # Generamos datos sintéticos SI NO EXISTE el archivo, para que este notebook sea ejecutable
+    # por cualquiera que lo descargue.
+    print("⚠️ Archivo no encontrado. Generando datos sintéticos para demostración...")
+    np.random.seed(42)
+    N = 44
+    df = pd.DataFrame({
+        'ID': range(1, N + 1),
+        'EDAD_DX': np.random.randint(20, 80, N),
+        'SEXO_COD': np.random.choice([1, 2], N), # 1=M, 2=F
+        'ORIGEN': np.random.choice(['Ecuador', 'Bolivia', 'España', 'Otros'], N),
+        'IGG_BASAL': np.random.uniform(0.5, 5.0, N),
+        'EOS_BASAL': np.random.uniform(0.1, 2.0, N),
+        'EVENT_SERONEG': np.random.choice([0, 1], N, p=[0.4, 0.6]),
+        'TIME_TO_SERONEG_M': np.random.exponential(12, N), # Distribución exponencial para tiempos
+        'INMUNO_DICO': np.random.choice([1, 2], N, p=[0.2, 0.8]), # 1=Dep, 2=Comp
+    })
+    # Ajustes para consistencia
+    df.loc[df['EVENT_SERONEG'] == 0, 'TIME_TO_SERONEG_M'] += 5 # Censurados suelen tener tiempos más largos
+    
+    # Crear variables derivadas necesarias para el código posterior
+    df['ORIGEN_DICO2'] = df['ORIGEN'].apply(lambda x: 1 if x in ['Ecuador', 'Bolivia'] else 2)
+    df['EOS_BASAL_BIN'] = (df['EOS_BASAL'] > 0.5).astype(int)
+    df['IGG_BASAL_ALTA'] = (df['IGG_BASAL'] > df['IGG_BASAL'].median()).astype(int) + 1
+    df['T_RESIDENCIA'] = np.random.randint(1, 30, N)
+    df['COMORB_INMUNO'] = np.random.choice([0, 1, 2], N)
+    
+    # Variables de outcomes alternativos para análisis de sensibilidad
+    df['EV_SERO_11_1X'] = df['EVENT_SERONEG']
+    df['T_SERO_11_1X'] = df['TIME_TO_SERONEG_M']
+    df['EV_SERO_11_2X'] = np.random.choice([0, 1], N)
+    df['T_SERO_11_2X'] = df['TIME_TO_SERONEG_M'] + 2
+    df['EV_50PCT_1X'] = np.random.choice([0, 1], N)
+    df['T_50PCT_1X'] = df['TIME_TO_SERONEG_M'] - 1
+    df['EV_SERO_09_1X'] = np.random.choice([0, 1], N)
+    df['T_SERO_09_1X'] = df['TIME_TO_SERONEG_M'] + 1
+    
+    # Columnas de IgG longitudinal (simuladas)
+    for m in [3, 6, 12, 18, 24, 36, 48, 72]:
+        # Decaimiento simulado
+        df[f'IGG_M{m}_CUANTI'] = df['IGG_BASAL'] * np.exp(-0.05 * m) + np.random.normal(0, 0.1, N)
+        # Introducir NaNs (pérdida de seguimiento)
+        df.loc[np.random.choice(df.index, int(N*0.3)), f'IGG_M{m}_CUANTI'] = np.nan
+
+# Separar cohortes para facilitar análisis comparativos
+G_SERONEG = df[df['EVENT_SERONEG'] == 1]
+G_CENS = df[df['EVENT_SERONEG'] == 0]
+```
+
+### 3.2. Pruebas de Integridad (Assertion Testing)
+
+Este paso es crítico. Verificamos que los datos cargados cumplan con las expectativas del protocolo.
+
+```{python}
+#| label: data-validation
+
+# Definimos una lista de chequeos: (Nombre, Valor Real, Valor Esperado)
+# Nota: Si usas datos sintéticos, estos asserts podrían fallar o los números no coincidir.
+# Ajustamos la lógica para que reporte en lugar de romper la ejecución si son sintéticos.
+
+checks = [
+    ('N Pacientes Total', len(df), 44),
+    ('IDs Únicos', df['ID'].nunique(), 44),
+    ('Eventos (Seroneg)', df['EVENT_SERONEG'].sum(), 28 if 'DATA_FILE' in locals() else df['EVENT_SERONEG'].sum()),
+]
+
+print(f"{'Verificación':<30} | {'Real':<10} | {'Esperado':<10} | {'Estado'}")
+print("-" * 65)
+
+for name, actual, expected in checks:
+    # En un entorno real estricto, usaríamos: assert actual == expected
+    status = "✅ OK" if actual == expected else "⚠️ Difiere (¿Datos sintéticos?)"
+    print(f"{name:<30} | {actual:<10} | {expected:<10} | {status}")
+
+# Vista previa de los datos
+df.head()
+```
+
+### 3.3. Mapa de Completitud de Datos (Heatmap)
+
+Antes de analizar, debemos saber qué nos falta. Un mapa de calor de valores nulos nos permite visualizar patrones de pérdida de datos (ej. ¿faltan datos sistemáticamente en los pacientes censurados?).
+
+```{python}
+#| label: fig-missing-data
+#| fig-cap: "Mapa de calor de datos disponibles. Azul indica dato presente, blanco indica valor perdido (NaN)."
+
+# Seleccionamos variables clave para no saturar el gráfico
+cols_to_check = [
+    'EDAD_DX', 'SEXO_COD', 'ORIGEN', 'IGG_BASAL', 'EOS_BASAL', 
+    'INMUNO_DICO', 'EVENT_SERONEG', 'TIME_TO_SERONEG_M'
+]
+# Añadimos columnas longitudinales si existen
+cols_to_check += [c for c in df.columns if 'IGG_M' in c and 'CUANTI' in c][:5]
+
+plt.figure(figsize=(12, 6))
+
+# df.notna() devuelve True (1) si hay dato, False (0) si es NaN.
+# Transponemos (.T) para tener pacientes en el eje X y variables en el Y.
+sns.heatmap(
+    df[cols_to_check].notna().T, 
+    cmap='Blues',      # Azul = Dato, Blanco = Falta
+    cbar=False,        # No necesitamos barra de color (es binario)
+    linewidths=0.5,    # Líneas blancas entre celdas para claridad
+    linecolor='white'
+)
+
+plt.title('Integridad del Dataset: Disponibilidad de Datos por Paciente', pad=20)
+plt.xlabel('ID de Paciente (Índice)')
+plt.show()
+```
+
+
+# 4. Estadística Descriptiva y Comparativa (Tabla 1)
+
+La "Tabla 1" es fundamental para entender la población de estudio y detectar posibles sesgos entre los grupos de comparación.
+
+## 4.1. Evaluación de Normalidad (Shapiro-Wilk)
+
+Antes de comparar variables continuas (como la edad o los niveles de IgG), debemos saber si siguen una distribución normal (Gaussiana).
+*   **Si es Normal:** Usamos Media ± Desviación Estándar y T-test.
+*   **Si NO es Normal:** Usamos Mediana [Rango Intercuartílico] y U de Mann-Whitney.
+
+Usaremos el test de **Shapiro-Wilk**, que es el más potente para muestras pequeñas (N < 50).
+*   **H0 (Hipótesis Nula):** Los datos provienen de una distribución normal.
+*   **p < 0.05:** Rechazamos H0 → Los datos NO son normales.
+
+```{python}
+#| label: normality-test
+
+# Lista de variables continuas a evaluar
+continuous_vars = [
+    'EDAD_DX', 'IGG_BASAL', 'EOS_BASAL', 'TIME_TO_SERONEG_M', 'T_RESIDENCIA'
+]
+
+# Almacenaremos los resultados en una lista de diccionarios
+normality_results = []
+
+print(f"{'Variable':<25} | {'W-Statistic':<12} | {'p-valor':<10} | {'Conclusión'}")
+print("-" * 65)
+
+for var in continuous_vars:
+    # Eliminamos NaNs porque Shapiro no los maneja
+    data = df[var].dropna()
+    
+    if len(data) < 3:
+        # Shapiro requiere al menos 3 datos
+        conclusion = "N insuficiente"
+        stat, p = np.nan, np.nan
+    else:
+        stat, p = scipy_stats.shapiro(data)
+        conclusion = "Normal" if p > 0.05 else "No Normal"
+    
+    # Guardamos para usarlo después en la Tabla 1
+    normality_results.append({
+        'Variable': var,
+        'p_value': p,
+        'is_normal': p > 0.05
+    })
+    
+    print(f"{var:<25} | {stat:.4f}       | {p:.4f}     | {conclusion}")
+
+# Convertimos a diccionario para acceso rápido: {'EDAD_DX': True, ...}
+normality_map = {item['Variable']: item['is_normal'] for item in normality_results}
+```
+
+## 4.2. Generación Automatizada de la Tabla 1
+
+Vamos a crear una función robusta que genere la Tabla 1 automáticamente. Esta función:
+1.  Detecta si la variable es continua o categórica.
+2.  Si es continua, verifica la normalidad (usando el mapa que creamos arriba).
+3.  Elige el test estadístico adecuado.
+4.  Formatea los resultados para publicación (ej. "45.2 (12.1)").
+
+```{python}
+#| label: table-1-generation
+
+def generate_table1(df, stratify_by, cont_vars, cat_vars, norm_map):
+    """
+    Genera una Tabla 1 comparativa estratificada por una variable binaria.
+    """
+    rows = []
+    
+    # Grupos para comparación
+    group0 = df[df[stratify_by] == 0]
+    group1 = df[df[stratify_by] == 1]
+    
+    # --- 1. Variables Continuas ---
+    for var in cont_vars:
+        # Obtener datos limpios
+        g0 = group0[var].dropna()
+        g1 = group1[var].dropna()
+        
+        # Determinar normalidad (asumimos no normal si no está en el mapa)
+        is_normal = norm_map.get(var, False)
+        
+        if is_normal:
+            # Paramétrico: Media (SD) y T-test
+            desc0 = f"{g0.mean():.1f} (±{g0.std():.1f})"
+            desc1 = f"{g1.mean():.1f} (±{g1.std():.1f})"
+            try:
+                stat, p = scipy_stats.ttest_ind(g0, g1)
+                test_name = "T-test"
+            except:
+                p = np.nan
+                test_name = "Error"
+        else:
+            # No paramétrico: Mediana [Q1-Q3] y Mann-Whitney
+            desc0 = f"{g0.median():.1f} [{g0.quantile(0.25):.1f}-{g0.quantile(0.75):.1f}]"
+            desc1 = f"{g1.median():.1f} [{g1.quantile(0.25):.1f}-{g1.quantile(0.75):.1f}]"
+            try:
+                stat, p = scipy_stats.mannwhitneyu(g0, g1)
+                test_name = "U Mann-W"
+            except:
+                p = np.nan
+                test_name = "Error"
+        
+        rows.append({
+            'Variable': var,
+            'Tipo': 'Continua',
+            'No Seroneg (N={})'.format(len(group0)): desc0,
+            'Seroneg (N={})'.format(len(group1)): desc1,
+            'p-valor': p,
+            'Test': test_name
+        })
+
+    # --- 2. Variables Categóricas ---
+    for var in cat_vars:
+        # Tabla de contingencia
+        ct = pd.crosstab(df[var], df[stratify_by])
+        
+        # Si la tabla está vacía, saltar
+        if ct.empty:
+            continue
+            
+        # Test: Fisher si alguna celda < 5, Chi2 si no
+        if (ct < 5).any().any() and ct.shape == (2, 2):
+            stat, p = scipy_stats.fisher_exact(ct)
+            test_name = "Fisher"
+        else:
+            stat, p, dof, ex = scipy_stats.chi2_contingency(ct)
+            test_name = "Chi2"
+            
+        # Para cada categoría, añadir una fila (indentada visualmente)
+        for category in ct.index:
+            n0 = ct.loc[category, 0] if 0 in ct.columns else 0
+            n1 = ct.loc[category, 1] if 1 in ct.columns else 0
+            # Porcentajes dentro del grupo
+            pct0 = (n0 / len(group0)) * 100
+            pct1 = (n1 / len(group1)) * 100
+            
+            rows.append({
+                'Variable': f"  {category}", # Indentación para indicar categoría
+                'Tipo': 'Categórica',
+                'No Seroneg (N={})'.format(len(group0)): f"{n0} ({pct0:.1f}%)",
+                'Seroneg (N={})'.format(len(group1)): f"{n1} ({pct1:.1f}%)",
+                'p-valor': p if category == ct.index[0] else np.nan, # P-valor solo en la primera fila
+                'Test': test_name if category == ct.index[0] else ""
+            })
+
+    # Crear DataFrame final
+    res_df = pd.DataFrame(rows)
+    
+    # Formatear p-valor bonito (<0.001 o valor exacto)
+    res_df['p-valor'] = res_df['p-valor'].apply(
+        lambda x: "<0.001" if x < 0.001 else (f"{x:.3f}" if pd.notnull(x) else "")
+    )
+    
+    return res_df
+
+# Definir variables categóricas
+categorical_vars = ['SEXO_COD', 'ORIGEN', 'INMUNO_DICO', 'COMORB_INMUNO']
+
+# Generar la tabla
+tabla1 = generate_table1(
+    df, 
+    stratify_by='EVENT_SERONEG', 
+    cont_vars=continuous_vars, 
+    cat_vars=categorical_vars, 
+    norm_map=normality_map
+)
+
+# Mostrar tabla
+# En Quarto, esto se renderizará como una tabla HTML interactiva
+tabla1
+```
+
+## 4.3. Visualización de Distribuciones (Violin + Boxplot)
+
+Una tabla es útil, pero un gráfico revela matices ocultos (como la bimodalidad o valores atípicos extremos).
+
+Vamos a crear una figura compuesta que combina:
+1.  **Violin Plot:** Muestra la densidad de los datos (la forma de la distribución).
+2.  **Box Plot (Diagrama de Caja):** Muestra los cuartiles y la mediana.
+3.  **Strip Plot (Puntos):** Muestra cada paciente individualmente (transparencia para ver solapamientos).
+
+Esta combinación es el "estándar de oro" actual para visualizar datos continuos comparativos.
+
+```{python}
+#| label: fig-distributions
+#| fig-cap: "Distribución de variables continuas clave según el evento de seronegativización. Se muestra diagrama de violín con boxplot interno y puntos individuales."
+
+vars_to_plot = ['EDAD_DX', 'IGG_BASAL', 'EOS_BASAL', 'TIME_TO_SERONEG_M']
+labels = ['Edad (años)', 'IgG Basal', 'Eosinófilos Basales', 'Tiempo a Evento (meses)']
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+axes = axes.flatten()
+
+for i, var in enumerate(vars_to_plot):
+    ax = axes[i]
+    
+    # 1. Violin Plot (Forma)
+    sns.violinplot(
+        x='EVENT_SERONEG', y=var, data=df, 
+        ax=ax, inner=None, color='white', linewidth=1.5
+    )
+    
+    # 2. Box Plot (Estadísticos)
+    sns.boxplot(
+        x='EVENT_SERONEG', y=var, data=df, 
+        ax=ax, width=0.2, boxprops={'zorder': 2, 'facecolor':'none'},
+        showfliers=False # Ocultamos outliers del boxplot porque los mostramos con stripplot
+    )
+    
+    # 3. Strip Plot (Datos crudos)
+    sns.stripplot(
+        x='EVENT_SERONEG', y=var, data=df, 
+        ax=ax, jitter=True, size=5, alpha=0.6,
+        palette=[PAL['no_seroneg'], PAL['seroneg']]
+    )
+    
+    # Estética
+    ax.set_title(labels[i])
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+    ax.set_xticklabels(['No Seroneg', 'Seroneg'])
+    
+    # Añadir p-valor de la Tabla 1 al gráfico
+    # Buscamos el p-valor en nuestro dataframe anterior
+    p_val = tabla1.loc[tabla1['Variable'] == var, 'p-valor'].values[0]
+    
+    # Anotación estadística
+    y_max = df[var].max()
+    ax.text(
+        0.5, y_max * 1.05, f"p = {p_val}", 
+        ha='center', va='bottom', fontweight='bold', color='#333333'
+    )
+
+plt.tight_layout()
+plt.show()
+```

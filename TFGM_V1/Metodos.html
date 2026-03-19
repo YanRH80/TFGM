@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yan Rodríguez Hachimaru">
+<meta name="dcterms.date" content="2026-03-04">
+
+<title>Materiales y Métodos — Análisis Computacional</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="Metodos_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Metodos_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="Metodos_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="Metodos_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="Metodos_files/libs/quarto-html/popper.min.js"></script>
+<script src="Metodos_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Metodos_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Metodos_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Metodos_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Metodos_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Metodos_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Metodos_files/libs/bootstrap/bootstrap-3b16eb0718cebd31751d7052832b4c1f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="Metodos_files/libs/quarto-diagram/mermaid.min.js"></script>
+<script src="Metodos_files/libs/quarto-diagram/mermaid-init.js"></script>
+<link href="Metodos_files/libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introducción" id="toc-introducción" class="nav-link active" data-scroll-target="#introducción"><span class="header-section-number">1</span> Introducción</a>
+  <ul class="collapse">
+  <li><a href="#entorno-computacional" id="toc-entorno-computacional" class="nav-link" data-scroll-target="#entorno-computacional"><span class="header-section-number">1.1</span> Entorno computacional</a></li>
+  </ul></li>
+  <li><a href="#fuente-de-datos" id="toc-fuente-de-datos" class="nav-link" data-scroll-target="#fuente-de-datos"><span class="header-section-number">2</span> Fuente de datos</a>
+  <ul class="collapse">
+  <li><a href="#dataset-analítico" id="toc-dataset-analítico" class="nav-link" data-scroll-target="#dataset-analítico"><span class="header-section-number">2.1</span> Dataset analítico</a></li>
+  <li><a href="#validación-de-integridad" id="toc-validación-de-integridad" class="nav-link" data-scroll-target="#validación-de-integridad"><span class="header-section-number">2.2</span> Validación de integridad</a></li>
+  <li><a href="#datos-faltantes" id="toc-datos-faltantes" class="nav-link" data-scroll-target="#datos-faltantes"><span class="header-section-number">2.3</span> Datos faltantes</a></li>
+  </ul></li>
+  <li><a href="#estadística-descriptiva" id="toc-estadística-descriptiva" class="nav-link" data-scroll-target="#estadística-descriptiva"><span class="header-section-number">3</span> Estadística descriptiva</a>
+  <ul class="collapse">
+  <li><a href="#tabla-1-características-basales" id="toc-tabla-1-características-basales" class="nav-link" data-scroll-target="#tabla-1-características-basales"><span class="header-section-number">3.1</span> Tabla 1 — Características basales</a>
+  <ul class="collapse">
+  <li><a href="#elección-de-estadísticos-descriptivos" id="toc-elección-de-estadísticos-descriptivos" class="nav-link" data-scroll-target="#elección-de-estadísticos-descriptivos"><span class="header-section-number">3.1.1</span> Elección de estadísticos descriptivos</a></li>
+  <li><a href="#tests-de-comparación-entre-grupos" id="toc-tests-de-comparación-entre-grupos" class="nav-link" data-scroll-target="#tests-de-comparación-entre-grupos"><span class="header-section-number">3.1.2</span> Tests de comparación entre grupos</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#visualización-de-datos" id="toc-visualización-de-datos" class="nav-link" data-scroll-target="#visualización-de-datos"><span class="header-section-number">4</span> Visualización de datos</a>
+  <ul class="collapse">
+  <li><a href="#principios-de-diseño" id="toc-principios-de-diseño" class="nav-link" data-scroll-target="#principios-de-diseño"><span class="header-section-number">4.1</span> Principios de diseño</a></li>
+  <li><a href="#catálogo-de-figuras" id="toc-catálogo-de-figuras" class="nav-link" data-scroll-target="#catálogo-de-figuras"><span class="header-section-number">4.2</span> Catálogo de figuras</a>
+  <ul class="collapse">
+  <li><a href="#figura-1-distribución-de-variables-continuas" id="toc-figura-1-distribución-de-variables-continuas" class="nav-link" data-scroll-target="#figura-1-distribución-de-variables-continuas"><span class="header-section-number">4.2.1</span> Figura 1 — Distribución de variables continuas</a></li>
+  <li><a href="#figura-2-cinética-de-igg-post-tratamiento" id="toc-figura-2-cinética-de-igg-post-tratamiento" class="nav-link" data-scroll-target="#figura-2-cinética-de-igg-post-tratamiento"><span class="header-section-number">4.2.2</span> Figura 2 — Cinética de IgG post-tratamiento</a></li>
+  <li><a href="#figura-3-comparativa-de-definiciones-de-outcome" id="toc-figura-3-comparativa-de-definiciones-de-outcome" class="nav-link" data-scroll-target="#figura-3-comparativa-de-definiciones-de-outcome"><span class="header-section-number">4.2.3</span> Figura 3 — Comparativa de definiciones de outcome</a></li>
+  <li><a href="#figura-4-distribución-geográfica" id="toc-figura-4-distribución-geográfica" class="nav-link" data-scroll-target="#figura-4-distribución-geográfica"><span class="header-section-number">4.2.4</span> Figura 4 — Distribución geográfica</a></li>
+  <li><a href="#figura-5-correlación-igg-basaltiempo" id="toc-figura-5-correlación-igg-basaltiempo" class="nav-link" data-scroll-target="#figura-5-correlación-igg-basaltiempo"><span class="header-section-number">4.2.5</span> Figura 5 — Correlación IgG basal–tiempo</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#análisis-de-supervivencia" id="toc-análisis-de-supervivencia" class="nav-link" data-scroll-target="#análisis-de-supervivencia"><span class="header-section-number">5</span> Análisis de supervivencia</a>
+  <ul class="collapse">
+  <li><a href="#estimador-de-kaplan-meier" id="toc-estimador-de-kaplan-meier" class="nav-link" data-scroll-target="#estimador-de-kaplan-meier"><span class="header-section-number">5.1</span> Estimador de Kaplan-Meier</a>
+  <ul class="collapse">
+  <li><a href="#definición-del-evento-y-el-tiempo" id="toc-definición-del-evento-y-el-tiempo" class="nav-link" data-scroll-target="#definición-del-evento-y-el-tiempo"><span class="header-section-number">5.1.1</span> Definición del evento y el tiempo</a></li>
+  <li><a href="#implementación" id="toc-implementación" class="nav-link" data-scroll-target="#implementación"><span class="header-section-number">5.1.2</span> Implementación</a></li>
+  <li><a href="#tablas-de-riesgo-numbers-at-risk" id="toc-tablas-de-riesgo-numbers-at-risk" class="nav-link" data-scroll-target="#tablas-de-riesgo-numbers-at-risk"><span class="header-section-number">5.1.3</span> Tablas de riesgo (<em>numbers at risk</em>)</a></li>
+  </ul></li>
+  <li><a href="#test-log-rank" id="toc-test-log-rank" class="nav-link" data-scroll-target="#test-log-rank"><span class="header-section-number">5.2</span> Test log-rank</a>
+  <ul class="collapse">
+  <li><a href="#formulación" id="toc-formulación" class="nav-link" data-scroll-target="#formulación"><span class="header-section-number">5.2.1</span> Formulación</a></li>
+  <li><a href="#variables-de-estratificación" id="toc-variables-de-estratificación" class="nav-link" data-scroll-target="#variables-de-estratificación"><span class="header-section-number">5.2.2</span> Variables de estratificación</a></li>
+  </ul></li>
+  <li><a href="#regresión-de-cox" id="toc-regresión-de-cox" class="nav-link" data-scroll-target="#regresión-de-cox"><span class="header-section-number">5.3</span> Regresión de Cox</a>
+  <ul class="collapse">
+  <li><a href="#modelo-de-riesgos-proporcionales" id="toc-modelo-de-riesgos-proporcionales" class="nav-link" data-scroll-target="#modelo-de-riesgos-proporcionales"><span class="header-section-number">5.3.1</span> Modelo de riesgos proporcionales</a></li>
+  <li><a href="#estimación-de-parámetros" id="toc-estimación-de-parámetros" class="nav-link" data-scroll-target="#estimación-de-parámetros"><span class="header-section-number">5.3.2</span> Estimación de parámetros</a></li>
+  <li><a href="#interpretación-del-hazard-ratio" id="toc-interpretación-del-hazard-ratio" class="nav-link" data-scroll-target="#interpretación-del-hazard-ratio"><span class="header-section-number">5.3.3</span> Interpretación del Hazard Ratio</a></li>
+  <li><a href="#estrategia-de-selección-de-variables" id="toc-estrategia-de-selección-de-variables" class="nav-link" data-scroll-target="#estrategia-de-selección-de-variables"><span class="header-section-number">5.3.4</span> Estrategia de selección de variables</a></li>
+  </ul></li>
+  <li><a href="#análisis-de-sensibilidad" id="toc-análisis-de-sensibilidad" class="nav-link" data-scroll-target="#análisis-de-sensibilidad"><span class="header-section-number">5.4</span> Análisis de sensibilidad</a></li>
+  </ul></li>
+  <li><a href="#reproducibilidad-y-publicación" id="toc-reproducibilidad-y-publicación" class="nav-link" data-scroll-target="#reproducibilidad-y-publicación"><span class="header-section-number">6</span> Reproducibilidad y publicación</a>
+  <ul class="collapse">
+  <li><a href="#estructura-de-archivos" id="toc-estructura-de-archivos" class="nav-link" data-scroll-target="#estructura-de-archivos"><span class="header-section-number">6.1</span> Estructura de archivos</a></li>
+  <li><a href="#flujo-de-renderizado" id="toc-flujo-de-renderizado" class="nav-link" data-scroll-target="#flujo-de-renderizado"><span class="header-section-number">6.2</span> Flujo de renderizado</a></li>
+  <li><a href="#cómo-reproducir-el-análisis" id="toc-cómo-reproducir-el-análisis" class="nav-link" data-scroll-target="#cómo-reproducir-el-análisis"><span class="header-section-number">6.3</span> Cómo reproducir el análisis</a></li>
+  <li><a href="#puntos-de-configuración-centralizada" id="toc-puntos-de-configuración-centralizada" class="nav-link" data-scroll-target="#puntos-de-configuración-centralizada"><span class="header-section-number">6.4</span> Puntos de configuración centralizada</a></li>
+  </ul></li>
+  <li><a href="#limitaciones-metodológicas" id="toc-limitaciones-metodológicas" class="nav-link" data-scroll-target="#limitaciones-metodológicas"><span class="header-section-number">7</span> Limitaciones metodológicas</a></li>
+  <li><a href="#referencias" id="toc-referencias" class="nav-link" data-scroll-target="#referencias"><span class="header-section-number">8</span> Referencias</a></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="Metodos.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Materiales y Métodos — Análisis Computacional</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+<p class="subtitle lead">Cinética de seronegativización de IgG anti-<em>Strongyloides stercoralis</em> tras ivermectina</p>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">Yan Rodríguez Hachimaru </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            Hospital Central de la Defensa Gómez Ulla
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 4, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introducción" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Introducción</h1>
+<p>Este documento detalla los <strong>materiales y métodos computacionales</strong> empleados en el análisis de la cinética de seronegativización de IgG anti-<em>Strongyloides stercoralis</em> tras tratamiento con ivermectina en una cohorte retrospectiva (N = 44) del Hospital Central de la Defensa Gómez Ulla (2014–2024).</p>
+<p>El objetivo es documentar el proceso analítico con el nivel de detalle necesario para:</p>
+<ol type="1">
+<li><strong>Reproducibilidad completa</strong> — cualquier investigador con acceso al dataset puede replicar los resultados ejecutando la notebook.</li>
+<li><strong>Transparencia metodológica</strong> — cada decisión estadística (test elegido, punto de corte, manejo de datos faltantes) está justificada.</li>
+<li><strong>Publicación doble</strong> — este material sirve tanto para la sección de Materiales y Métodos del artículo clínico como para una publicación metodológica independiente sobre el uso de Python/Jupyter en investigación biomédica.</li>
+</ol>
+<section id="entorno-computacional" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="entorno-computacional"><span class="header-section-number">1.1</span> Entorno computacional</h2>
+<p>El análisis se realizó en <strong>Python 3.12</strong> dentro de <strong>Jupyter Notebook</strong>, utilizando las siguientes librerías:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Librería</th>
+<th>Versión</th>
+<th>Propósito</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>pandas</code></td>
+<td>3.0+</td>
+<td>Manipulación de datos tabulares</td>
+</tr>
+<tr class="even">
+<td><code>numpy</code></td>
+<td>2.4+</td>
+<td>Operaciones numéricas</td>
+</tr>
+<tr class="odd">
+<td><code>matplotlib</code></td>
+<td>3.10+</td>
+<td>Generación de figuras</td>
+</tr>
+<tr class="even">
+<td><code>seaborn</code></td>
+<td>0.13+</td>
+<td>Gráficos estadísticos</td>
+</tr>
+<tr class="odd">
+<td><code>scipy</code></td>
+<td>1.17+</td>
+<td>Tests estadísticos y optimización</td>
+</tr>
+</tbody>
+</table>
+<p>El renderizado final del presente documento se realizó con <strong>Quarto</strong> (sistema de publicación científica basado en Pandoc), que permite integrar código ejecutable, prosa académica y referencias bibliográficas en un único flujo de trabajo.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Reproducibilidad
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Todo el código fuente está disponible en la notebook <code>TFGM_analysis.ipynb</code>. Para ejecutarla, se necesita únicamente el archivo <code>BASE_SPSS.xlsx</code> (dataset analítico) en el mismo directorio.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="fuente-de-datos" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Fuente de datos</h1>
+<section id="dataset-analítico" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="dataset-analítico"><span class="header-section-number">2.1</span> Dataset analítico</h2>
+<p>El dataset de trabajo (<code>BASE_SPSS.xlsx</code>) contiene <strong>44 filas × 122 columnas</strong> — una fila por paciente. Fue construido a partir de 5 hojas de datos crudos (<code>BASAL</code>, <code>SERO</code>, <code>EOS</code>, <code>MICRO</code>, <code>SEG</code>) mediante un pipeline de ETL (Extracción, Transformación y Carga) documentado en una notebook separada.</p>
+<p>Las 122 variables incluyen:</p>
+<ul>
+<li><strong>Demográficas y clínicas basales</strong> (20 variables): edad al diagnóstico, sexo, país de origen, tiempo de residencia en España, estado inmunológico, comorbilidades, pauta de ivermectina.</li>
+<li><strong>Serología longitudinal</strong> (24 variables): IgG cuantitativa y cualitativa en 8 timepoints nominales (3, 6, 12, 18, 24, 36, 48, 72 meses post-tratamiento).</li>
+<li><strong>Eosinófilos longitudinales</strong> (24 variables): recuento y clasificación binaria en los mismos timepoints.</li>
+<li><strong>Microbiología longitudinal</strong> (16 variables): resultado y mes real de pruebas parasitológicas.</li>
+<li><strong>Variables de outcome</strong> (16 variables): eventos y tiempos para 7 definiciones diferentes de seronegativización.</li>
+<li><strong>Variables auxiliares</strong> (22 variables): dicotomizaciones, labels, flags de calidad.</li>
+</ul>
+</section>
+<section id="validación-de-integridad" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="validación-de-integridad"><span class="header-section-number">2.2</span> Validación de integridad</h2>
+<p>Al cargar el dataset, se verificaron mediante <em>assertions</em> programáticas:</p>
+<div id="validacion" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_excel(<span class="st">'BASE_SPSS.xlsx'</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificaciones de integridad</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">len</span>(df) <span class="op">==</span> <span class="dv">44</span>,              <span class="ss">f"Se esperan 44 filas, hay </span><span class="sc">{</span><span class="bu">len</span>(df)<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> df[<span class="st">'ID'</span>].nunique() <span class="op">==</span> <span class="dv">44</span>,   <span class="st">"IDs duplicados"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> (df[<span class="st">'EVENT_SERONEG'</span>] <span class="op">==</span> <span class="dv">1</span>).<span class="bu">sum</span>() <span class="op">==</span> <span class="dv">28</span>, <span class="st">"Se esperan 28 eventos"</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"✅ Dataset validado: </span><span class="sc">{</span>df<span class="sc">.</span>shape[<span class="dv">0</span>]<span class="sc">}</span><span class="ss"> pacientes × </span><span class="sc">{</span>df<span class="sc">.</span>shape[<span class="dv">1</span>]<span class="sc">}</span><span class="ss"> variables"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>✅ Dataset validado: 44 pacientes × 122 variables</code></pre>
+</div>
+</div>
+<p>Los conteos esperados (28 eventos de seronegativización, 15 pacientes de origen ecuatoriano, 4 inmunodeprimidos, etc.) se contrastaron con el cuaderno de variables del estudio.</p>
+</section>
+<section id="datos-faltantes" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="datos-faltantes"><span class="header-section-number">2.3</span> Datos faltantes</h2>
+<p>La estrategia de manejo de datos faltantes fue <strong>análisis de casos completos</strong> (<em>complete case analysis</em>) para cada análisis específico:</p>
+<ul>
+<li><strong>IgG basal</strong>: disponible en 36/44 pacientes (81.8%). Los 8 pacientes sin IgG basal numérica tenían resultado cualitativo (POS/NEG) sin valor cuantitativo.</li>
+<li><strong>Tiempo de seguimiento</strong>: disponible en 40/44 (90.9%). Los 4 pacientes sin tiempo se excluyeron del análisis de supervivencia (IDs sin serología post-tratamiento).</li>
+<li><strong>Eosinófilos basales</strong>: disponible en 42/44 (95.5%). Se marcaron como dudosas las mediciones realizadas &gt;365 días antes del tratamiento.</li>
+</ul>
+<p>Se generó un mapa visual de completitud (<strong>?@fig-missing</strong>) para documentar la estructura de missingness.</p>
+</section>
+</section>
+<section id="estadística-descriptiva" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Estadística descriptiva</h1>
+<section id="tabla-1-características-basales" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="tabla-1-características-basales"><span class="header-section-number">3.1</span> Tabla 1 — Características basales</h2>
+<p>La Tabla 1 presenta las características basales de la cohorte estratificadas por el outcome principal (seronegativización sí/no).</p>
+<section id="elección-de-estadísticos-descriptivos" class="level3" data-number="3.1.1">
+<h3 data-number="3.1.1" class="anchored" data-anchor-id="elección-de-estadísticos-descriptivos"><span class="header-section-number">3.1.1</span> Elección de estadísticos descriptivos</h3>
+<p>La decisión entre estadísticos paramétricos (media ± DE) y no paramétricos (mediana, IQR) se basó en el <strong>test de Shapiro-Wilk</strong> para normalidad, el más potente para muestras pequeñas (n &lt; 50).</p>
+<div id="shapiro" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy <span class="im">import</span> stats <span class="im">as</span> scipy_stats</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>cont_vars <span class="op">=</span> [</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'EDAD_DX'</span>,           <span class="st">'Edad al diagnóstico'</span>),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'T_RESIDENCIA'</span>,      <span class="st">'Tiempo residencia España'</span>),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'IGG_BASAL'</span>,         <span class="st">'IgG basal'</span>),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'EOS_BASAL'</span>,         <span class="st">'Eosinófilos basales'</span>),</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'TIME_TO_SERONEG_M'</span>, <span class="st">'Tiempo hasta seroneg.'</span>),</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> col, label <span class="kw">in</span> cont_vars:</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    vals <span class="op">=</span> df[col].dropna()</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    W, p <span class="op">=</span> scipy_stats.shapiro(vals)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    dist <span class="op">=</span> <span class="st">'Normal'</span> <span class="cf">if</span> p <span class="op">&gt;</span> <span class="fl">0.05</span> <span class="cf">else</span> <span class="st">'No normal'</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>label<span class="sc">:&lt;30}</span><span class="ss">  W=</span><span class="sc">{</span>W<span class="sc">:.4f}</span><span class="ss">  p=</span><span class="sc">{</span>p<span class="sc">:.4f}</span><span class="ss">  → </span><span class="sc">{</span>dist<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Edad al diagnóstico             W=0.9826  p=0.7376  → Normal
+Tiempo residencia España        W=0.9292  p=0.0152  → No normal
+IgG basal                       W=0.8714  p=0.0006  → No normal
+Eosinófilos basales             W=0.8085  p=0.0000  → No normal
+Tiempo hasta seroneg.           W=0.6407  p=0.0000  → No normal</code></pre>
+</div>
+</div>
+<p><strong>Resultado:</strong> solo la edad al diagnóstico superó el umbral de normalidad (p = 0.74). Todas las demás variables mostraron distribuciones no normales (p &lt; 0.05), justificando el uso sistemático de mediana (IQR) y tests no paramétricos.</p>
+</section>
+<section id="tests-de-comparación-entre-grupos" class="level3" data-number="3.1.2">
+<h3 data-number="3.1.2" class="anchored" data-anchor-id="tests-de-comparación-entre-grupos"><span class="header-section-number">3.1.2</span> Tests de comparación entre grupos</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 32%">
+<col style="width: 24%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tipo de variable</th>
+<th>Estadístico descriptivo</th>
+<th>Test inferencial</th>
+<th>Condiciones</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Continua, no normal</td>
+<td>Mediana (Q1–Q3)</td>
+<td>Mann-Whitney U bilateral</td>
+<td>n₁ ≥ 2 y n₂ ≥ 2</td>
+</tr>
+<tr class="even">
+<td>Categórica, celdas ≥ 5</td>
+<td>n (%)</td>
+<td>Chi-cuadrado de Pearson</td>
+<td>Tabla ≥ 2×2</td>
+</tr>
+<tr class="odd">
+<td>Categórica, alguna celda &lt; 5</td>
+<td>n (%)</td>
+<td>Test exacto de Fisher</td>
+<td>Solo para tablas 2×2</td>
+</tr>
+</tbody>
+</table>
+<p>La regla de Cochran (todas las frecuencias esperadas ≥ 5) se verificó automáticamente: si alguna celda esperada era &lt; 5 en una tabla 2×2, se sustituyó chi-cuadrado por Fisher exacto.</p>
+</section>
+</section>
+</section>
+<section id="visualización-de-datos" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Visualización de datos</h1>
+<section id="principios-de-diseño" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="principios-de-diseño"><span class="header-section-number">4.1</span> Principios de diseño</h2>
+<p>Todas las figuras siguen un protocolo visual uniforme:</p>
+<ol type="1">
+<li><strong>Paleta semántica centralizada</strong>: cada grupo clínico tiene un color fijo definido en un único diccionario (<code>PAL</code>). Cambiar un color lo propaga a todas las figuras.</li>
+<li><strong>Estilo editorial</strong>: fuente sans-serif (Arial), sin bordes superior ni derecho, grid semitransparente. Sigue las recomendaciones de Tufte (<em>The Visual Display of Quantitative Information</em>) de minimizar la ratio tinta/dato.</li>
+<li><strong>Resolución dual</strong>: 150 DPI en pantalla (Jupyter), 300 DPI al guardar (requisito de journals).</li>
+<li><strong>Accesibilidad</strong>: colores seleccionados para ser distinguibles en daltonismo (evitando rojo/verde puros juntos) y en impresión en escala de grises (diferentes luminosidades).</li>
+</ol>
+</section>
+<section id="catálogo-de-figuras" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="catálogo-de-figuras"><span class="header-section-number">4.2</span> Catálogo de figuras</h2>
+<section id="figura-1-distribución-de-variables-continuas" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="figura-1-distribución-de-variables-continuas"><span class="header-section-number">4.2.1</span> Figura 1 — Distribución de variables continuas</h3>
+<p><strong>Tipo:</strong> violin plot + boxplot superpuesto.</p>
+<p>El violin plot muestra la <em>densidad de probabilidad empírica</em> (equivalente a un histograma suavizado rotado 90°). El boxplot superpuesto (más estrecho, <code>widths=0.13</code>) añade la mediana, cuartiles y outliers con precisión numérica. Sobre cada panel se indica el p-valor de Mann-Whitney.</p>
+</section>
+<section id="figura-2-cinética-de-igg-post-tratamiento" class="level3" data-number="4.2.2">
+<h3 data-number="4.2.2" class="anchored" data-anchor-id="figura-2-cinética-de-igg-post-tratamiento"><span class="header-section-number">4.2.2</span> Figura 2 — Cinética de IgG post-tratamiento</h3>
+<p><strong>Tipo:</strong> spaghetti plot con línea de tendencia central.</p>
+<p>Cada línea semitransparente (α = 0.12) representa la trayectoria individual de un paciente. La línea gruesa muestra la mediana del grupo en cada timepoint. Se anotan las <code>n</code> disponibles en cada punto temporal — obligatorio en estudios longitudinales, ya que el número de pacientes con seguimiento disminuye con el tiempo.</p>
+<p>Las líneas horizontales de corte (1.1 para positividad según DRG International; 0.9 para negatividad estricta según protocolo) sirven como referencia clínica.</p>
+</section>
+<section id="figura-3-comparativa-de-definiciones-de-outcome" class="level3" data-number="4.2.3">
+<h3 data-number="4.2.3" class="anchored" data-anchor-id="figura-3-comparativa-de-definiciones-de-outcome"><span class="header-section-number">4.2.3</span> Figura 3 — Comparativa de definiciones de outcome</h3>
+<p><strong>Tipo:</strong> lollipop chart horizontal, paneles pareados.</p>
+<p>Alternativa al gráfico de barras que reduce el “área de tinta” siguiendo el principio de Tufte. Compara 7 definiciones de seronegativización (desde la más sensible hasta la más específica) en dos dimensiones: número de eventos y tiempo mediano al evento.</p>
+</section>
+<section id="figura-4-distribución-geográfica" class="level3" data-number="4.2.4">
+<h3 data-number="4.2.4" class="anchored" data-anchor-id="figura-4-distribución-geográfica"><span class="header-section-number">4.2.4</span> Figura 4 — Distribución geográfica</h3>
+<p><strong>Tipo:</strong> barras horizontales + donut chart anidado.</p>
+<p>Panel A: barras por país de origen con superposición de los que tuvieron seroneg. Panel B: anillo externo (Sudamérica vs.&nbsp;Otros) y anillo interno (desglose por país).</p>
+</section>
+<section id="figura-5-correlación-igg-basaltiempo" class="level3" data-number="4.2.5">
+<h3 data-number="4.2.5" class="anchored" data-anchor-id="figura-5-correlación-igg-basaltiempo"><span class="header-section-number">4.2.5</span> Figura 5 — Correlación IgG basal–tiempo</h3>
+<p><strong>Tipo:</strong> scatter plot con Spearman ρ.</p>
+<p>Se eligió Spearman sobre Pearson porque la IgG basal no es normal (Shapiro p &lt; 0.001) y la relación no es necesariamente lineal. Se etiquetan selectivamente los outliers (P90 en X o Y) para su inspección visual.</p>
+</section>
+</section>
+</section>
+<section id="análisis-de-supervivencia" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Análisis de supervivencia</h1>
+<section id="estimador-de-kaplan-meier" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="estimador-de-kaplan-meier"><span class="header-section-number">5.1</span> Estimador de Kaplan-Meier</h2>
+<section id="definición-del-evento-y-el-tiempo" class="level3" data-number="5.1.1">
+<h3 data-number="5.1.1" class="anchored" data-anchor-id="definición-del-evento-y-el-tiempo"><span class="header-section-number">5.1.1</span> Definición del evento y el tiempo</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Componente</th>
+<th>Definición</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Tiempo cero</strong></td>
+<td>Fecha de la primera dosis de ivermectina (<code>F_TTO</code>)</td>
+</tr>
+<tr class="even">
+<td><strong>Evento</strong></td>
+<td>Primera medición serológica post-TTO con IgG &lt; 1.1 (cualitativa = negativa)</td>
+</tr>
+<tr class="odd">
+<td><strong>Censura</strong></td>
+<td>Última medición serológica disponible, si no hubo seronegativización</td>
+</tr>
+<tr class="even">
+<td><strong>Unidad temporal</strong></td>
+<td>Meses (días / 30.44)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="implementación" class="level3" data-number="5.1.2">
+<h3 data-number="5.1.2" class="anchored" data-anchor-id="implementación"><span class="header-section-number">5.1.2</span> Implementación</h3>
+<p>El estimador de Kaplan-Meier se implementó desde cero (sin dependencias externas) siguiendo la formulación clásica:</p>
+<p><span class="math display">\[
+\hat{S}(t) = \prod_{t_i \leq t} \left(1 - \frac{d_i}{n_i}\right)
+\]</span></p>
+<p>donde <span class="math inline">\(d_i\)</span> es el número de eventos en el tiempo <span class="math inline">\(t_i\)</span> y <span class="math inline">\(n_i\)</span> es el número de pacientes a riesgo (ni evento ni censura) inmediatamente antes de <span class="math inline">\(t_i\)</span>.</p>
+<p>Los <strong>intervalos de confianza al 95%</strong> se calcularon mediante la <strong>fórmula de Greenwood</strong>:</p>
+<p><span class="math display">\[
+\widehat{\text{Var}}[\hat{S}(t)] = \hat{S}(t)^2 \sum_{t_i \leq t} \frac{d_i}{n_i(n_i - d_i)}
+\]</span></p>
+<p><span class="math display">\[
+\text{IC}_{95\%} = \hat{S}(t) \pm 1.96 \times \sqrt{\widehat{\text{Var}}[\hat{S}(t)]}
+\]</span></p>
+<p>truncado al intervalo [0, 1].</p>
+<p>La <strong>mediana de supervivencia</strong> se definió como el primer tiempo <span class="math inline">\(t\)</span> en que <span class="math inline">\(\hat{S}(t) \leq 0.5\)</span>.</p>
+</section>
+<section id="tablas-de-riesgo-numbers-at-risk" class="level3" data-number="5.1.3">
+<h3 data-number="5.1.3" class="anchored" data-anchor-id="tablas-de-riesgo-numbers-at-risk"><span class="header-section-number">5.1.3</span> Tablas de riesgo (<em>numbers at risk</em>)</h3>
+<p>Debajo de cada curva KM se muestra el número de pacientes a riesgo en timepoints predefinidos (0, 3, 6, 12, 18, 24, 36, 48, 72 meses), siguiendo las recomendaciones CONSORT y STROBE para estudios de supervivencia.</p>
+</section>
+</section>
+<section id="test-log-rank" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="test-log-rank"><span class="header-section-number">5.2</span> Test log-rank</h2>
+<section id="formulación" class="level3" data-number="5.2.1">
+<h3 data-number="5.2.1" class="anchored" data-anchor-id="formulación"><span class="header-section-number">5.2.1</span> Formulación</h3>
+<p>Para comparar curvas de supervivencia entre dos grupos se empleó el test log-rank (Mantel-Cox), implementado desde cero:</p>
+<p><span class="math display">\[
+\chi^2_{\text{LR}} = \frac{\left(\sum_i O_{1i} - \sum_i E_{1i}\right)^2}{\sum_i V_i}
+\]</span></p>
+<p>donde, en cada tiempo de evento <span class="math inline">\(t_i\)</span>:</p>
+<ul>
+<li><span class="math inline">\(O_{1i}\)</span> = eventos observados en el grupo 1</li>
+<li><span class="math inline">\(E_{1i} = n_{1i} \times d_i / n_i\)</span> = eventos esperados bajo <span class="math inline">\(H_0\)</span> (proporcional al tamaño del grupo)</li>
+<li><span class="math inline">\(V_i = \frac{n_{1i} \cdot n_{2i} \cdot d_i \cdot (n_i - d_i)}{n_i^2 \cdot (n_i - 1)}\)</span> = varianza hipergeométrica</li>
+</ul>
+<p>Bajo <span class="math inline">\(H_0\)</span> (curvas iguales), el estadístico sigue una distribución <span class="math inline">\(\chi^2\)</span> con 1 grado de libertad.</p>
+</section>
+<section id="variables-de-estratificación" class="level3" data-number="5.2.2">
+<h3 data-number="5.2.2" class="anchored" data-anchor-id="variables-de-estratificación"><span class="header-section-number">5.2.2</span> Variables de estratificación</h3>
+<p>Se evaluaron las siguientes estratificaciones:</p>
+<ol type="1">
+<li><strong>Estado inmunológico</strong>: inmunodeprimido vs.&nbsp;inmunocompetente</li>
+<li><strong>IgG basal</strong>: alta (≥ mediana) vs.&nbsp;baja (&lt; mediana)</li>
+<li><strong>Eosinofilia basal</strong>: sí (&gt; 0.5 × 10³/µL) vs.&nbsp;no</li>
+<li><strong>Origen geográfico</strong>: Sudamérica vs.&nbsp;otro</li>
+</ol>
+</section>
+</section>
+<section id="regresión-de-cox" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="regresión-de-cox"><span class="header-section-number">5.3</span> Regresión de Cox</h2>
+<section id="modelo-de-riesgos-proporcionales" class="level3" data-number="5.3.1">
+<h3 data-number="5.3.1" class="anchored" data-anchor-id="modelo-de-riesgos-proporcionales"><span class="header-section-number">5.3.1</span> Modelo de riesgos proporcionales</h3>
+<p>Se empleó el modelo semiparamétrico de Cox:</p>
+<p><span class="math display">\[
+h(t \mid \mathbf{X}) = h_0(t) \cdot \exp(\beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p)
+\]</span></p>
+<p>donde <span class="math inline">\(h_0(t)\)</span> es la función de riesgo basal (no estimada explícitamente) y <span class="math inline">\(\exp(\beta_i)\)</span> es el <strong>hazard ratio</strong> (HR) de la variable <span class="math inline">\(X_i\)</span>.</p>
+</section>
+<section id="estimación-de-parámetros" class="level3" data-number="5.3.2">
+<h3 data-number="5.3.2" class="anchored" data-anchor-id="estimación-de-parámetros"><span class="header-section-number">5.3.2</span> Estimación de parámetros</h3>
+<p>Los coeficientes <span class="math inline">\(\hat{\beta}\)</span> se obtuvieron maximizando la <strong>log-verosimilitud parcial</strong> de Cox:</p>
+<p><span class="math display">\[
+\ell(\beta) = \sum_{i: \delta_i=1} \left[ \beta^\top \mathbf{x}_i - \log\left(\sum_{j \in \mathcal{R}(t_i)} \exp(\beta^\top \mathbf{x}_j)\right) \right]
+\]</span></p>
+<p>donde <span class="math inline">\(\mathcal{R}(t_i)\)</span> es el <em>risk set</em> (conjunto de pacientes a riesgo) en el tiempo <span class="math inline">\(t_i\)</span> y <span class="math inline">\(\delta_i = 1\)</span> indica evento.</p>
+<p>La optimización se realizó mediante el algoritmo <strong>BFGS</strong> (Broyden-Fletcher-Goldfarb-Shanno) implementado en <code>scipy.optimize.minimize</code>. Los <strong>errores estándar</strong> se obtuvieron de la raíz cuadrada de la diagonal de la inversa de la matriz Hessiana, calculada por diferencias finitas.</p>
+</section>
+<section id="interpretación-del-hazard-ratio" class="level3" data-number="5.3.3">
+<h3 data-number="5.3.3" class="anchored" data-anchor-id="interpretación-del-hazard-ratio"><span class="header-section-number">5.3.3</span> Interpretación del Hazard Ratio</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>HR</th>
+<th>Interpretación</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>HR &gt; 1</td>
+<td>Factor de riesgo: acelera la seronegativización</td>
+</tr>
+<tr class="even">
+<td>HR = 1</td>
+<td>Sin efecto</td>
+</tr>
+<tr class="odd">
+<td>HR &lt; 1</td>
+<td>Factor protector: retrasa la seronegativización</td>
+</tr>
+<tr class="even">
+<td>IC 95% incluye 1</td>
+<td>Efecto no estadísticamente significativo</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="estrategia-de-selección-de-variables" class="level3" data-number="5.3.4">
+<h3 data-number="5.3.4" class="anchored" data-anchor-id="estrategia-de-selección-de-variables"><span class="header-section-number">5.3.4</span> Estrategia de selección de variables</h3>
+<ol type="1">
+<li><strong>Análisis univariable</strong>: se evaluaron 10 covariables individualmente.</li>
+<li><strong>Criterio de selección</strong>: variables con p &lt; 0.20 en univariable o con relevancia clínica <em>a priori</em>.</li>
+<li><strong>Modelo multivariable</strong>: se ajustó un modelo con las variables seleccionadas, evitando colinealidad (ej: no incluir simultáneamente <code>INMUNO_DICO</code> y <code>COMORB_INMUNO</code>).</li>
+</ol>
+</section>
+</section>
+<section id="análisis-de-sensibilidad" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="análisis-de-sensibilidad"><span class="header-section-number">5.4</span> Análisis de sensibilidad</h2>
+<p>Para evaluar la robustez de los resultados, se repitió el análisis de Kaplan-Meier con definiciones alternativas del outcome:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 43%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Definición</th>
+<th>Criterio de evento</th>
+<th>Denominador</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Primaria</strong></td>
+<td>IgG &lt; 1.1 en ≥ 1 medición</td>
+<td>N = 44</td>
+</tr>
+<tr class="even">
+<td>Estricta temporal</td>
+<td>IgG &lt; 1.1 en ≥ 2 mediciones consecutivas</td>
+<td>N = 44</td>
+</tr>
+<tr class="odd">
+<td>Corte bajo</td>
+<td>IgG &lt; 0.9 en ≥ 1 medición</td>
+<td>N = 44</td>
+</tr>
+<tr class="even">
+<td>Reducción relativa</td>
+<td>Descenso ≥ 50% respecto a IgG basal</td>
+<td>N = 36</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="reproducibilidad-y-publicación" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Reproducibilidad y publicación</h1>
+<section id="estructura-de-archivos" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="estructura-de-archivos"><span class="header-section-number">6.1</span> Estructura de archivos</h2>
+<pre><code>proyecto/
+├── BASE_SPSS.xlsx              ← Dataset analítico (44 × 122)
+├── TFGM_analysis.ipynb         ← Notebook completa (bloques 00–04)
+├── TFGM_metodos.qmd            ← Este documento (Quarto)
+└── outputs/
+    ├── figures/
+    │   ├── fig00_missing_map.png
+    │   ├── fig01_continuas_por_evento.png
+    │   ├── fig02_cinetica_igg.png
+    │   ├── fig03_outcomes_comparativa.png
+    │   ├── fig04_origen_geografico.png
+    │   ├── fig05_scatter_igg_tiempo.png
+    │   ├── fig06_km_global.png
+    │   ├── fig07_km_estratificado.png
+    │   ├── fig08_forest_plot.png
+    │   └── fig09_km_sensibilidad.png
+    └── tables/
+        ├── tabla1_descriptiva.csv
+        ├── cox_univariable.csv
+        └── cox_multivariable.csv</code></pre>
+</section>
+<section id="flujo-de-renderizado" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="flujo-de-renderizado"><span class="header-section-number">6.2</span> Flujo de renderizado</h2>
+<div class="cell" data-layout-align="default">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>flowchart LR</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    A[BASE_SPSS.xlsx] --&gt; B[TFGM_analysis.ipynb]</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    B --&gt; C[Figuras PNG 300 DPI]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    B --&gt; D[Tablas CSV]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    C --&gt; E[TFGM_metodos.qmd]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    D --&gt; E</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    E --&gt; F[HTML / PDF]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+    A[BASE_SPSS.xlsx] --&gt; B[TFGM_analysis.ipynb]
+    B --&gt; C[Figuras PNG 300 DPI]
+    B --&gt; D[Tablas CSV]
+    C --&gt; E[TFGM_metodos.qmd]
+    D --&gt; E
+    E --&gt; F[HTML / PDF]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="cómo-reproducir-el-análisis" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="cómo-reproducir-el-análisis"><span class="header-section-number">6.3</span> Cómo reproducir el análisis</h2>
+<ol type="1">
+<li>Instalar Python 3.10+ con: <code>pip install pandas numpy matplotlib seaborn scipy openpyxl</code></li>
+<li>Colocar <code>BASE_SPSS.xlsx</code> en el directorio de trabajo.</li>
+<li>Abrir <code>TFGM_analysis.ipynb</code> en Jupyter y ejecutar todas las celdas (<code>Kernel → Restart &amp; Run All</code>).</li>
+<li>Renderizar este documento: <code>quarto render TFGM_metodos.qmd</code></li>
+</ol>
+</section>
+<section id="puntos-de-configuración-centralizada" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="puntos-de-configuración-centralizada"><span class="header-section-number">6.4</span> Puntos de configuración centralizada</h2>
+<p>La notebook está diseñada para facilitar ajustes sin modificar la lógica:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 53%">
+<col style="width: 23%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Qué modificar</th>
+<th>Dónde</th>
+<th>Celda</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Colores de las figuras</td>
+<td>Diccionario <code>PAL</code></td>
+<td>00-B</td>
+</tr>
+<tr class="even">
+<td>Tipografía y estilo</td>
+<td><code>plt.rcParams.update()</code></td>
+<td>00-C</td>
+</tr>
+<tr class="odd">
+<td>Variables de la Tabla 1</td>
+<td>Listas <code>CONT_VARS</code> y <code>CAT_VARS</code></td>
+<td>02-A, 02-B</td>
+</tr>
+<tr class="even">
+<td>Definiciones de outcome</td>
+<td>Lista <code>OUTCOME_DEFS</code></td>
+<td>03-C</td>
+</tr>
+<tr class="odd">
+<td>Estratificaciones KM</td>
+<td>Lista <code>STRAT_VARS</code></td>
+<td>04-E</td>
+</tr>
+<tr class="even">
+<td>Covariables Cox univariable</td>
+<td>Lista <code>COX_UNIVAR</code></td>
+<td>04-F</td>
+</tr>
+<tr class="odd">
+<td>Covariables Cox multivariable</td>
+<td>Lista <code>MULTI_VARS</code></td>
+<td>04-G</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="limitaciones-metodológicas" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Limitaciones metodológicas</h1>
+<ol type="1">
+<li><strong>Tamaño muestral</strong>: N = 44 limita la potencia estadística, especialmente en subgrupos (ej: solo 4 inmunodeprimidos). Los resultados del modelo multivariable de Cox con 4 covariables y 19–28 eventos se sitúan en el límite de la regla de ≥10 eventos por variable.</li>
+<li><strong>Implementación de Cox propia</strong>: la optimización numérica (BFGS con Hessiana por diferencias finitas) puede diferir ligeramente de implementaciones de referencia (<code>lifelines</code>, <code>R survival</code>). Se recomienda validar los resultados con una librería establecida antes de la publicación final.</li>
+<li><strong>Definición del tiempo cero</strong>: se usó la fecha de primera dosis como <code>F_TTO</code>. Pacientes con múltiples ciclos se anclan al primero.</li>
+<li><strong>Análisis de casos completos</strong>: los pacientes sin IgG basal numérica (n = 8) se excluyen de los análisis que requieren esta variable, lo cual podría introducir sesgo si el <em>missingness</em> no es completamente aleatorio.</li>
+</ol>
+</section>
+<section id="referencias" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Referencias</h1>
+<div id="refs" role="list">
+
+</div>
+<!-- -->
+
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Materiales y Métodos — Análisis Computacional"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "Cinética de seronegativización de IgG anti-*Strongyloides stercoralis* tras ivermectina"</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Yan Rodríguez Hachimaru</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Hospital Central de la Defensa Gómez Ulla</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> today</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">    toc-depth: 3</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">    number-sections: true</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">    theme: cosmo</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">    fontsize: 11pt</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-width: 8</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-height: 5</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-dpi: 300</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="co">  pdf:</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co">    number-sections: true</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">    documentclass: article</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="co">    geometry: margin=2.5cm</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">    fontsize: 11pt</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-width: 7</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-height: 4.5</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="co">    fig-dpi: 300</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="an">bibliography:</span><span class="co"> references.bib</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="an">csl:</span><span class="co"> vancouver.csl</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="co">  echo: true</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="fu"># Introducción</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>Este documento detalla los **materiales y métodos computacionales** empleados en el análisis de la cinética de seronegativización de IgG anti-*Strongyloides stercoralis* tras tratamiento con ivermectina en una cohorte retrospectiva (N = 44) del Hospital Central de la Defensa Gómez Ulla (2014–2024).</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>El objetivo es documentar el proceso analítico con el nivel de detalle necesario para:</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Reproducibilidad completa** — cualquier investigador con acceso al dataset puede replicar los resultados ejecutando la notebook.</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Transparencia metodológica** — cada decisión estadística (test elegido, punto de corte, manejo de datos faltantes) está justificada.</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Publicación doble** — este material sirve tanto para la sección de Materiales y Métodos del artículo clínico como para una publicación metodológica independiente sobre el uso de Python/Jupyter en investigación biomédica.</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a><span class="fu">## Entorno computacional</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>El análisis se realizó en **Python 3.12** dentro de **Jupyter Notebook**, utilizando las siguientes librerías:</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Librería <span class="pp">|</span> Versión <span class="pp">|</span> Propósito <span class="pp">|</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a><span class="pp">|----------|---------|-----------|</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`pandas`</span> <span class="pp">|</span> 3.0+ <span class="pp">|</span> Manipulación de datos tabulares <span class="pp">|</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`numpy`</span> <span class="pp">|</span> 2.4+ <span class="pp">|</span> Operaciones numéricas <span class="pp">|</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`matplotlib`</span> <span class="pp">|</span> 3.10+ <span class="pp">|</span> Generación de figuras <span class="pp">|</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`seaborn`</span> <span class="pp">|</span> 0.13+ <span class="pp">|</span> Gráficos estadísticos <span class="pp">|</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`scipy`</span> <span class="pp">|</span> 1.17+ <span class="pp">|</span> Tests estadísticos y optimización <span class="pp">|</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>El renderizado final del presente documento se realizó con **Quarto** (sistema de publicación científica basado en Pandoc), que permite integrar código ejecutable, prosa académica y referencias bibliográficas en un único flujo de trabajo.</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>::: {.callout-note}</span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a><span class="fu">## Reproducibilidad</span></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>Todo el código fuente está disponible en la notebook <span class="in">`TFGM_analysis.ipynb`</span>. Para ejecutarla, se necesita únicamente el archivo <span class="in">`BASE_SPSS.xlsx`</span> (dataset analítico) en el mismo directorio.</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a><span class="fu"># Fuente de datos</span></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="fu">## Dataset analítico</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>El dataset de trabajo (<span class="in">`BASE_SPSS.xlsx`</span>) contiene **44 filas × 122 columnas** — una fila por paciente. Fue construido a partir de 5 hojas de datos crudos (<span class="in">`BASAL`</span>, <span class="in">`SERO`</span>, <span class="in">`EOS`</span>, <span class="in">`MICRO`</span>, <span class="in">`SEG`</span>) mediante un pipeline de ETL (Extracción, Transformación y Carga) documentado en una notebook separada.</span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>Las 122 variables incluyen:</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Demográficas y clínicas basales** (20 variables): edad al diagnóstico, sexo, país de origen, tiempo de residencia en España, estado inmunológico, comorbilidades, pauta de ivermectina.</span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Serología longitudinal** (24 variables): IgG cuantitativa y cualitativa en 8 timepoints nominales (3, 6, 12, 18, 24, 36, 48, 72 meses post-tratamiento).</span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Eosinófilos longitudinales** (24 variables): recuento y clasificación binaria en los mismos timepoints.</span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Microbiología longitudinal** (16 variables): resultado y mes real de pruebas parasitológicas.</span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Variables de outcome** (16 variables): eventos y tiempos para 7 definiciones diferentes de seronegativización.</span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Variables auxiliares** (22 variables): dicotomizaciones, labels, flags de calidad.</span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a><span class="fu">## Validación de integridad</span></span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a>Al cargar el dataset, se verificaron mediante *assertions* programáticas:</span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: validacion</span></span>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_excel(<span class="st">'BASE_SPSS.xlsx'</span>)</span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificaciones de integridad</span></span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">len</span>(df) <span class="op">==</span> <span class="dv">44</span>,              <span class="ss">f"Se esperan 44 filas, hay </span><span class="sc">{</span><span class="bu">len</span>(df)<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> df[<span class="st">'ID'</span>].nunique() <span class="op">==</span> <span class="dv">44</span>,   <span class="st">"IDs duplicados"</span></span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> (df[<span class="st">'EVENT_SERONEG'</span>] <span class="op">==</span> <span class="dv">1</span>).<span class="bu">sum</span>() <span class="op">==</span> <span class="dv">28</span>, <span class="st">"Se esperan 28 eventos"</span></span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"✅ Dataset validado: </span><span class="sc">{</span>df<span class="sc">.</span>shape[<span class="dv">0</span>]<span class="sc">}</span><span class="ss"> pacientes × </span><span class="sc">{</span>df<span class="sc">.</span>shape[<span class="dv">1</span>]<span class="sc">}</span><span class="ss"> variables"</span>)</span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a>Los conteos esperados (28 eventos de seronegativización, 15 pacientes de origen ecuatoriano, 4 inmunodeprimidos, etc.) se contrastaron con el cuaderno de variables del estudio.</span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a><span class="fu">## Datos faltantes</span></span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a>La estrategia de manejo de datos faltantes fue **análisis de casos completos** (*complete case analysis*) para cada análisis específico:</span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**IgG basal**: disponible en 36/44 pacientes (81.8%). Los 8 pacientes sin IgG basal numérica tenían resultado cualitativo (POS/NEG) sin valor cuantitativo.</span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Tiempo de seguimiento**: disponible en 40/44 (90.9%). Los 4 pacientes sin tiempo se excluyeron del análisis de supervivencia (IDs sin serología post-tratamiento).</span>
+<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Eosinófilos basales**: disponible en 42/44 (95.5%). Se marcaron como dudosas las mediciones realizadas &gt;365 días antes del tratamiento.</span>
+<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a>Se generó un mapa visual de completitud (@fig-missing) para documentar la estructura de missingness.</span>
+<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a><span class="fu"># Estadística descriptiva</span></span>
+<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a><span class="fu">## Tabla 1 — Características basales</span></span>
+<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>La Tabla 1 presenta las características basales de la cohorte estratificadas por el outcome principal (seronegativización sí/no).</span>
+<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a><span class="fu">### Elección de estadísticos descriptivos</span></span>
+<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>La decisión entre estadísticos paramétricos (media ± DE) y no paramétricos (mediana, IQR) se basó en el **test de Shapiro-Wilk** para normalidad, el más potente para muestras pequeñas (n &lt; 50).</span>
+<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: shapiro</span></span>
+<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy <span class="im">import</span> stats <span class="im">as</span> scipy_stats</span>
+<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a>cont_vars <span class="op">=</span> [</span>
+<span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'EDAD_DX'</span>,           <span class="st">'Edad al diagnóstico'</span>),</span>
+<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'T_RESIDENCIA'</span>,      <span class="st">'Tiempo residencia España'</span>),</span>
+<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'IGG_BASAL'</span>,         <span class="st">'IgG basal'</span>),</span>
+<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'EOS_BASAL'</span>,         <span class="st">'Eosinófilos basales'</span>),</span>
+<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'TIME_TO_SERONEG_M'</span>, <span class="st">'Tiempo hasta seroneg.'</span>),</span>
+<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> col, label <span class="kw">in</span> cont_vars:</span>
+<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a>    vals <span class="op">=</span> df[col].dropna()</span>
+<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a>    W, p <span class="op">=</span> scipy_stats.shapiro(vals)</span>
+<span id="cb7-145"><a href="#cb7-145" aria-hidden="true" tabindex="-1"></a>    dist <span class="op">=</span> <span class="st">'Normal'</span> <span class="cf">if</span> p <span class="op">&gt;</span> <span class="fl">0.05</span> <span class="cf">else</span> <span class="st">'No normal'</span></span>
+<span id="cb7-146"><a href="#cb7-146" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>label<span class="sc">:&lt;30}</span><span class="ss">  W=</span><span class="sc">{</span>W<span class="sc">:.4f}</span><span class="ss">  p=</span><span class="sc">{</span>p<span class="sc">:.4f}</span><span class="ss">  → </span><span class="sc">{</span>dist<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb7-147"><a href="#cb7-147" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-148"><a href="#cb7-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a>**Resultado:** solo la edad al diagnóstico superó el umbral de normalidad (p = 0.74). Todas las demás variables mostraron distribuciones no normales (p &lt; 0.05), justificando el uso sistemático de mediana (IQR) y tests no paramétricos.</span>
+<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a><span class="fu">### Tests de comparación entre grupos</span></span>
+<span id="cb7-152"><a href="#cb7-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-153"><a href="#cb7-153" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Tipo de variable <span class="pp">|</span> Estadístico descriptivo <span class="pp">|</span> Test inferencial <span class="pp">|</span> Condiciones <span class="pp">|</span></span>
+<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a><span class="pp">|------------------|------------------------|------------------|-------------|</span></span>
+<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Continua, no normal <span class="pp">|</span> Mediana (Q1–Q3) <span class="pp">|</span> Mann-Whitney U bilateral <span class="pp">|</span> n₁ ≥ 2 y n₂ ≥ 2 <span class="pp">|</span></span>
+<span id="cb7-156"><a href="#cb7-156" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Categórica, celdas ≥ 5 <span class="pp">|</span> n (%) <span class="pp">|</span> Chi-cuadrado de Pearson <span class="pp">|</span> Tabla ≥ 2×2 <span class="pp">|</span></span>
+<span id="cb7-157"><a href="#cb7-157" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Categórica, alguna celda &lt; 5 <span class="pp">|</span> n (%) <span class="pp">|</span> Test exacto de Fisher <span class="pp">|</span> Solo para tablas 2×2 <span class="pp">|</span></span>
+<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a>La regla de Cochran (todas las frecuencias esperadas ≥ 5) se verificó automáticamente: si alguna celda esperada era &lt; 5 en una tabla 2×2, se sustituyó chi-cuadrado por Fisher exacto.</span>
+<span id="cb7-160"><a href="#cb7-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-161"><a href="#cb7-161" aria-hidden="true" tabindex="-1"></a><span class="fu"># Visualización de datos</span></span>
+<span id="cb7-162"><a href="#cb7-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-163"><a href="#cb7-163" aria-hidden="true" tabindex="-1"></a><span class="fu">## Principios de diseño</span></span>
+<span id="cb7-164"><a href="#cb7-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-165"><a href="#cb7-165" aria-hidden="true" tabindex="-1"></a>Todas las figuras siguen un protocolo visual uniforme:</span>
+<span id="cb7-166"><a href="#cb7-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-167"><a href="#cb7-167" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Paleta semántica centralizada**: cada grupo clínico tiene un color fijo definido en un único diccionario (<span class="in">`PAL`</span>). Cambiar un color lo propaga a todas las figuras.</span>
+<span id="cb7-168"><a href="#cb7-168" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Estilo editorial**: fuente sans-serif (Arial), sin bordes superior ni derecho, grid semitransparente. Sigue las recomendaciones de Tufte (*The Visual Display of Quantitative Information*) de minimizar la ratio tinta/dato.</span>
+<span id="cb7-169"><a href="#cb7-169" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Resolución dual**: 150 DPI en pantalla (Jupyter), 300 DPI al guardar (requisito de journals).</span>
+<span id="cb7-170"><a href="#cb7-170" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>**Accesibilidad**: colores seleccionados para ser distinguibles en daltonismo (evitando rojo/verde puros juntos) y en impresión en escala de grises (diferentes luminosidades).</span>
+<span id="cb7-171"><a href="#cb7-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-172"><a href="#cb7-172" aria-hidden="true" tabindex="-1"></a><span class="fu">## Catálogo de figuras</span></span>
+<span id="cb7-173"><a href="#cb7-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-174"><a href="#cb7-174" aria-hidden="true" tabindex="-1"></a><span class="fu">### Figura 1 — Distribución de variables continuas</span></span>
+<span id="cb7-175"><a href="#cb7-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-176"><a href="#cb7-176" aria-hidden="true" tabindex="-1"></a>**Tipo:** violin plot + boxplot superpuesto.</span>
+<span id="cb7-177"><a href="#cb7-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-178"><a href="#cb7-178" aria-hidden="true" tabindex="-1"></a>El violin plot muestra la *densidad de probabilidad empírica* (equivalente a un histograma suavizado rotado 90°). El boxplot superpuesto (más estrecho, <span class="in">`widths=0.13`</span>) añade la mediana, cuartiles y outliers con precisión numérica. Sobre cada panel se indica el p-valor de Mann-Whitney.</span>
+<span id="cb7-179"><a href="#cb7-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-180"><a href="#cb7-180" aria-hidden="true" tabindex="-1"></a><span class="fu">### Figura 2 — Cinética de IgG post-tratamiento</span></span>
+<span id="cb7-181"><a href="#cb7-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-182"><a href="#cb7-182" aria-hidden="true" tabindex="-1"></a>**Tipo:** spaghetti plot con línea de tendencia central.</span>
+<span id="cb7-183"><a href="#cb7-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-184"><a href="#cb7-184" aria-hidden="true" tabindex="-1"></a>Cada línea semitransparente (α = 0.12) representa la trayectoria individual de un paciente. La línea gruesa muestra la mediana del grupo en cada timepoint. Se anotan las <span class="in">`n`</span> disponibles en cada punto temporal — obligatorio en estudios longitudinales, ya que el número de pacientes con seguimiento disminuye con el tiempo.</span>
+<span id="cb7-185"><a href="#cb7-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-186"><a href="#cb7-186" aria-hidden="true" tabindex="-1"></a>Las líneas horizontales de corte (1.1 para positividad según DRG International; 0.9 para negatividad estricta según protocolo) sirven como referencia clínica.</span>
+<span id="cb7-187"><a href="#cb7-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-188"><a href="#cb7-188" aria-hidden="true" tabindex="-1"></a><span class="fu">### Figura 3 — Comparativa de definiciones de outcome</span></span>
+<span id="cb7-189"><a href="#cb7-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-190"><a href="#cb7-190" aria-hidden="true" tabindex="-1"></a>**Tipo:** lollipop chart horizontal, paneles pareados.</span>
+<span id="cb7-191"><a href="#cb7-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-192"><a href="#cb7-192" aria-hidden="true" tabindex="-1"></a>Alternativa al gráfico de barras que reduce el "área de tinta" siguiendo el principio de Tufte. Compara 7 definiciones de seronegativización (desde la más sensible hasta la más específica) en dos dimensiones: número de eventos y tiempo mediano al evento.</span>
+<span id="cb7-193"><a href="#cb7-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-194"><a href="#cb7-194" aria-hidden="true" tabindex="-1"></a><span class="fu">### Figura 4 — Distribución geográfica</span></span>
+<span id="cb7-195"><a href="#cb7-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-196"><a href="#cb7-196" aria-hidden="true" tabindex="-1"></a>**Tipo:** barras horizontales + donut chart anidado.</span>
+<span id="cb7-197"><a href="#cb7-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-198"><a href="#cb7-198" aria-hidden="true" tabindex="-1"></a>Panel A: barras por país de origen con superposición de los que tuvieron seroneg. Panel B: anillo externo (Sudamérica vs. Otros) y anillo interno (desglose por país).</span>
+<span id="cb7-199"><a href="#cb7-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-200"><a href="#cb7-200" aria-hidden="true" tabindex="-1"></a><span class="fu">### Figura 5 — Correlación IgG basal–tiempo</span></span>
+<span id="cb7-201"><a href="#cb7-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-202"><a href="#cb7-202" aria-hidden="true" tabindex="-1"></a>**Tipo:** scatter plot con Spearman ρ.</span>
+<span id="cb7-203"><a href="#cb7-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-204"><a href="#cb7-204" aria-hidden="true" tabindex="-1"></a>Se eligió Spearman sobre Pearson porque la IgG basal no es normal (Shapiro p &lt; 0.001) y la relación no es necesariamente lineal. Se etiquetan selectivamente los outliers (P90 en X o Y) para su inspección visual.</span>
+<span id="cb7-205"><a href="#cb7-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-206"><a href="#cb7-206" aria-hidden="true" tabindex="-1"></a><span class="fu"># Análisis de supervivencia</span></span>
+<span id="cb7-207"><a href="#cb7-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-208"><a href="#cb7-208" aria-hidden="true" tabindex="-1"></a><span class="fu">## Estimador de Kaplan-Meier</span></span>
+<span id="cb7-209"><a href="#cb7-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-210"><a href="#cb7-210" aria-hidden="true" tabindex="-1"></a><span class="fu">### Definición del evento y el tiempo</span></span>
+<span id="cb7-211"><a href="#cb7-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-212"><a href="#cb7-212" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Componente <span class="pp">|</span> Definición <span class="pp">|</span></span>
+<span id="cb7-213"><a href="#cb7-213" aria-hidden="true" tabindex="-1"></a><span class="pp">|------------|------------|</span></span>
+<span id="cb7-214"><a href="#cb7-214" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Tiempo cero** <span class="pp">|</span> Fecha de la primera dosis de ivermectina (<span class="in">`F_TTO`</span>) <span class="pp">|</span></span>
+<span id="cb7-215"><a href="#cb7-215" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Evento** <span class="pp">|</span> Primera medición serológica post-TTO con IgG &lt; 1.1 (cualitativa = negativa) <span class="pp">|</span></span>
+<span id="cb7-216"><a href="#cb7-216" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Censura** <span class="pp">|</span> Última medición serológica disponible, si no hubo seronegativización <span class="pp">|</span></span>
+<span id="cb7-217"><a href="#cb7-217" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Unidad temporal** <span class="pp">|</span> Meses (días / 30.44) <span class="pp">|</span></span>
+<span id="cb7-218"><a href="#cb7-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-219"><a href="#cb7-219" aria-hidden="true" tabindex="-1"></a><span class="fu">### Implementación</span></span>
+<span id="cb7-220"><a href="#cb7-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-221"><a href="#cb7-221" aria-hidden="true" tabindex="-1"></a>El estimador de Kaplan-Meier se implementó desde cero (sin dependencias externas) siguiendo la formulación clásica:</span>
+<span id="cb7-222"><a href="#cb7-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-223"><a href="#cb7-223" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-224"><a href="#cb7-224" aria-hidden="true" tabindex="-1"></a>\hat{S}(t) = \prod_{t_i \leq t} \left(1 - \frac{d_i}{n_i}\right)</span>
+<span id="cb7-225"><a href="#cb7-225" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-226"><a href="#cb7-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-227"><a href="#cb7-227" aria-hidden="true" tabindex="-1"></a>donde $d_i$ es el número de eventos en el tiempo $t_i$ y $n_i$ es el número de pacientes a riesgo (ni evento ni censura) inmediatamente antes de $t_i$.</span>
+<span id="cb7-228"><a href="#cb7-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-229"><a href="#cb7-229" aria-hidden="true" tabindex="-1"></a>Los **intervalos de confianza al 95%** se calcularon mediante la **fórmula de Greenwood**:</span>
+<span id="cb7-230"><a href="#cb7-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-231"><a href="#cb7-231" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-232"><a href="#cb7-232" aria-hidden="true" tabindex="-1"></a>\widehat{\text{Var}}<span class="co">[</span><span class="ot">\hat{S}(t)</span><span class="co">]</span> = \hat{S}(t)^2 \sum_{t_i \leq t} \frac{d_i}{n_i(n_i - d_i)}</span>
+<span id="cb7-233"><a href="#cb7-233" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-234"><a href="#cb7-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-235"><a href="#cb7-235" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-236"><a href="#cb7-236" aria-hidden="true" tabindex="-1"></a>\text{IC}_{95\%} = \hat{S}(t) \pm 1.96 \times \sqrt{\widehat{\text{Var}}<span class="co">[</span><span class="ot">\hat{S}(t)</span><span class="co">]</span>}</span>
+<span id="cb7-237"><a href="#cb7-237" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-238"><a href="#cb7-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-239"><a href="#cb7-239" aria-hidden="true" tabindex="-1"></a>truncado al intervalo <span class="co">[</span><span class="ot">0, 1</span><span class="co">]</span>.</span>
+<span id="cb7-240"><a href="#cb7-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-241"><a href="#cb7-241" aria-hidden="true" tabindex="-1"></a>La **mediana de supervivencia** se definió como el primer tiempo $t$ en que $\hat{S}(t) \leq 0.5$.</span>
+<span id="cb7-242"><a href="#cb7-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-243"><a href="#cb7-243" aria-hidden="true" tabindex="-1"></a><span class="fu">### Tablas de riesgo (*numbers at risk*)</span></span>
+<span id="cb7-244"><a href="#cb7-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-245"><a href="#cb7-245" aria-hidden="true" tabindex="-1"></a>Debajo de cada curva KM se muestra el número de pacientes a riesgo en timepoints predefinidos (0, 3, 6, 12, 18, 24, 36, 48, 72 meses), siguiendo las recomendaciones CONSORT y STROBE para estudios de supervivencia.</span>
+<span id="cb7-246"><a href="#cb7-246" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-247"><a href="#cb7-247" aria-hidden="true" tabindex="-1"></a><span class="fu">## Test log-rank</span></span>
+<span id="cb7-248"><a href="#cb7-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-249"><a href="#cb7-249" aria-hidden="true" tabindex="-1"></a><span class="fu">### Formulación</span></span>
+<span id="cb7-250"><a href="#cb7-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-251"><a href="#cb7-251" aria-hidden="true" tabindex="-1"></a>Para comparar curvas de supervivencia entre dos grupos se empleó el test log-rank (Mantel-Cox), implementado desde cero:</span>
+<span id="cb7-252"><a href="#cb7-252" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-253"><a href="#cb7-253" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-254"><a href="#cb7-254" aria-hidden="true" tabindex="-1"></a>\chi^2_{\text{LR}} = \frac{\left(\sum_i O_{1i} - \sum_i E_{1i}\right)^2}{\sum_i V_i}</span>
+<span id="cb7-255"><a href="#cb7-255" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-256"><a href="#cb7-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-257"><a href="#cb7-257" aria-hidden="true" tabindex="-1"></a>donde, en cada tiempo de evento $t_i$:</span>
+<span id="cb7-258"><a href="#cb7-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-259"><a href="#cb7-259" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$O_{1i}$ = eventos observados en el grupo 1</span>
+<span id="cb7-260"><a href="#cb7-260" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$E_{1i} = n_{1i} \times d_i / n_i$ = eventos esperados bajo $H_0$ (proporcional al tamaño del grupo)</span>
+<span id="cb7-261"><a href="#cb7-261" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$V_i = \frac{n_{1i} \cdot n_{2i} \cdot d_i \cdot (n_i - d_i)}{n_i^2 \cdot (n_i - 1)}$ = varianza hipergeométrica</span>
+<span id="cb7-262"><a href="#cb7-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-263"><a href="#cb7-263" aria-hidden="true" tabindex="-1"></a>Bajo $H_0$ (curvas iguales), el estadístico sigue una distribución $\chi^2$ con 1 grado de libertad.</span>
+<span id="cb7-264"><a href="#cb7-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-265"><a href="#cb7-265" aria-hidden="true" tabindex="-1"></a><span class="fu">### Variables de estratificación</span></span>
+<span id="cb7-266"><a href="#cb7-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-267"><a href="#cb7-267" aria-hidden="true" tabindex="-1"></a>Se evaluaron las siguientes estratificaciones:</span>
+<span id="cb7-268"><a href="#cb7-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-269"><a href="#cb7-269" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Estado inmunológico**: inmunodeprimido vs. inmunocompetente</span>
+<span id="cb7-270"><a href="#cb7-270" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**IgG basal**: alta (≥ mediana) vs. baja (&lt; mediana)</span>
+<span id="cb7-271"><a href="#cb7-271" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Eosinofilia basal**: sí (&gt; 0.5 × 10³/µL) vs. no</span>
+<span id="cb7-272"><a href="#cb7-272" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>**Origen geográfico**: Sudamérica vs. otro</span>
+<span id="cb7-273"><a href="#cb7-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-274"><a href="#cb7-274" aria-hidden="true" tabindex="-1"></a><span class="fu">## Regresión de Cox</span></span>
+<span id="cb7-275"><a href="#cb7-275" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-276"><a href="#cb7-276" aria-hidden="true" tabindex="-1"></a><span class="fu">### Modelo de riesgos proporcionales</span></span>
+<span id="cb7-277"><a href="#cb7-277" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-278"><a href="#cb7-278" aria-hidden="true" tabindex="-1"></a>Se empleó el modelo semiparamétrico de Cox:</span>
+<span id="cb7-279"><a href="#cb7-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-280"><a href="#cb7-280" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-281"><a href="#cb7-281" aria-hidden="true" tabindex="-1"></a>h(t \mid \mathbf{X}) = h_0(t) \cdot \exp(\beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p)</span>
+<span id="cb7-282"><a href="#cb7-282" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-283"><a href="#cb7-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-284"><a href="#cb7-284" aria-hidden="true" tabindex="-1"></a>donde $h_0(t)$ es la función de riesgo basal (no estimada explícitamente) y $\exp(\beta_i)$ es el **hazard ratio** (HR) de la variable $X_i$.</span>
+<span id="cb7-285"><a href="#cb7-285" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-286"><a href="#cb7-286" aria-hidden="true" tabindex="-1"></a><span class="fu">### Estimación de parámetros</span></span>
+<span id="cb7-287"><a href="#cb7-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-288"><a href="#cb7-288" aria-hidden="true" tabindex="-1"></a>Los coeficientes $\hat{\beta}$ se obtuvieron maximizando la **log-verosimilitud parcial** de Cox:</span>
+<span id="cb7-289"><a href="#cb7-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-290"><a href="#cb7-290" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-291"><a href="#cb7-291" aria-hidden="true" tabindex="-1"></a>\ell(\beta) = \sum_{i: \delta_i=1} \left<span class="co">[</span><span class="ot"> \beta^\top \mathbf{x}_i - \log\left(\sum_{j \in \mathcal{R}(t_i)} \exp(\beta^\top \mathbf{x}_j)\right) \right</span><span class="co">]</span></span>
+<span id="cb7-292"><a href="#cb7-292" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-293"><a href="#cb7-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-294"><a href="#cb7-294" aria-hidden="true" tabindex="-1"></a>donde $\mathcal{R}(t_i)$ es el *risk set* (conjunto de pacientes a riesgo) en el tiempo $t_i$ y $\delta_i = 1$ indica evento.</span>
+<span id="cb7-295"><a href="#cb7-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-296"><a href="#cb7-296" aria-hidden="true" tabindex="-1"></a>La optimización se realizó mediante el algoritmo **BFGS** (Broyden-Fletcher-Goldfarb-Shanno) implementado en `scipy.optimize.minimize`. Los **errores estándar** se obtuvieron de la raíz cuadrada de la diagonal de la inversa de la matriz Hessiana, calculada por diferencias finitas.</span>
+<span id="cb7-297"><a href="#cb7-297" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-298"><a href="#cb7-298" aria-hidden="true" tabindex="-1"></a><span class="fu">### Interpretación del Hazard Ratio</span></span>
+<span id="cb7-299"><a href="#cb7-299" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-300"><a href="#cb7-300" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> HR <span class="pp">|</span> Interpretación <span class="pp">|</span></span>
+<span id="cb7-301"><a href="#cb7-301" aria-hidden="true" tabindex="-1"></a><span class="pp">|----|---------------|</span></span>
+<span id="cb7-302"><a href="#cb7-302" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> HR &gt; 1 <span class="pp">|</span> Factor de riesgo: acelera la seronegativización <span class="pp">|</span></span>
+<span id="cb7-303"><a href="#cb7-303" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> HR = 1 <span class="pp">|</span> Sin efecto <span class="pp">|</span></span>
+<span id="cb7-304"><a href="#cb7-304" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> HR &lt; 1 <span class="pp">|</span> Factor protector: retrasa la seronegativización <span class="pp">|</span></span>
+<span id="cb7-305"><a href="#cb7-305" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> IC 95% incluye 1 <span class="pp">|</span> Efecto no estadísticamente significativo <span class="pp">|</span></span>
+<span id="cb7-306"><a href="#cb7-306" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-307"><a href="#cb7-307" aria-hidden="true" tabindex="-1"></a><span class="fu">### Estrategia de selección de variables</span></span>
+<span id="cb7-308"><a href="#cb7-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-309"><a href="#cb7-309" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Análisis univariable**: se evaluaron 10 covariables individualmente.</span>
+<span id="cb7-310"><a href="#cb7-310" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Criterio de selección**: variables con p &lt; 0.20 en univariable o con relevancia clínica *a priori*.</span>
+<span id="cb7-311"><a href="#cb7-311" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Modelo multivariable**: se ajustó un modelo con las variables seleccionadas, evitando colinealidad (ej: no incluir simultáneamente <span class="in">`INMUNO_DICO`</span> y <span class="in">`COMORB_INMUNO`</span>).</span>
+<span id="cb7-312"><a href="#cb7-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-313"><a href="#cb7-313" aria-hidden="true" tabindex="-1"></a><span class="fu">## Análisis de sensibilidad</span></span>
+<span id="cb7-314"><a href="#cb7-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-315"><a href="#cb7-315" aria-hidden="true" tabindex="-1"></a>Para evaluar la robustez de los resultados, se repitió el análisis de Kaplan-Meier con definiciones alternativas del outcome:</span>
+<span id="cb7-316"><a href="#cb7-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-317"><a href="#cb7-317" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Definición <span class="pp">|</span> Criterio de evento <span class="pp">|</span> Denominador <span class="pp">|</span></span>
+<span id="cb7-318"><a href="#cb7-318" aria-hidden="true" tabindex="-1"></a><span class="pp">|------------|-------------------|-------------|</span></span>
+<span id="cb7-319"><a href="#cb7-319" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Primaria** <span class="pp">|</span> IgG &lt; 1.1 en ≥ 1 medición <span class="pp">|</span> N = 44 <span class="pp">|</span></span>
+<span id="cb7-320"><a href="#cb7-320" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Estricta temporal <span class="pp">|</span> IgG &lt; 1.1 en ≥ 2 mediciones consecutivas <span class="pp">|</span> N = 44 <span class="pp">|</span></span>
+<span id="cb7-321"><a href="#cb7-321" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Corte bajo <span class="pp">|</span> IgG &lt; 0.9 en ≥ 1 medición <span class="pp">|</span> N = 44 <span class="pp">|</span></span>
+<span id="cb7-322"><a href="#cb7-322" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Reducción relativa <span class="pp">|</span> Descenso ≥ 50% respecto a IgG basal <span class="pp">|</span> N = 36 <span class="pp">|</span></span>
+<span id="cb7-323"><a href="#cb7-323" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-324"><a href="#cb7-324" aria-hidden="true" tabindex="-1"></a><span class="fu"># Reproducibilidad y publicación</span></span>
+<span id="cb7-325"><a href="#cb7-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-326"><a href="#cb7-326" aria-hidden="true" tabindex="-1"></a><span class="fu">## Estructura de archivos</span></span>
+<span id="cb7-327"><a href="#cb7-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-328"><a href="#cb7-328" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-329"><a href="#cb7-329" aria-hidden="true" tabindex="-1"></a><span class="in">proyecto/</span></span>
+<span id="cb7-330"><a href="#cb7-330" aria-hidden="true" tabindex="-1"></a><span class="in">├── BASE_SPSS.xlsx              ← Dataset analítico (44 × 122)</span></span>
+<span id="cb7-331"><a href="#cb7-331" aria-hidden="true" tabindex="-1"></a><span class="in">├── TFGM_analysis.ipynb         ← Notebook completa (bloques 00–04)</span></span>
+<span id="cb7-332"><a href="#cb7-332" aria-hidden="true" tabindex="-1"></a><span class="in">├── TFGM_metodos.qmd            ← Este documento (Quarto)</span></span>
+<span id="cb7-333"><a href="#cb7-333" aria-hidden="true" tabindex="-1"></a><span class="in">└── outputs/</span></span>
+<span id="cb7-334"><a href="#cb7-334" aria-hidden="true" tabindex="-1"></a><span class="in">    ├── figures/</span></span>
+<span id="cb7-335"><a href="#cb7-335" aria-hidden="true" tabindex="-1"></a><span class="in">    │   ├── fig00_missing_map.png</span></span>
+<span id="cb7-336"><a href="#cb7-336" aria-hidden="true" tabindex="-1"></a><span class="in">    │   ├── fig01_continuas_por_evento.png</span></span>
+<span id="cb7-337"><a href="#cb7-337" aria-hidden="true" tabindex="-1"></a><span class="in">    │   ├── fig02_cinetica_igg.png</span></span>
+<span id="cb7-338"><a href="#cb7-338" aria-hidden="true" tabindex="-1"></a><span class="in">    │   ├── fig03_outcomes_comparativa.png</span></span>
+<span id="cb7-339"><a href="#cb7-339" aria-hidden="true" tabindex="-1"></a><span class="in">    │   ├── fig04_origen_geografico.png</span></span>
+<span id="cb7-340"><a href="#cb7-340" aria-hidden="true" tabindex="-1"></a><span class="in">    │   ├── fig05_scatter_igg_tiempo.png</span></span>
+<span id="cb7-341"><a href="#cb7-341" aria-hidden="true" tabindex="-1"></a><span class="in">    │   ├── fig06_km_global.png</span></span>
+<span id="cb7-342"><a href="#cb7-342" aria-hidden="true" tabindex="-1"></a><span class="in">    │   ├── fig07_km_estratificado.png</span></span>
+<span id="cb7-343"><a href="#cb7-343" aria-hidden="true" tabindex="-1"></a><span class="in">    │   ├── fig08_forest_plot.png</span></span>
+<span id="cb7-344"><a href="#cb7-344" aria-hidden="true" tabindex="-1"></a><span class="in">    │   └── fig09_km_sensibilidad.png</span></span>
+<span id="cb7-345"><a href="#cb7-345" aria-hidden="true" tabindex="-1"></a><span class="in">    └── tables/</span></span>
+<span id="cb7-346"><a href="#cb7-346" aria-hidden="true" tabindex="-1"></a><span class="in">        ├── tabla1_descriptiva.csv</span></span>
+<span id="cb7-347"><a href="#cb7-347" aria-hidden="true" tabindex="-1"></a><span class="in">        ├── cox_univariable.csv</span></span>
+<span id="cb7-348"><a href="#cb7-348" aria-hidden="true" tabindex="-1"></a><span class="in">        └── cox_multivariable.csv</span></span>
+<span id="cb7-349"><a href="#cb7-349" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-350"><a href="#cb7-350" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-351"><a href="#cb7-351" aria-hidden="true" tabindex="-1"></a><span class="fu">## Flujo de renderizado</span></span>
+<span id="cb7-352"><a href="#cb7-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-355"><a href="#cb7-355" aria-hidden="true" tabindex="-1"></a><span class="in">```{mermaid}</span></span>
+<span id="cb7-356"><a href="#cb7-356" aria-hidden="true" tabindex="-1"></a>flowchart LR</span>
+<span id="cb7-357"><a href="#cb7-357" aria-hidden="true" tabindex="-1"></a>    A[BASE_SPSS.xlsx] --&gt; B[TFGM_analysis.ipynb]</span>
+<span id="cb7-358"><a href="#cb7-358" aria-hidden="true" tabindex="-1"></a>    B --&gt; C[Figuras PNG <span class="dv">300</span> DPI]</span>
+<span id="cb7-359"><a href="#cb7-359" aria-hidden="true" tabindex="-1"></a>    B --&gt; D[Tablas CSV]</span>
+<span id="cb7-360"><a href="#cb7-360" aria-hidden="true" tabindex="-1"></a>    C --&gt; E[TFGM_metodos.qmd]</span>
+<span id="cb7-361"><a href="#cb7-361" aria-hidden="true" tabindex="-1"></a>    D --&gt; E</span>
+<span id="cb7-362"><a href="#cb7-362" aria-hidden="true" tabindex="-1"></a>    E --&gt; F[HTML / PDF]</span>
+<span id="cb7-363"><a href="#cb7-363" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-364"><a href="#cb7-364" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-365"><a href="#cb7-365" aria-hidden="true" tabindex="-1"></a><span class="fu">## Cómo reproducir el análisis</span></span>
+<span id="cb7-366"><a href="#cb7-366" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-367"><a href="#cb7-367" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Instalar Python 3.10+ con: <span class="in">`pip install pandas numpy matplotlib seaborn scipy openpyxl`</span></span>
+<span id="cb7-368"><a href="#cb7-368" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Colocar <span class="in">`BASE_SPSS.xlsx`</span> en el directorio de trabajo.</span>
+<span id="cb7-369"><a href="#cb7-369" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Abrir <span class="in">`TFGM_analysis.ipynb`</span> en Jupyter y ejecutar todas las celdas (<span class="in">`Kernel → Restart &amp; Run All`</span>).</span>
+<span id="cb7-370"><a href="#cb7-370" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>Renderizar este documento: <span class="in">`quarto render TFGM_metodos.qmd`</span></span>
+<span id="cb7-371"><a href="#cb7-371" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-372"><a href="#cb7-372" aria-hidden="true" tabindex="-1"></a><span class="fu">## Puntos de configuración centralizada</span></span>
+<span id="cb7-373"><a href="#cb7-373" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-374"><a href="#cb7-374" aria-hidden="true" tabindex="-1"></a>La notebook está diseñada para facilitar ajustes sin modificar la lógica:</span>
+<span id="cb7-375"><a href="#cb7-375" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-376"><a href="#cb7-376" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Qué modificar <span class="pp">|</span> Dónde <span class="pp">|</span> Celda <span class="pp">|</span></span>
+<span id="cb7-377"><a href="#cb7-377" aria-hidden="true" tabindex="-1"></a><span class="pp">|----------------|-------|-------|</span></span>
+<span id="cb7-378"><a href="#cb7-378" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Colores de las figuras <span class="pp">|</span> Diccionario <span class="in">`PAL`</span> <span class="pp">|</span> 00-B <span class="pp">|</span></span>
+<span id="cb7-379"><a href="#cb7-379" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Tipografía y estilo <span class="pp">|</span> <span class="in">`plt.rcParams.update()`</span> <span class="pp">|</span> 00-C <span class="pp">|</span></span>
+<span id="cb7-380"><a href="#cb7-380" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Variables de la Tabla 1 <span class="pp">|</span> Listas <span class="in">`CONT_VARS`</span> y <span class="in">`CAT_VARS`</span> <span class="pp">|</span> 02-A, 02-B <span class="pp">|</span></span>
+<span id="cb7-381"><a href="#cb7-381" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Definiciones de outcome <span class="pp">|</span> Lista <span class="in">`OUTCOME_DEFS`</span> <span class="pp">|</span> 03-C <span class="pp">|</span></span>
+<span id="cb7-382"><a href="#cb7-382" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Estratificaciones KM <span class="pp">|</span> Lista <span class="in">`STRAT_VARS`</span> <span class="pp">|</span> 04-E <span class="pp">|</span></span>
+<span id="cb7-383"><a href="#cb7-383" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Covariables Cox univariable <span class="pp">|</span> Lista <span class="in">`COX_UNIVAR`</span> <span class="pp">|</span> 04-F <span class="pp">|</span></span>
+<span id="cb7-384"><a href="#cb7-384" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Covariables Cox multivariable <span class="pp">|</span> Lista <span class="in">`MULTI_VARS`</span> <span class="pp">|</span> 04-G <span class="pp">|</span></span>
+<span id="cb7-385"><a href="#cb7-385" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-386"><a href="#cb7-386" aria-hidden="true" tabindex="-1"></a><span class="fu"># Limitaciones metodológicas</span></span>
+<span id="cb7-387"><a href="#cb7-387" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-388"><a href="#cb7-388" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Tamaño muestral**: N = 44 limita la potencia estadística, especialmente en subgrupos (ej: solo 4 inmunodeprimidos). Los resultados del modelo multivariable de Cox con 4 covariables y 19–28 eventos se sitúan en el límite de la regla de ≥10 eventos por variable.</span>
+<span id="cb7-389"><a href="#cb7-389" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Implementación de Cox propia**: la optimización numérica (BFGS con Hessiana por diferencias finitas) puede diferir ligeramente de implementaciones de referencia (<span class="in">`lifelines`</span>, <span class="in">`R survival`</span>). Se recomienda validar los resultados con una librería establecida antes de la publicación final.</span>
+<span id="cb7-390"><a href="#cb7-390" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Definición del tiempo cero**: se usó la fecha de primera dosis como <span class="in">`F_TTO`</span>. Pacientes con múltiples ciclos se anclan al primero.</span>
+<span id="cb7-391"><a href="#cb7-391" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>**Análisis de casos completos**: los pacientes sin IgG basal numérica (n = 8) se excluyen de los análisis que requieren esta variable, lo cual podría introducir sesgo si el *missingness* no es completamente aleatorio.</span>
+<span id="cb7-392"><a href="#cb7-392" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-393"><a href="#cb7-393" aria-hidden="true" tabindex="-1"></a><span class="fu"># Referencias</span></span>
+<span id="cb7-394"><a href="#cb7-394" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-395"><a href="#cb7-395" aria-hidden="true" tabindex="-1"></a>::: {#refs}</span>
+<span id="cb7-396"><a href="#cb7-396" aria-hidden="true" tabindex="-1"></a>:::</span>
+</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

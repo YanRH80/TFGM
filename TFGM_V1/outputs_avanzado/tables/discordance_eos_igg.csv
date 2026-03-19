@@ -1,0 +1,45 @@
+﻿ID,had_eosinophilia,eos_basal,eos_norm_month,igg_neg_month,last_fu,event_seroneg,inmuno,eos_normalized,igg_negativized,concordance
+1,True,0.97,0.69,,20.47,0,2,True,False,"EOS normaliza, IgG persiste"
+2,False,,4.3,15.18,78.15,1,2,True,True,Ambos normalizan
+3,False,0.16,1.64,,31.27,0,2,True,False,"EOS normaliza, IgG persiste"
+4,True,0.91,2.14,8.77,55.55,1,2,True,True,Ambos normalizan
+5,True,1.27,9.2,9.26,43.4,1,2,True,True,Ambos normalizan
+6,True,0.56,2.33,36.04,60.68,1,2,True,True,Ambos normalizan
+7,True,1.03,3.32,12.91,43.4,1,1,True,True,Ambos normalizan
+8,True,1.02,2.76,,2.76,0,2,True,False,"EOS normaliza, IgG persiste"
+9,True,1.51,,6.7,25.82,1,2,False,True,"IgG normaliza, EOS persiste"
+10,True,0.92,2.92,2.92,27.73,1,2,True,True,Ambos normalizan
+11,True,3.65,3.22,3.75,22.6,1,1,True,True,Ambos normalizan
+12,False,0.04,2.5,10.81,34.72,1,2,True,True,Ambos normalizan
+13,True,1.5,3.02,,3.02,0,2,True,False,"EOS normaliza, IgG persiste"
+14,True,1.11,18.63,,18.63,0,2,True,False,"EOS normaliza, IgG persiste"
+15,True,1.03,8.05,12.88,12.88,1,2,True,True,Ambos normalizan
+16,True,2.48,5.52,,24.08,0,2,True,False,"EOS normaliza, IgG persiste"
+17,False,0.14,3.22,3.22,3.22,1,2,True,True,Ambos normalizan
+18,False,0.26,2.86,,16.62,1,1,True,False,"EOS normaliza, IgG persiste"
+19,True,2.27,7.26,,46.16,0,2,True,False,"EOS normaliza, IgG persiste"
+20,False,0.35,3.35,3.35,43.43,1,2,True,True,Ambos normalizan
+21,True,0.79,7.23,7.23,12.16,1,2,True,True,Ambos normalizan
+22,False,0.3,16.43,3.84,43.1,1,2,True,True,Ambos normalizan
+23,False,0.11,26.84,21.02,37.81,1,2,True,True,Ambos normalizan
+24,False,0.09,2.0,2.0,10.25,1,2,True,True,Ambos normalizan
+25,False,0.16,3.68,,3.68,0,2,True,False,"EOS normaliza, IgG persiste"
+26,True,0.93,2.96,,22.54,0,2,True,False,"EOS normaliza, IgG persiste"
+27,True,1.56,1.71,,1.71,0,2,True,False,"EOS normaliza, IgG persiste"
+28,True,1.18,1.15,21.45,21.45,1,2,True,True,Ambos normalizan
+29,True,0.87,5.49,,72.14,0,2,True,False,"EOS normaliza, IgG persiste"
+30,True,3.22,0.95,,23.09,0,2,True,False,"EOS normaliza, IgG persiste"
+31,False,0.18,3.68,23.0,23.0,1,2,True,True,Ambos normalizan
+32,True,0.58,4.3,4.3,16.79,1,2,True,True,Ambos normalizan
+33,False,0.15,3.61,,10.09,0,2,True,False,"EOS normaliza, IgG persiste"
+34,True,0.82,3.45,,3.45,0,2,True,False,"EOS normaliza, IgG persiste"
+35,False,0.21,2.1,2.1,9.95,1,2,True,True,Ambos normalizan
+36,False,0.21,2.2,7.75,13.53,1,2,True,True,Ambos normalizan
+37,False,0.12,3.42,4.34,10.51,1,2,True,True,Ambos normalizan
+38,False,0.39,1.28,4.6,4.6,1,1,True,True,Ambos normalizan
+39,True,3.61,9.26,7.88,9.26,1,2,True,True,Ambos normalizan
+40,False,0.27,3.09,3.09,10.91,1,2,True,True,Ambos normalizan
+41,False,,11.43,11.43,16.06,1,2,True,True,Ambos normalizan
+42,False,0.15,3.02,,15.37,0,2,True,False,"EOS normaliza, IgG persiste"
+43,True,1.84,3.55,,13.21,0,2,True,False,"EOS normaliza, IgG persiste"
+44,False,0.11,2.23,2.23,2.23,1,2,True,True,Ambos normalizan
