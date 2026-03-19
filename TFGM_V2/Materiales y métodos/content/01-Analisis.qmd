@@ -1,0 +1,693 @@
+# 0. Setup {.unnumbered}
+
+## 0.1 Dependencias
+
+```{python}
+#| code-fold: true
+#| code-summary: "Imports"
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+from datetime import timedelta
+
+pd.set_option('display.max_columns', 20)
+pd.set_option('display.width', 120)
+```
+
+## 0.2 Paleta
+
+```{python}
+#| code-fold: true
+#| code-summary: "Colores"
+
+# ── 7 saturados ───────────────────────────────────────────────
+SAT = ['#E74C3C', '#3498DB', '#F39C12', '#2ECC71',
+       '#9B59B6', '#1ABC9C', '#E67E22']
+# ── 7 pastel ──────────────────────────────────────────────────
+PAS = ['#FADBD8', '#D6EAF8', '#FDEBD0', '#D5F5E3',
+       '#E8DAEF', '#D1F2EB', '#FAE5D3']
+# ── 5 grises ──────────────────────────────────────────────────
+GRI = ['#F5F5F5', '#D9D9D9', '#AAAAAA', '#666666', '#2B2B2B']
+
+# Aliases semánticos
+C = {
+    'red': SAT[0], 'blue': SAT[1], 'gold': SAT[2], 'green': SAT[3],
+    'purple': SAT[4], 'teal': SAT[5], 'orange': SAT[6],
+    'bg': GRI[0], 'grid': GRI[1], 'muted': GRI[2],
+    'annot': GRI[3], 'text': GRI[4],
+}
+```
+
+## 0.3 Configuración de matplotlib
+
+```{python}
+#| code-fold: true
+#| code-summary: "Matplotlib defaults"
+
+plt.rcParams.update({
+    'font.family': 'sans-serif',
+    'font.sans-serif': ['DejaVu Sans', 'Helvetica', 'Arial'],
+    'font.size': 10,
+    'axes.spines.top': False,
+    'axes.spines.right': False,
+    'axes.grid': True,
+    'grid.alpha': 0.3,
+    'grid.linestyle': ':',
+    'figure.dpi': 100,
+    'savefig.dpi': 300,
+    'savefig.bbox': 'tight',
+    'text.color': C['text'],
+    'axes.labelcolor': C['text'],
+})
+```
+
+## 0.4 Constantes clínicas
+
+Los umbrales que definen los eventos del protocolo. Si cambia el protocolo, se cambian aquí y se propagan a todo el notebook.
+
+```{python}
+# ── Umbrales de negativización ────────────────────────────────
+SERO_NEG     = 1.1       # IgG ELISA < 1.1 = negativo
+SERO_DROP    = 0.50      # caída >50% del basal
+EOS_NEG      = 0.5       # 10³/µL (= 500 cél/µL)
+EOS_DROP     = 0.50      # caída >50% del basal
+
+# ── Umbrales temporales (días) ────────────────────────────────
+MICRO_MIN    = 7         # >7d post-TTO para neg parasitológica
+RECIDIVA_MIN = 90        # >3 meses = recidiva (no persistencia)
+EOS_PERSIST  = 180       # >6 meses = eosinofilia persistente
+
+print(f"Sero negativo: IGG < {SERO_NEG}")
+print(f"Eos negativo:  < {EOS_NEG} ×10³/µL (= {int(EOS_NEG*1000)} cél/µL)")
+print(f"Recidiva:      > {RECIDIVA_MIN} días post-TTO")
+```
+
+---
+
+# 1. Carga y limpieza
+
+## 1.1 Leer el Excel
+
+Cada hoja se convierte en un DataFrame independiente. Verificamos dimensiones y tipos.
+
+```{python}
+# ── Leer las 5 hojas ──────────────────────────────────────────
+RUTA = '/Users/yanrodriguez/Desktop/VSCode/TFGM_V2/Materiales y métodos/assets/data/BASE_EXCEL.xlsx'
+
+bas = pd.read_excel(RUTA, sheet_name='bas')
+ser = pd.read_excel(RUTA, sheet_name='ser')
+eos = pd.read_excel(RUTA, sheet_name='eos')
+mic = pd.read_excel(RUTA, sheet_name='mic')
+seg = pd.read_excel(RUTA, sheet_name='seg')
+
+# ── Verificación rápida ───────────────────────────────────────
+for nombre, df in [('bas', bas), ('ser', ser), ('eos', eos),
+                   ('mic', mic), ('seg', seg)]:
+    print(f"{nombre.upper():>3}: {len(df):>4} filas × {df.shape[1]} cols, "
+          f"{df['ID'].nunique():>2} pacientes, "
+          f"{df.isnull().sum().sum():>3} nulos")
+```
+
+## 1.2 Limpieza de tipos
+
+Cada columna debe tener el tipo correcto antes de operar.
+
+### BAS — Variables basales
+
+```{python}
+# ID como entero
+bas['ID'] = bas['ID'].astype(int)
+
+# Fechas
+bas['F_NAC'] = pd.to_datetime(bas['F_NAC'])
+
+# T_ESP es año de llegada (float con nulos) → dejamos como float
+# Las categóricas ya vienen como string, verificamos:
+print("SEXO:   ", bas['SEXO'].unique())
+print("ORIGEN: ", bas['ORIGEN'].unique())
+print("INMUNO: ", bas['INMUNO'].unique())
+print("COMORB: ", bas['COMORB'].unique())
+print("CONFEOS:", bas['CONFEOS'].unique())
+
+bas.head(3)
+```
+
+### SER — Serología longitudinal
+
+```{python}
+# ── Problema: 10 valores de IGG son texto (POS, NEG) ─────────
+# Estos son resultados cualitativos sin título cuantitativo.
+# Los marcamos como NaN numérico pero guardamos la info cualitativa.
+
+ser['ID'] = ser['ID'].astype(int)
+ser['F_SER'] = pd.to_datetime(ser['F_SER'])
+
+# Crear columna cualitativa antes de convertir
+ser['IGG_QUAL'] = ser['IGG'].where(
+    ser['IGG'].apply(lambda x: isinstance(x, str)), other=np.nan)
+
+# Convertir IGG a numérico (POS/NEG → NaN)
+ser['IGG'] = pd.to_numeric(ser['IGG'], errors='coerce')
+
+# Verificar
+n_qual = ser['IGG_QUAL'].notna().sum()
+print(f"Valores cualitativos (sin título): {n_qual}")
+print(ser[ser['IGG_QUAL'].notna()][['ID', 'F_SER', 'IGG', 'IGG_QUAL']])
+print(f"\nIGG numérico: n={ser['IGG'].notna().sum()}, "
+      f"rango={ser['IGG'].min():.2f} – {ser['IGG'].max():.2f}, "
+      f"mediana={ser['IGG'].median():.2f}")
+```
+
+### EOS — Eosinófilos longitudinal
+
+```{python}
+eos['ID'] = eos['ID'].astype(int)
+eos['F_EOS'] = pd.to_datetime(eos['F_EOS'])
+eos['EOS'] = pd.to_numeric(eos['EOS'], errors='coerce')
+
+# Unidades: la columna viene en 10³/µL
+# 0.5 × 10³/µL = 500 cél/µL = umbral de eosinofilia
+print(f"EOS (×10³/µL): rango={eos['EOS'].min():.2f} – {eos['EOS'].max():.2f}, "
+      f"mediana={eos['EOS'].median():.2f}")
+print(f"Equivale a: {eos['EOS'].min()*1000:.0f} – {eos['EOS'].max()*1000:.0f} cél/µL")
+```
+
+### MIC — Microbiología
+
+```{python}
+mic['ID'] = mic['ID'].astype(int)
+
+# Filas sin fecha = pacientes sin microbiología (placeholder)
+mic_clean = mic[mic['F_MIC'].notna()].copy()
+mic_clean['F_MIC'] = pd.to_datetime(mic_clean['F_MIC'])
+mic_clean['RESULTADO'] = mic_clean['RESULTADO'].astype(int)  # 0/1
+
+n_con = mic_clean['ID'].nunique()
+n_sin = 44 - n_con
+print(f"Pacientes con microbiología: {n_con}")
+print(f"Pacientes sin microbiología: {n_sin}")
+print(f"TIPO: {mic_clean['TIPO'].value_counts().to_dict()}")
+print(f"RESULTADO: {mic_clean['RESULTADO'].value_counts().to_dict()}")
+```
+
+### SEG — Seguimiento
+
+```{python}
+seg['ID'] = seg['ID'].astype(int)
+seg['F_CONSULTA'] = pd.to_datetime(seg['F_CONSULTA'])
+
+print(f"Consultas: {len(seg)}, pacientes: {seg['ID'].nunique()}")
+print(f"Servicios: {seg['SERVICIO'].value_counts().to_dict()}")
+print(f"Dosis IVM: {seg['DOSIS_IVM'].value_counts().to_dict()}")
+```
+
+---
+
+# 2. Tiempo cero (T₀)
+
+T₀ = fecha de la **primera prescripción de Ivermectina** para cada paciente. Se extrae de SEG filtrando filas con `DOSIS_IVM` no nulo.
+
+```{python}
+# ── Filtrar consultas con prescripción de IVM ─────────────────
+seg_ivm = seg[seg['DOSIS_IVM'].notna()].copy()
+print(f"Consultas con IVM: {len(seg_ivm)} (de {len(seg)} totales)")
+
+# ── T0 = primera prescripción por paciente ────────────────────
+t0 = seg_ivm.groupby('ID')['F_CONSULTA'].min().rename('T0')
+
+print(f"\nPacientes con T0: {len(t0)} / 44")
+print(f"Rango: {t0.min().date()} → {t0.max().date()}")
+
+# ── Verificar: ¿todos los pacientes de BAS tienen T0? ────────
+sin_t0 = set(bas['ID']) - set(t0.index)
+assert len(sin_t0) == 0, f"Pacientes sin T0: {sin_t0}"
+print("✓ Todos los pacientes tienen T0")
+```
+
+## 2.1 Información del primer tratamiento
+
+```{python}
+# ── Extraer info del primer TTO ───────────────────────────────
+primer_tto = seg_ivm.sort_values('F_CONSULTA').groupby('ID').first()
+primer_tto = primer_tto[['SERVICIO', 'DOSIS_IVM', 'AJUSTE_IVM']].copy()
+primer_tto['T0'] = t0
+
+print("Distribución de la primera dosis:")
+print(primer_tto['DOSIS_IVM'].value_counts())
+print(f"\nServicio que prescribe:")
+print(primer_tto['SERVICIO'].value_counts())
+```
+
+---
+
+# 3. Basales
+
+Necesitamos valores **basales** (la medición más cercana a T₀, antes o en la fecha del tratamiento) para serología y eosinófilos.
+
+## 3.1 Serología basal
+
+```{python}
+# ── Unir SER con T0 ──────────────────────────────────────────
+ser_t = ser.merge(t0.reset_index(), on='ID')
+ser_t['dias'] = (ser_t['F_SER'] - ser_t['T0']).dt.days
+
+# ── Basal = última medición ≤ T0 ──────────────────────────────
+ser_pre = ser_t[ser_t['dias'] <= 0].copy()
+
+# Para cada paciente, la medición más cercana a T0 (máximo de dias ≤ 0)
+idx_basal = ser_pre.groupby('ID')['dias'].idxmax()
+ser_basal = ser_pre.loc[idx_basal, ['ID', 'F_SER', 'IGG', 'dias']].copy()
+ser_basal = ser_basal.rename(columns={'IGG': 'IGG_BASAL', 'dias': 'DIAS_PRE'})
+
+print(f"Pacientes con serología basal cuantitativa: {ser_basal['IGG_BASAL'].notna().sum()}")
+print(f"IGG basal: mediana={ser_basal['IGG_BASAL'].median():.2f}, "
+      f"rango={ser_basal['IGG_BASAL'].min():.2f} – {ser_basal['IGG_BASAL'].max():.2f}")
+
+ser_basal.head()
+```
+
+## 3.2 Eosinófilos basal
+
+```{python}
+# ── Mismo procedimiento ───────────────────────────────────────
+eos_t = eos.merge(t0.reset_index(), on='ID')
+eos_t['dias'] = (eos_t['F_EOS'] - eos_t['T0']).dt.days
+
+eos_pre = eos_t[eos_t['dias'] <= 0].copy()
+idx_basal_eos = eos_pre.groupby('ID')['dias'].idxmax()
+eos_basal = eos_pre.loc[idx_basal_eos, ['ID', 'F_EOS', 'EOS', 'dias']].copy()
+eos_basal = eos_basal.rename(columns={'EOS': 'EOS_BASAL', 'dias': 'DIAS_PRE'})
+
+print(f"Pacientes con eos basal: {len(eos_basal)}")
+print(f"EOS basal (×10³/µL): mediana={eos_basal['EOS_BASAL'].median():.2f}, "
+      f"rango={eos_basal['EOS_BASAL'].min():.2f} – {eos_basal['EOS_BASAL'].max():.2f}")
+
+# ── Clasificar eosinofilia basal ──────────────────────────────
+eos_basal['EOSINOFILIA'] = eos_basal['EOS_BASAL'] >= EOS_NEG
+print(f"\nEosinofilia basal (≥ {EOS_NEG} = {int(EOS_NEG*1000)} cél/µL):")
+print(eos_basal['EOSINOFILIA'].value_counts())
+```
+
+## 3.3 Tabla maestra de pacientes
+
+Unimos BAS + T0 + basales en un solo DataFrame. Esta es la **tabla de referencia** que usaremos para todo el análisis.
+
+```{python}
+# ── Construir tabla maestra ───────────────────────────────────
+pac = bas.copy()
+pac = pac.merge(t0.reset_index(), on='ID')
+pac = pac.merge(ser_basal[['ID', 'IGG_BASAL']], on='ID', how='left')
+pac = pac.merge(eos_basal[['ID', 'EOS_BASAL', 'EOSINOFILIA']], on='ID', how='left')
+
+# Edad al T0
+pac['EDAD_T0'] = ((pac['T0'] - pac['F_NAC']).dt.days / 365.25).round(1)
+
+# Años en España al T0
+pac['ANIOS_ESP'] = pac['T0'].dt.year - pac['T_ESP']
+
+# Variables binarias útiles
+pac['INMUNO_SI'] = pac['INMUNO'] != 'NO'
+pac['COMORB_SI'] = pac['COMORB'] != 'NO'
+pac['CONFEOS_SI'] = pac['CONFEOS'] != 'NO'
+pac['SERO_ALTA'] = pac['IGG_BASAL'] >= SERO_NEG
+
+print(f"Tabla maestra: {len(pac)} pacientes × {pac.shape[1]} columnas")
+print(f"\nColumnas: {list(pac.columns)}")
+pac[['ID', 'SEXO', 'EDAD_T0', 'ORIGEN', 'IGG_BASAL', 'EOS_BASAL',
+     'INMUNO_SI', 'COMORB_SI', 'T0']].head(10)
+```
+
+---
+
+# 4. Descriptivo
+
+## 4.1 Demografía
+
+```{python}
+print(f"N = {len(pac)}")
+print(f"\nEdad al T0: {pac['EDAD_T0'].median():.0f} años "
+      f"(RIQ {pac['EDAD_T0'].quantile(0.25):.0f}–{pac['EDAD_T0'].quantile(0.75):.0f})")
+print(f"Sexo: {pac['SEXO'].value_counts().to_dict()}")
+print(f"Origen: {pac['ORIGEN'].value_counts().to_dict()}")
+print(f"\nInmunodepresión: {pac['INMUNO_SI'].sum()} ({pac['INMUNO_SI'].mean()*100:.0f}%)")
+print(f"Comorbilidad: {pac['COMORB_SI'].sum()} ({pac['COMORB_SI'].mean()*100:.0f}%)")
+print(f"Confusores eos: {pac['CONFEOS_SI'].sum()} ({pac['CONFEOS_SI'].mean()*100:.0f}%)")
+```
+
+## 4.2 Laboratorio basal
+
+```{python}
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+# Serología basal
+ax = axes[0]
+ax.hist(pac['IGG_BASAL'].dropna(), bins=15, color=C['blue'], alpha=0.7, edgecolor='white')
+ax.axvline(SERO_NEG, color=C['red'], linestyle='--', linewidth=1.5, label=f'Umbral ({SERO_NEG})')
+ax.set_xlabel('IgG ELISA basal')
+ax.set_ylabel('Pacientes')
+ax.set_title('Serología basal')
+ax.legend(frameon=False)
+
+# Eosinófilos basal
+ax = axes[1]
+ax.hist(pac['EOS_BASAL'].dropna(), bins=15, color=C['gold'], alpha=0.7, edgecolor='white')
+ax.axvline(EOS_NEG, color=C['red'], linestyle='--', linewidth=1.5, label=f'Umbral ({EOS_NEG})')
+ax.set_xlabel('Eosinófilos basal (×10³/µL)')
+ax.set_ylabel('Pacientes')
+ax.set_title('Eosinófilos basal')
+ax.legend(frameon=False)
+
+plt.tight_layout()
+plt.savefig('figures/fig-basales-hist.png', dpi=300)
+plt.show()
+```
+
+## 4.3 Densidad de seguimiento
+
+```{python}
+# ── Mediciones por paciente ───────────────────────────────────
+densidad = pd.DataFrame({
+    'Tabla': ['SER', 'EOS', 'MIC'],
+    'Mediciones': [len(ser), len(eos), len(mic_clean)],
+    'Pacientes': [ser['ID'].nunique(), eos['ID'].nunique(), mic_clean['ID'].nunique()],
+    'Med/pac (mediana)': [
+        ser.groupby('ID').size().median(),
+        eos.groupby('ID').size().median(),
+        mic_clean.groupby('ID').size().median(),
+    ],
+    'Rango': [
+        f"{ser.groupby('ID').size().min()}–{ser.groupby('ID').size().max()}",
+        f"{eos.groupby('ID').size().min()}–{eos.groupby('ID').size().max()}",
+        f"{mic_clean.groupby('ID').size().min()}–{mic_clean.groupby('ID').size().max()}",
+    ]
+})
+densidad
+```
+
+---
+
+# 5. Trayectorias
+
+## 5.1 Preparar datos longitudinales relativos a T₀
+
+```{python}
+# ── Serología: días desde T0 ──────────────────────────────────
+ser_long = ser[ser['IGG'].notna()].merge(t0.reset_index(), on='ID')
+ser_long['dias'] = (ser_long['F_SER'] - ser_long['T0']).dt.days
+ser_long['meses'] = ser_long['dias'] / 30.44
+
+# ── Eosinófilos: días desde T0 ───────────────────────────────
+eos_long = eos.merge(t0.reset_index(), on='ID')
+eos_long['dias'] = (eos_long['F_EOS'] - eos_long['T0']).dt.days
+eos_long['meses'] = eos_long['dias'] / 30.44
+
+print(f"SER longitudinal: {len(ser_long)} mediciones")
+print(f"EOS longitudinal: {len(eos_long)} mediciones")
+```
+
+## 5.2 Spaghetti plot — Serología
+
+Cada línea fina = un paciente. Línea gruesa = tendencia del grupo.
+
+```{python}
+fig, ax = plt.subplots(figsize=(10, 5))
+
+# Líneas individuales
+for pid, grp in ser_long.groupby('ID'):
+    grp_sorted = grp.sort_values('meses')
+    ax.plot(grp_sorted['meses'], grp_sorted['IGG'],
+            color=C['muted'], alpha=0.3, linewidth=0.8)
+
+# Media móvil del grupo (bins de 3 meses)
+ser_long['bin'] = (ser_long['meses'] / 3).round() * 3
+media = ser_long.groupby('bin')['IGG'].agg(['mean', 'std', 'count'])
+media = media[media['count'] >= 3]  # al menos 3 mediciones por bin
+ax.plot(media.index, media['mean'], color=C['blue'], linewidth=2.5, label='Media del grupo')
+
+# Umbral
+ax.axhline(SERO_NEG, color=C['red'], linestyle='--', linewidth=1, label=f'Negativo ({SERO_NEG})')
+ax.axvline(0, color=C['annot'], linestyle='-', linewidth=0.8, alpha=0.5)
+ax.text(0.5, ax.get_ylim()[1]*0.95, 'T₀ (IVM)', color=C['annot'], fontsize=9)
+
+ax.set_xlabel('Meses desde tratamiento')
+ax.set_ylabel('IgG ELISA')
+ax.set_title('Trayectorias serológicas individuales')
+ax.legend(frameon=False, loc='upper right')
+
+plt.tight_layout()
+plt.savefig('figures/fig-sero-spaghetti.png', dpi=300)
+plt.show()
+```
+
+## 5.3 Spaghetti plot — Eosinófilos
+
+```{python}
+fig, ax = plt.subplots(figsize=(10, 5))
+
+for pid, grp in eos_long.groupby('ID'):
+    grp_sorted = grp.sort_values('meses')
+    ax.plot(grp_sorted['meses'], grp_sorted['EOS'],
+            color=C['muted'], alpha=0.2, linewidth=0.6)
+
+eos_long['bin'] = (eos_long['meses'] / 3).round() * 3
+media_eos = eos_long.groupby('bin')['EOS'].agg(['mean', 'std', 'count'])
+media_eos = media_eos[media_eos['count'] >= 5]
+ax.plot(media_eos.index, media_eos['mean'], color=C['gold'], linewidth=2.5, label='Media del grupo')
+
+ax.axhline(EOS_NEG, color=C['red'], linestyle='--', linewidth=1, label=f'Umbral ({EOS_NEG})')
+ax.axvline(0, color=C['annot'], linestyle='-', linewidth=0.8, alpha=0.5)
+
+ax.set_xlabel('Meses desde tratamiento')
+ax.set_ylabel('Eosinófilos (×10³/µL)')
+ax.set_title('Trayectorias de eosinófilos individuales')
+ax.legend(frameon=False, loc='upper right')
+
+plt.tight_layout()
+plt.savefig('figures/fig-eos-spaghetti.png', dpi=300)
+plt.show()
+```
+
+---
+
+# 6. Eventos de negativización
+
+## 6.1 Negativización serológica absoluta
+
+Definición: primera medición post-T₀ con IGG < 1.1.
+
+```{python}
+# ── Filtrar mediciones post-T0 ────────────────────────────────
+ser_post = ser_long[ser_long['dias'] > 0].copy()
+
+# ── Para cada paciente: ¿alcanza IGG < SERO_NEG? ─────────────
+ser_post['neg_abs'] = ser_post['IGG'] < SERO_NEG
+
+# Primera negativización absoluta por paciente
+neg_abs = (ser_post[ser_post['neg_abs']]
+           .sort_values('dias')
+           .groupby('ID')
+           .first()
+           [['F_SER', 'IGG', 'dias']]
+           .rename(columns={'dias': 'T_NEG_SERO_ABS'}))
+
+n_neg = len(neg_abs)
+n_total = pac['IGG_BASAL'].notna().sum()
+print(f"Negativización serológica absoluta: {n_neg}/{n_total} pacientes")
+print(f"Tiempo mediano: {neg_abs['T_NEG_SERO_ABS'].median():.0f} días "
+      f"({neg_abs['T_NEG_SERO_ABS'].median()/30.44:.1f} meses)")
+```
+
+## 6.2 Negativización serológica relativa
+
+Definición: primera medición post-T₀ con IGG < 50% del basal.
+
+```{python}
+# ── Unir con IGG basal ────────────────────────────────────────
+ser_post_b = ser_post.merge(pac[['ID', 'IGG_BASAL']], on='ID')
+ser_post_b['umbral_rel'] = ser_post_b['IGG_BASAL'] * (1 - SERO_DROP)
+ser_post_b['neg_rel'] = ser_post_b['IGG'] < ser_post_b['umbral_rel']
+
+neg_rel = (ser_post_b[ser_post_b['neg_rel']]
+           .sort_values('dias')
+           .groupby('ID')
+           .first()
+           [['F_SER', 'IGG', 'dias', 'IGG_BASAL', 'umbral_rel']]
+           .rename(columns={'dias': 'T_NEG_SERO_REL'}))
+
+print(f"Negativización serológica relativa (↓>{SERO_DROP*100:.0f}%): "
+      f"{len(neg_rel)}/{n_total} pacientes")
+print(f"Tiempo mediano: {neg_rel['T_NEG_SERO_REL'].median():.0f} días")
+```
+
+## 6.3 Negativización eosinofílica absoluta
+
+Definición: primera medición post-T₀ con EOS < 0.5 ×10³/µL.
+
+```{python}
+eos_post = eos_long[eos_long['dias'] > 0].copy()
+eos_post['neg_abs'] = eos_post['EOS'] < EOS_NEG
+
+neg_eos = (eos_post[eos_post['neg_abs']]
+           .sort_values('dias')
+           .groupby('ID')
+           .first()
+           [['F_EOS', 'EOS', 'dias']]
+           .rename(columns={'dias': 'T_NEG_EOS_ABS'}))
+
+print(f"Negativización eosinofílica: {len(neg_eos)}/44 pacientes")
+print(f"Tiempo mediano: {neg_eos['T_NEG_EOS_ABS'].median():.0f} días")
+```
+
+## 6.4 Tabla de eventos consolidada
+
+```{python}
+# ── Unir todos los eventos a la tabla maestra ─────────────────
+eventos = pac[['ID']].copy()
+
+# Serología absoluta
+eventos = eventos.merge(
+    neg_abs[['T_NEG_SERO_ABS']].reset_index(), on='ID', how='left')
+eventos['E_SERO_ABS'] = eventos['T_NEG_SERO_ABS'].notna().astype(int)
+
+# Serología relativa
+eventos = eventos.merge(
+    neg_rel[['T_NEG_SERO_REL']].reset_index(), on='ID', how='left')
+eventos['E_SERO_REL'] = eventos['T_NEG_SERO_REL'].notna().astype(int)
+
+# Eosinófilos absoluta
+eventos = eventos.merge(
+    neg_eos[['T_NEG_EOS_ABS']].reset_index(), on='ID', how='left')
+eventos['E_EOS_ABS'] = eventos['T_NEG_EOS_ABS'].notna().astype(int)
+
+# ── Para pacientes sin evento: tiempo de censura ──────────────
+# = tiempo desde T0 hasta última medición disponible
+ultima_ser = ser_long.groupby('ID')['dias'].max().rename('ultimo_ser')
+ultima_eos = eos_long.groupby('ID')['dias'].max().rename('ultimo_eos')
+
+eventos = eventos.merge(ultima_ser.reset_index(), on='ID', how='left')
+eventos = eventos.merge(ultima_eos.reset_index(), on='ID', how='left')
+
+# Tiempo de análisis = tiempo hasta evento, o hasta censura
+eventos['T_SERO_ABS'] = eventos['T_NEG_SERO_ABS'].fillna(eventos['ultimo_ser'])
+eventos['T_SERO_REL'] = eventos['T_NEG_SERO_REL'].fillna(eventos['ultimo_ser'])
+eventos['T_EOS_ABS']  = eventos['T_NEG_EOS_ABS'].fillna(eventos['ultimo_eos'])
+
+print("Tabla de eventos:")
+print(eventos[['ID', 'T_SERO_ABS', 'E_SERO_ABS',
+               'T_SERO_REL', 'E_SERO_REL',
+               'T_EOS_ABS', 'E_EOS_ABS']].describe().round(1))
+```
+
+---
+
+# 7. Análisis de supervivencia
+
+## 7.1 Kaplan-Meier: negativización serológica absoluta
+
+```{python}
+from lifelines import KaplanMeierFitter
+
+# ── Filtrar tiempos válidos (>0 días) ─────────────────────────
+km_data = eventos[eventos['T_SERO_ABS'] > 0].copy()
+
+kmf = KaplanMeierFitter()
+kmf.fit(km_data['T_SERO_ABS'], km_data['E_SERO_ABS'],
+        label='Neg. serológica absoluta')
+
+fig, ax = plt.subplots(figsize=(8, 5))
+kmf.plot_survival_function(ax=ax, ci_show=True, color=C['blue'])
+ax.set_xlabel('Días desde tratamiento')
+ax.set_ylabel('Probabilidad de NO negativizar')
+ax.set_title('Kaplan-Meier: Negativización serológica absoluta (IGG < 1.1)')
+ax.set_ylim(0, 1.05)
+ax.axhline(0.5, color=C['grid'], linestyle=':', linewidth=0.8)
+
+# Mediana
+if kmf.median_survival_time_ < np.inf:
+    ax.axvline(kmf.median_survival_time_, color=C['red'],
+               linestyle='--', linewidth=1, alpha=0.7)
+    ax.text(kmf.median_survival_time_ + 10, 0.52,
+            f'Mediana: {kmf.median_survival_time_:.0f} días',
+            color=C['red'], fontsize=9)
+
+plt.tight_layout()
+plt.savefig('figures/fig-km-sero-abs.png', dpi=300)
+plt.show()
+
+print(f"Mediana de supervivencia: {kmf.median_survival_time_:.0f} días")
+```
+
+## 7.2 Kaplan-Meier: negativización eosinofílica
+
+```{python}
+km_eos_data = eventos[eventos['T_EOS_ABS'] > 0].copy()
+
+kmf_eos = KaplanMeierFitter()
+kmf_eos.fit(km_eos_data['T_EOS_ABS'], km_eos_data['E_EOS_ABS'],
+            label='Neg. eosinofílica')
+
+fig, ax = plt.subplots(figsize=(8, 5))
+kmf_eos.plot_survival_function(ax=ax, ci_show=True, color=C['gold'])
+ax.set_xlabel('Días desde tratamiento')
+ax.set_ylabel('Probabilidad de NO negativizar')
+ax.set_title('Kaplan-Meier: Negativización eosinofílica (< 500 cél/µL)')
+ax.set_ylim(0, 1.05)
+
+plt.tight_layout()
+plt.savefig('figures/fig-km-eos.png', dpi=300)
+plt.show()
+```
+
+## 7.3 KM estratificado por inmunodepresión
+
+```{python}
+from lifelines.statistics import logrank_test
+
+# ── Unir eventos con variable de grupo ────────────────────────
+km_strat = km_data.merge(pac[['ID', 'INMUNO_SI']], on='ID')
+
+fig, ax = plt.subplots(figsize=(8, 5))
+
+for i, (label, grupo) in enumerate(km_strat.groupby('INMUNO_SI')):
+    nombre = 'Inmunodeprimido' if label else 'No inmunodeprimido'
+    kmf_g = KaplanMeierFitter()
+    kmf_g.fit(grupo['T_SERO_ABS'], grupo['E_SERO_ABS'], label=nombre)
+    kmf_g.plot_survival_function(ax=ax, ci_show=True, color=SAT[i])
+
+# Log-Rank test
+g0 = km_strat[~km_strat['INMUNO_SI']]
+g1 = km_strat[km_strat['INMUNO_SI']]
+lr = logrank_test(g0['T_SERO_ABS'], g1['T_SERO_ABS'],
+                  g0['E_SERO_ABS'], g1['E_SERO_ABS'])
+
+ax.set_xlabel('Días desde tratamiento')
+ax.set_ylabel('Probabilidad de NO negativizar')
+ax.set_title('KM por inmunodepresión')
+ax.legend(frameon=False)
+ax.text(0.95, 0.95, f'Log-Rank p = {lr.p_value:.3f}',
+        transform=ax.transAxes, ha='right', va='top',
+        fontsize=10, color=C['annot'])
+
+plt.tight_layout()
+plt.savefig('figures/fig-km-sero-inmuno.png', dpi=300)
+plt.show()
+
+print(f"Log-Rank: χ² = {lr.test_statistic:.2f}, p = {lr.p_value:.4f}")
+```
+
+---
+
+# 8. Next steps {.unnumbered}
+
+Lo que queda por implementar, en orden:
+
+1. **Negativización serológica ×2** — dos mediciones consecutivas bajo umbral
+2. **Negativización parasitológica** — 2 negativos consecutivos en MIC, >7 días post-T₀
+3. **Recidiva** — positivo >90 días post-T₀
+4. **KM estratificado** por cada variable de grupo (sexo, comorbilidad, confusores eos, origen)
+5. **Cox univariable** — HR para cada covariable
+6. **Cox multivariable** — covariables con Log-Rank p < 0.20
+7. **Modelo lineal mixto** — trayectoria de IGG y EOS en función del tiempo, con covariables
+8. **Forest plot** de los HRs

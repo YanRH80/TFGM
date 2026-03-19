@@ -1,0 +1,96 @@
+% ═══════════════════════════════════════════════════════════════
+% Draft preamble — Aesthetic one-column layout
+% Change palette by editing the \input line below.
+% ═══════════════════════════════════════════════════════════════
+
+% ── Palette (swap this line to change all colors) ─────────────
+\input{assets/palettes/sapphire.tex}
+
+% ── Typography ────────────────────────────────────────────────
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\setmainfont{TeX Gyre Pagella}[Ligatures=TeX]
+\setmathfont{TeX Gyre Pagella Math}
+\setsansfont{TeX Gyre Heros}[Scale=MatchLowercase]
+\usepackage{microtype}
+
+% ── Spacing ───────────────────────────────────────────────────
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.7em}
+\linespread{1.15}
+\widowpenalty=10000
+\clubpenalty=10000
+
+% ── Links ─────────────────────────────────────────────────────
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=Accent, citecolor=Accent, urlcolor=Accent}
+
+% ── Section titles (use palette colors) ───────────────────────
+\usepackage{titlesec}
+\titleformat{\section}
+  {\color{PrimaryDark}\sffamily\Large\bfseries}
+  {\thesection}{1em}{}[\vspace{0em}{\color{AccentLight}\titlerule}]
+\titlespacing*{\section}{0pt}{2.5em}{1em}
+
+\titleformat{\subsection}
+  {\color{PrimaryDark}\sffamily\large\bfseries}
+  {\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{1.5em}{0.5em}
+
+% ── Captions ──────────────────────────────────────────────────
+\usepackage{caption}
+\captionsetup{
+  font={small,sf,color=TextBody},
+  labelfont={bf,color=PrimaryDark},
+  labelsep=space, format=hang
+}
+
+% ── Lists ─────────────────────────────────────────────────────
+\usepackage{enumitem}
+\setlist[itemize]{label=\textcolor{AccentLight}{\rule{0.8ex}{0.8ex}}, leftmargin=*, topsep=0pt}
+
+% ── Headers ───────────────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\footnotesize\sffamily\color{PrimaryMid} Y. Rodríguez-Hachimaru \textit{et al.}}
+\fancyhead[R]{\footnotesize\sffamily\color{PrimaryMid} The `Sitting Sign' in Chronic Pelvic Pain}
+\fancyfoot[C]{\sffamily\color{PrimaryDark}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{AccentLight}\leaders\hrule height \headrulewidth\hfill}}
+
+% ── Tables & floats ───────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{float}
+
+% ═══════════════════════════════════════════════════════════════
+% STANDARD ENVIRONMENTS (targeted by custom-blocks.lua)
+% ═══════════════════════════════════════════════════════════════
+
+% ── custombox{Title} — aesthetic floating-title box ───────────
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+\newtcolorbox{custombox}[1]{
+  enhanced, breakable,
+  colback=white,
+  colframe=AccentLight,
+  colbacktitle=AccentLight,
+  coltitle=black,
+  fonttitle=\bfseries\rmfamily\large,
+  title={#1},
+  boxrule=1.5pt, arc=0pt, outer arc=0pt,
+  left=12pt, right=12pt, top=12pt, bottom=12pt,
+  attach boxed title to top left={xshift=15pt, yshift=-\tcboxedtitleheight/2},
+  boxed title style={frame hidden, arc=0pt, outer arc=0pt,
+    top=4pt, bottom=4pt, left=8pt, right=8pt}
+}
+
+% ── customquote — editorial-style left-bar quote ──────────────
+\newtcolorbox{customquote}{
+  enhanced, breakable,
+  frame hidden, boxrule=0pt,
+  borderline west={4pt}{0pt}{Accent!60},
+  colback=SurfaceLight,
+  sharp corners,
+  fontupper=\itshape\rmfamily,
+  left=15pt, right=15pt, top=10pt, bottom=10pt
+}

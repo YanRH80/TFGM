@@ -1,0 +1,30 @@
+---
+title: "Título"
+author:
+  - Yan Rodríguez-Hachimaru
+date: today
+format:
+  pdf:
+    pdf-engine: lualatex
+    documentclass: article
+    classoption: [a4paper, 11pt]
+    geometry: "top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm"
+    linestretch: 1.15
+    cite-method: citeproc
+    include-in-header:
+      - file: assets/draft/preamble.tex
+    toc: false
+---
+
+{{< include content/00-Draft.qmd >}}
+{{< include content/01-Analisis.qmd >}}
+
+
+\pagebreak
+
+## References
+
+::: {#refs}
+:::
+
+

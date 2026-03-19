@@ -1,0 +1,34 @@
+% ═══════════════════════════════════════════════════════════════
+% FP titleblock — layout only, all data comes from authors.tex
+% ═══════════════════════════════════════════════════════════════
+\input{assets/authors.tex}
+\renewcommand{\FPshorttitle}{\ShortTitle}
+\thispagestyle{plain}%
+\twocolumn[%
+  \vspace*{6pt}%
+  \begin{flushleft}
+  {\fontsize{16}{22}\selectfont\sffamily\bfseries \ArticleTitle\par}
+  \end{flushleft}
+  \vspace{6pt}
+
+  \begin{flushleft}
+  {\fontsize{10.5}{13}\selectfont\sffamily\bfseries \AuthorLine\par}
+  \end{flushleft}
+  \vspace{2pt}
+
+  \begin{flushleft}
+  {\small\sffamily\itshape \AffiliationBlock\par}
+  \end{flushleft}
+  \vspace{1pt}
+
+  \begin{flushleft}
+  {\footnotesize\sffamily \textsuperscript{*}Corresponding author: \CorrespondingLine\par}
+  \end{flushleft}
+  \vspace{6pt}
+
+  {\small\sffamily\noindent \AbstractText\par}
+  \vspace{4pt}
+  
+  {\small\sffamily\noindent \textbf{Key words:} \KeywordsText\par}
+  \vspace{10pt}
+]%

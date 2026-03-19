@@ -1,0 +1,117 @@
+# Recogida de datos
+
+## Procedimiento
+
+1. Buscar historia clínica
+2. Confirmar prueba positiva de strongyloides (serología, coprocultivo, microscopia)
+3. Buscar tratamiento (TTO) Ivermectina (IVM) (desde fecha de 1º positivo)
+	1. Exclusión de no tratados con Ivermectina
+4. Confirmar seguimiento post-TTO (prueba pedida *después* de la fecha de la consulta en la que se prescribe IVM)
+	1. Exclusión de no seguidos post-TTO con IVM
+5. Recogida de datos
+	1. Introducir : Basal, Eosinófilos, Serología (IgG ELISA), Micro (+ fecha de *finalización* de prueba)
+	2. Introducir : Comorbilidad, Inmunodepresión
+		1. Interpretación de datos reflejados en historia clínica asociada a fecha de 1º tratamiento
+6. Comprobación de duplicados/omisiones (x2)
+7. Normalización de variables y valores (unidad, formato) + Anonimización
+
+## Resultado
+
+| Prueba positiva + Tratamiento con Ivermectina + Prueba post-tratamiento | 44  |
+| ----------------------------------------------------------------------- | --- |
+| NO TTO con IVM                                          | 20  |
+| NO Prueba post-TTO                                              | 19  |
+| NO Diagnóstico en HCDGU                                                 | 1   |
+
+
+| Tabla | Filas | Pacientes | Observaciones                                  |
+| :---: | ----- | --------- | ---------------------------------------------- |
+| `BAS` | 44    | 44        | Variables demográficas y clínicas              |
+| `SER` | 141   | 44        | 3.2 mediciones/paciente (rango 1–10)           |
+| `EOS` | 662   | 44        | 15.0 mediciones/paciente (rango 2–54)          |
+| `MIC` | 95    | 34        | 10 pacientes sin ninguna prueba microbiológica |
+| `SEG` | 208   | 44        | Narrativa clínica, TTO, eventos                |
+
+- BAS
+	- ID [ID]
+	- Fecha de nacimiento [T_NAC] 
+	- Sexo [SEX] 
+	- Fecha de llegada a España [T_ESP] 
+	- Inmunodepresión significativa a la fecha de 1º tratamiento [BAS_INMUNO]
+	- Comorbilidad significativa a la fecha de 1º tratamiento [BAS_COMORB]
+	- Confusores de eosinofilia a la fecha de 1º tratamiento [BAS_CONF_EOS]
+- SER
+	- ID [ID]
+	- Fecha de finalización de prueba
+	- Título de IgG ELISA DRG [IGG]
+- EOS
+	- ID [ID]
+	- Fecha de finalización de prueba
+	- Nº Eosinófilos (10³/µl) [EOS]
+- MIC
+	- ID [ID]
+	- Fecha de finalización de prueba
+	- Tipo de prueba (Micro / Copro) [MIC]
+	- Resultado (Positivo / Negativo)
+- SEG
+	- ID [ID]
+	- Fecha de consulta
+	- Servicio
+	- Motivo de consulta
+	- Clínica
+	- Viaje a zona endémica
+	- Dosis IVM
+	- Ajuste IVM
+
+## Análisis
+
+### Eventos
+
+- Tiempo 0 (Fecha de 1º prescripción de Ivermectina) = [FECHA_TTO]
+- Negativización
+	- Parasitológica (Microscopia/Coprocultivo negativo x2, Fecha >7d desde [FECHA_TTO]) = [NEG_PARA]
+	- Serológica
+		- Absoluta (Título <1.1)
+			- Una vez = [NEG_SERO_ABS_X1]
+			- Dos veces seguidas = [NEG_SERO_ABS_X2]
+		- Relativa (↓Título >50% Basal)
+			- Una vez = [NEG_SERO_REL_X1]
+			- Dos veces seguidas = [NEG_SERO_REL_X2]
+	- Eosinofílica
+		- Absoluta (<500 cél/µL) = [NEG_EOS_ABS]
+		- Relativa (↓ >50% Basal) = [NEG_EOS_REL]
+- Recidiva (Prueba positiva post-tto, Fecha >3m desde FECHA_TTO) = [RECIDIVA]
+- Strongyloides persistente = Prueba positiva post-tto, Fecha <3m desde FECHA_TTO
+- Eosinofilia persistente = >500 eos, Fecha >6m dsde FECHA_TTO
+
+### Variables compuestas
+
+- Logaritmo de Título de Strongyloides
+- Tiempo hasta NEG_PARA
+- Tiempo hasta NEG_SERO_ABS_X1 / NEG_SERO_ABS_X2 
+- Tiempo hasta NEG_SERO_PAR_X1 / NEG_SERO_PAR_X2
+- Tiempo hasta NEG_EOS_ABS / Tiempo hasta NEG_EOS_REL
+- Tiempo hasta RECIDIVA
+- Tiempo hasta Inicio de Tratamiento (FECHA_TTO - FECHA_DX)
+
+
+::: {.box title="Grupos de Comparación"}
+- Eosinofilia basal
+- Serología basal
+- Microbiología basal
+- Inmunosupresión basal
+- Comorbilidad basal
+- Confusores de eosinofilia
+- Origen
+- Sexo
+- Servicio
+:::
+
+::: {.box title="Herramientas de Análisis"}
+- Kaplan-Meier
+- Log-Rank
+- Modelo Lineal Mixto
+- Regresión de Cox Univariable
+- Regresión de Cox Multivariable (Si Log-Rank <0.15-20)
+:::
+

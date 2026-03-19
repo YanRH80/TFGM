@@ -1,0 +1,14 @@
+# ═══════════════════════════════════════════════════════════════
+# _quarto.yml — Shared project config
+# Format-specific settings live in each index-*.qmd
+# ═══════════════════════════════════════════════════════════════
+project:
+  output-dir: _output
+
+lang: en
+bibliography: bib.json
+csl: assets/vancouver-superscript.csl
+number-sections: false
+
+filters:
+  - assets/filters/custom-blocks.lua

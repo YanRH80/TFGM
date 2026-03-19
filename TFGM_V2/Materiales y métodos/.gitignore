@@ -1,0 +1,13 @@
+_output/
+.quarto/
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+
+/.quarto/
+**/*.quarto_ipynb
