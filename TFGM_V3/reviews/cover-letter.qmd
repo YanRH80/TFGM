@@ -1,0 +1,50 @@
+---
+title: ""
+format:
+  pdf:
+    pdf-engine: lualatex
+    documentclass: letter
+    geometry: "top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm"
+    include-in-header:
+      - text: |
+          \usepackage{fontspec}
+          \setmainfont{TeX Gyre Termes}
+          \usepackage{hyperref}
+          \hypersetup{colorlinks=true,urlcolor=blue}
+          \date{}
+---
+
+\vspace{-2cm}
+
+**Yan Rodríguez-Hachimaru**\
+Universidad de Alcalá de Henares\
+Madrid, Spain\
+yan.rodriguez@edu.uah.es
+
+\vspace{1cm}
+
+**Editor-in-Chief**\
+*Family Practice*\
+Oxford University Press
+
+\vspace{0.5cm}
+
+Dear Editor,
+
+We are pleased to submit our manuscript entitled **"The 'Sitting Sign' in Chronic Pelvic Pain: Avoiding the Diagnostic Cascade"** for consideration for publication in *Family Practice* as a Case Report.
+
+<!-- Customize from here -->
+
+This case report illustrates a 9-year diagnostic odyssey of a patient with Myofascial Pelvic Pain Syndrome, highlighting the consequences of diagnostic anchoring on incidental imaging findings and the critical role of directed physical examination in primary care. We believe this case is of particular relevance to the readership of *Family Practice* because...
+
+The manuscript has not been published elsewhere and is not under consideration by another journal. All authors have approved the manuscript and agree with its submission. Written informed consent was obtained from the patient.
+
+We have no conflicts of interest to declare.
+
+Thank you for your consideration.
+
+\vspace{1cm}
+
+Sincerely,
+
+Yan Rodríguez-Hachimaru, on behalf of all authors

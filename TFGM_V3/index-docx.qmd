@@ -1,0 +1,20 @@
+---
+title: "Title"
+author:
+  - Yan Rodríguez-Hachimaru
+date: today
+abstract: |
+  Abstract
+format:
+  docx:
+    reference-doc: assets/docx/reference.docx
+    toc: false
+    cite-method: citeproc
+---
+
+
+
+## References
+
+::: {#refs}
+:::

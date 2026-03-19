@@ -1,0 +1,29 @@
+---
+title: ""
+code-overflow: wrap
+author:
+  - Yan Rodríguez-Hachimaru
+date: today
+format:
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{fvextra}
+          \RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines=true,breakanywhere=true, breaksymbol={}}
+      - file: assets/draft/preamble.tex
+    code-overflow: wrap
+    pdf-engine: lualatex
+    documentclass: article
+    classoption: [a4paper, 11pt]
+    geometry: "top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm"
+    linestretch: 1.15
+    cite-method: citeproc
+    toc: false
+    toc-depth: 2
+    toc-title: "Contenido"
+    number-sections: false
+    execute:
+      echo: false
+---
+
+{{< include content/Manuscrito.qmd >}}

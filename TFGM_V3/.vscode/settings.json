@@ -1,0 +1,12 @@
+{
+    "favorites.resources": [
+        {
+            "filePath": "_output/index-draft.pdf",
+            "group": "Default"
+        },
+        {
+            "filePath": "content/01_Limpieza.qmd",
+            "group": "Default"
+        }
+    ]
+}

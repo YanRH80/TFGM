@@ -1,0 +1,24 @@
+---
+title: ""
+author: ""
+date: ""
+format:
+  pdf:
+    pdf-engine: lualatex
+    documentclass: article
+    classoption: [twocolumn, a4paper, 10pt]
+    geometry: "top=1.5cm, bottom=2.0cm, left=1.8cm, right=1.8cm, columnsep=0.6cm, headheight=45pt, includehead, headsep=10pt"
+    linestretch: 1.0
+    cite-method: citeproc
+    include-in-header:
+      - file: assets/fp/preamble.tex
+    include-before-body:
+      - file: assets/fp/titleblock.tex
+---
+
+
+
+## References
+
+::: {#refs}
+:::

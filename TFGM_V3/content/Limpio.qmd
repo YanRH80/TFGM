@@ -1,0 +1,361 @@
+---
+title: "Limpio"
+subtitle: "Análisis de supervivencia — Predictores basales de respuesta"
+date: today
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    fig-pos: 'H'
+execute:
+  echo: false
+  warning: false
+---
+
+```{python}
+#| output: false
+
+# ═══════════════════════════════════════════════════════════════
+# PROCESAMIENTO DE DATOS — Este bloque carga, limpia y prepara
+# todas las tablas. No genera output visible.
+# ═══════════════════════════════════════════════════════════════
+import pandas as pd, numpy as np, matplotlib.pyplot as plt, textwrap, warnings
+from scipy.stats import spearmanr, mannwhitneyu
+from collections import OrderedDict
+warnings.filterwarnings('ignore')
+
+# ── Paleta ────────────────────────────────────────────────────
+SAT = ['#E74C3C','#3498DB','#F39C12','#2ECC71','#9B59B6','#1ABC9C','#E67E22']
+GRI = ['#F5F5F5','#D9D9D9','#AAAAAA','#666666','#2B2B2B']
+C = {'red':SAT[0],'blue':SAT[1],'gold':SAT[2],'green':SAT[3],
+     'purple':SAT[4],'teal':SAT[5],'orange':SAT[6],
+     'bg':GRI[0],'grid':GRI[1],'muted':GRI[2],'annot':GRI[3],'text':GRI[4]}
+plt.rcParams.update({'font.family':'sans-serif','font.size':10,
+    'axes.spines.top':False,'axes.spines.right':False,
+    'axes.grid':True,'grid.alpha':0.3,'grid.linestyle':':',
+    'figure.dpi':100,'savefig.dpi':300,'savefig.bbox':'tight',
+    'text.color':C['text'],'axes.labelcolor':C['text']})
+
+# ── Constantes clínicas ───────────────────────────────────────
+SERO_NEG  = 1.1
+SERO_DROP = 0.50
+EOS_NEG   = 0.5
+MICRO_MIN = 7
+RECIDIVA_GAP = 21
+
+# ── Carga + Limpieza (5 hojas → 5 DataFrames limpios) ────────
+RUTA = '/Users/yanrodriguez/Desktop/VSCode/TFGM/TFGM_V3/BASE_EXCEL.xlsx'
+bas = pd.read_excel(RUTA,'bas'); bas['ID']=bas['ID'].astype(int); bas['F_NAC']=pd.to_datetime(bas['F_NAC'])
+ser = pd.read_excel(RUTA,'ser'); ser['ID']=ser['ID'].astype(int); ser['F_SER']=pd.to_datetime(ser['F_SER'])
+ser['IGG_QUAL']=ser['IGG'].where(ser['IGG'].apply(lambda x: isinstance(x, str)))
+ser['IGG']=pd.to_numeric(ser['IGG'],errors='coerce')
+eos = pd.read_excel(RUTA,'eos'); eos['ID']=eos['ID'].astype(int); eos['F_EOS']=pd.to_datetime(eos['F_EOS']); eos['EOS']=pd.to_numeric(eos['EOS'],errors='coerce')
+mic = pd.read_excel(RUTA,'mic'); mic=mic[mic['F_MIC'].notna()].copy(); mic['ID']=mic['ID'].astype(int); mic['F_MIC']=pd.to_datetime(mic['F_MIC'])
+mic['RESULTADO']=pd.to_numeric(mic['RESULTADO'],errors='coerce'); mic.loc[mic['RESULTADO'].isna(),'RESULTADO']=1; mic['RESULTADO']=mic['RESULTADO'].astype(int)
+seg = pd.read_excel(RUTA,'seg'); seg['ID']=seg['ID'].astype(int); seg['F_CONSULTA']=pd.to_datetime(seg['F_CONSULTA'])
+
+# ── T₀ = primera prescripción de IVM ─────────────────────────
+t0 = seg[seg['DOSIS_IVM'].notna()].groupby('ID')['F_CONSULTA'].min().rename('T0')
+
+# ── Basales (medición más cercana pre-T₀) ────────────────────
+ser_t = ser[['ID','F_SER','IGG']].merge(t0.reset_index(), on='ID'); ser_t['dias']=(ser_t['F_SER']-ser_t['T0']).dt.days
+ser_pre = ser_t[ser_t['dias']<=0]; idx=ser_pre.groupby('ID')['dias'].idxmax()
+ser_basal = ser_pre.loc[idx,['ID','IGG']].rename(columns={'IGG':'IGG_BASAL'})
+
+eos_t = eos[['ID','F_EOS','EOS']].merge(t0.reset_index(), on='ID'); eos_t['dias']=(eos_t['F_EOS']-eos_t['T0']).dt.days
+eos_pre = eos_t[eos_t['dias']<=0]; idx2=eos_pre.groupby('ID')['dias'].idxmax()
+eos_basal = eos_pre.loc[idx2,['ID','EOS']].rename(columns={'EOS':'EOS_BASAL'})
+
+mic_t = mic.merge(t0.reset_index(), on='ID'); mic_t['dias']=(mic_t['F_MIC']-mic_t['T0']).dt.days
+mic_pre = mic_t[mic_t['dias']<=0]
+mic_basal = mic_pre.groupby(['ID','TIPO'])['RESULTADO'].max().unstack().reset_index().rename(columns={'COPRO':'COPRO_BASAL','MICRO':'MICRO_BASAL'})
+mic_basal['MIC_BASAL'] = mic_basal[['COPRO_BASAL','MICRO_BASAL']].max(axis=1)
+
+# ── Tabla maestra pac (1 fila por paciente) ───────────────────
+pac = bas.merge(t0.reset_index(), on='ID').merge(ser_basal, on='ID', how='left').merge(eos_basal, on='ID', how='left').merge(mic_basal[['ID','MIC_BASAL']], on='ID', how='left')
+pac['EDAD'] = ((pac['T0']-pac['F_NAC']).dt.days/365.25).round(1)
+pac['AN_ESP'] = pac['T0'].dt.year - pac['T_ESP']
+pac['INMUNO_SI'] = (pac['INMUNO']!='NO').astype(int)
+pac['COMORB_SI'] = (pac['COMORB']!='NO').astype(int)
+pac['CONFEOS_SI'] = (pac['CONFEOS']!='NO').astype(int)
+pac['SEXO_V'] = (pac['SEXO']=='V').astype(int)
+pac['EOS_ALTA'] = np.where(pac['EOS_BASAL'].isna(), np.nan, (pac['EOS_BASAL']>=EOS_NEG).astype(int))
+pac['SER_ALTA'] = np.where(pac['IGG_BASAL'].isna(), np.nan, (pac['IGG_BASAL']>=SERO_NEG).astype(int))
+
+igg_med = pac['IGG_BASAL'].median()
+igg_p75 = pac['IGG_BASAL'].quantile(0.75)
+eos_med = pac['EOS_BASAL'].median()
+eos_p75 = pac['EOS_BASAL'].quantile(0.75)
+
+pac['SER_MEDIANA'] = np.where(pac['IGG_BASAL'].isna(), np.nan, (pac['IGG_BASAL']>=igg_med).astype(int))
+pac['SER_P75'] = np.where(pac['IGG_BASAL'].isna(), np.nan, (pac['IGG_BASAL']>=igg_p75).astype(int))
+pac['SER_TERCIL'] = pd.qcut(pac['IGG_BASAL'], q=3, labels=['Bajo','Medio','Alto'])
+pac['EDAD_ALTA'] = (pac['EDAD']>=pac['EDAD'].median()).astype(int)
+pac['EOS_MEDIANA'] = np.where(pac['EOS_BASAL'].isna(), np.nan, (pac['EOS_BASAL']>=eos_med).astype(int))
+pac['EOS_P75'] = np.where(pac['EOS_BASAL'].isna(), np.nan, (pac['EOS_BASAL']>=eos_p75).astype(int))
+pac['EOS_1000'] = np.where(pac['EOS_BASAL'].isna(), np.nan, (pac['EOS_BASAL']>=1.0).astype(int))
+pac['EOS_TERCIL'] = pd.qcut(pac['EOS_BASAL'], q=3, labels=['Bajo','Medio','Alto'])
+pac['EOS_LIMPIA'] = np.where(pac['EOS_BASAL'].isna(), np.nan, ((pac['EOS_BASAL']>=EOS_NEG) & (pac['CONFEOS_SI']==0)).astype(int))
+
+primer_tto = seg[seg['DOSIS_IVM'].notna()].sort_values('F_CONSULTA').groupby('ID').first()[['DOSIS_IVM']]
+pac = pac.merge(primer_tto.reset_index(), on='ID', how='left')
+pac['MONO'] = (pac['DOSIS_IVM']=='MONO').astype(int)
+n_ttos = seg[seg['DOSIS_IVM'].notna()].groupby('ID').size().rename('N_TTO')
+pac = pac.merge(n_ttos.reset_index(), on='ID', how='left')
+pac['RETRATADO'] = (pac['N_TTO']>1).astype(int)
+pac['INMUNO_O_COMORB'] = ((pac['INMUNO_SI']==1)|(pac['COMORB_SI']==1)).astype(int)
+pac['DX_PARA'] = pac['MIC_BASAL'].fillna(0).astype(int)
+
+# ── Series longitudinales ─────────────────────────────────────
+ser_long = ser_t[ser_t['IGG'].notna()].copy(); ser_long['meses']=ser_long['dias']/30.44
+eos_long = eos_t.copy(); eos_long['meses']=eos_long['dias']/30.44
+ser_post = ser_long[ser_long['dias']>0].copy()
+eos_post = eos_long[eos_long['dias']>0].copy()
+mic_post = mic_t[mic_t['dias']>MICRO_MIN].sort_values(['ID','dias']).copy()
+
+# ── Eventos de negativización ─────────────────────────────────
+ser_post['neg_abs'] = ser_post['IGG']<SERO_NEG
+neg_sero_abs = ser_post[ser_post['neg_abs']].sort_values('dias').groupby('ID').first()[['dias','IGG']].rename(columns={'dias':'T_NEG_SERO_ABS','IGG':'IGG_NEG'})
+
+ser_post_b = ser_post.merge(pac[['ID','IGG_BASAL']], on='ID')
+ser_post_b['neg_rel'] = ser_post_b['IGG'] < ser_post_b['IGG_BASAL']*0.5
+neg_sero_rel = ser_post_b[ser_post_b['neg_rel']].sort_values('dias').groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_REL'})
+
+sps = ser_post.sort_values(['ID','dias']).copy(); sps['neg']=sps['IGG']<SERO_NEG
+sps['neg_prev']=sps.groupby('ID')['neg'].shift(1); sps['doble_neg']=sps['neg']&sps['neg_prev']
+neg_sero_abs_x2 = sps[sps['doble_neg']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_ABS_X2'})
+
+spr = ser_post_b.sort_values(['ID','dias']).copy()
+spr['neg_prev']=spr.groupby('ID')['neg_rel'].shift(1); spr['doble']=spr['neg_rel']&spr['neg_prev']
+neg_sero_rel_x2 = spr[spr['doble']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_REL_X2'})
+
+eos_post['neg_abs'] = eos_post['EOS']<EOS_NEG
+neg_eos = eos_post[eos_post['neg_abs']].sort_values('dias').groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_EOS_ABS'})
+
+mic_post['neg']=mic_post['RESULTADO']==0; mic_post['neg_prev']=mic_post.groupby('ID')['neg'].shift(1)
+mic_post['doble']=mic_post['neg']&mic_post['neg_prev']
+neg_para = mic_post[mic_post['doble']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_PARA'})
+n_evaluables = mic_post['ID'].nunique()
+
+# ── Tabla de supervivencia ev ─────────────────────────────────
+cens_ser = ser_long[ser_long['dias']>0].groupby('ID')['dias'].max().rename('cens_ser')
+cens_eos = eos_long[eos_long['dias']>0].groupby('ID')['dias'].max().rename('cens_eos')
+cens_mic = mic_post.groupby('ID')['dias'].max().rename('cens_mic') if len(mic_post)>0 else pd.Series(dtype=float,name='cens_mic')
+
+ev = pac[['ID']].copy()
+ev = ev.merge(cens_ser.reset_index(), on='ID', how='left')
+ev = ev.merge(cens_eos.reset_index(), on='ID', how='left')
+ev = ev.merge(cens_mic.reset_index(), on='ID', how='left')
+
+def add_event(ev, neg_df, time_col, cens_col, prefix):
+    if len(neg_df)>0: ev=ev.merge(neg_df[[time_col]].reset_index().rename(columns={time_col:'_t'}),on='ID',how='left')
+    else: ev['_t']=np.nan
+    ev[f'E_{prefix}']=ev['_t'].notna().astype(int); ev[f'T_{prefix}']=ev['_t'].fillna(ev[cens_col]); ev=ev.drop(columns='_t')
+    return ev
+
+ev = add_event(ev, neg_sero_abs, 'T_NEG_SERO_ABS', 'cens_ser', 'SERO_ABS_X1')
+ev = add_event(ev, neg_sero_abs_x2, 'T_NEG_SERO_ABS_X2', 'cens_ser', 'SERO_ABS_X2')
+ev = add_event(ev, neg_sero_rel, 'T_NEG_SERO_REL', 'cens_ser', 'SERO_REL_X1')
+ev = add_event(ev, neg_sero_rel_x2, 'T_NEG_SERO_REL_X2', 'cens_ser', 'SERO_REL_X2')
+ev = add_event(ev, neg_eos, 'T_NEG_EOS_ABS', 'cens_eos', 'EOS_ABS')
+ev = add_event(ev, neg_para, 'T_NEG_PARA', 'cens_mic', 'PARA')
+
+# ── Datasets derivados para KM y Cox ─────────────────────────
+PAC_COLS = ['ID','SEXO','SEXO_V','EDAD','INMUNO_SI','COMORB_SI','CONFEOS_SI',
+            'EOS_ALTA','EOS_MEDIANA','EOS_P75','EOS_1000','EOS_TERCIL','EOS_LIMPIA','EOS_BASAL',
+            'SER_ALTA','SER_MEDIANA','SER_P75','SER_TERCIL','IGG_BASAL',
+            'EDAD_ALTA','MONO','RETRATADO','INMUNO_O_COMORB','DX_PARA']
+km_full = ev[['ID','T_SERO_ABS_X1','E_SERO_ABS_X1']].merge(pac[PAC_COLS], on='ID')
+km_full = km_full[km_full['T_SERO_ABS_X1']>0]
+cox_data = km_full.copy()
+
+# ── Modo de diagnóstico ───────────────────────────────────────
+sero_pos = set(pac[pac['IGG_BASAL']>=SERO_NEG]['ID'])
+mic_pos = set(mic_pre[mic_pre['RESULTADO']==1]['ID'])
+```
+
+# Bloque 0 — Diagrama de flujo y recogida de datos
+
+## Selección de pacientes
+
+```{python}
+#| echo: false
+#| fig-cap: "Diagrama de flujo de la selección de pacientes según normativa STROBE."
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
+
+fig, ax = plt.subplots(figsize=(12, 16))
+ax.set_xlim(0, 10); ax.set_ylim(0, 20); ax.axis('off')
+
+def box(ax, x, y, w, h, text, color='#D6EAF8', fontsize=9, bold_first=True):
+    rect = FancyBboxPatch((x-w/2, y-h/2), w, h, boxstyle="round,pad=0.15",
+                           facecolor=color, edgecolor='#2B2B2B', lw=1.2)
+    ax.add_patch(rect)
+    lines = text.split('\n')
+    for i, line in enumerate(lines):
+        yoff = y + (len(lines)-1)*0.15 - i*0.3
+        weight = 'bold' if (i==0 and bold_first) else 'normal'
+        size = fontsize if i==0 else fontsize-1
+        ax.text(x, yoff, line, ha='center', va='center', fontsize=size,
+                fontweight=weight, color='#2B2B2B')
+
+def arrow(ax, x1, y1, x2, y2):
+    ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
+                arrowprops=dict(arrowstyle='->', color='#666666', lw=1.5))
+
+def side_arrow(ax, x1, y1, x2, y2):
+    ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
+                arrowprops=dict(arrowstyle='->', color='#E74C3C', lw=1.2))
+
+# ── Nivel 1: Cribado ─────────────────────────────────────────
+box(ax, 5, 19, 6, 1.2,
+    'Historias clínicas cribadas\n'
+    'Bases CNM (2017–2023) + HCD (2020–2025)\n'
+    'N = [___] (rellenar)',
+    color='#F5F5F5')
+arrow(ax, 5, 18.4, 5, 17.6)
+
+# ── Nivel 2: Tras deduplicación ───────────────────────────────
+box(ax, 5, 17, 5.5, 1.0,
+    'Tras deduplicación: ≥1 resultado positivo\n'
+    'n = 198',
+    color='#F5F5F5')
+arrow(ax, 5, 16.5, 5, 15.7)
+
+# Exclusión: no verificable
+box(ax, 8.5, 15.9, 3, 0.8,
+    'No verificable en HCDGU\n'
+    'n = [198 − 84 = 114]',
+    color='#FADBD8')
+side_arrow(ax, 5+2.75, 16.5, 8.5-1.5, 16.0)
+
+# ── Nivel 3: Diagnóstico confirmado ──────────────────────────
+box(ax, 5, 15, 5.5, 1.0,
+    'Diagnóstico confirmado en HCDGU\n'
+    'Serología ≥1.1 y/o parasitología positiva\n'
+    'n = 84',
+    color='#D6EAF8')
+arrow(ax, 5, 14.5, 5, 13.5)
+
+# Exclusión: no tratados
+box(ax, 8.5, 13.2, 3.0, 0.7,
+    'No tratados con IVM\n'
+    'n = 20',
+    color='#FADBD8')
+side_arrow(ax, 5+2.75, 14.0, 8.5-1.5, 13.3)
+
+# ── Nivel 4: Tratados ────────────────────────────────────────
+box(ax, 5, 12.8, 5.0, 0.8,
+    'Tratados con Ivermectina\n'
+    'n = 64',
+    color='#D6EAF8')
+arrow(ax, 5, 12.4, 5, 11.4)
+
+# Exclusión: sin seguimiento
+box(ax, 8.5, 11.5, 3.0, 0.7,
+    'Sin seguimiento post-TTO\n'
+    'n = 19',
+    color='#FADBD8')
+side_arrow(ax, 5+2.5, 12.0, 8.5-1.5, 11.6)
+
+# Exclusión: sin diagnóstico
+box(ax, 8.5, 10.5, 3.0, 0.7,
+    'Sin diagnóstico en HCDGU\n'
+    'n = 1',
+    color='#FADBD8')
+side_arrow(ax, 5+2.5, 11.0, 8.5-1.5, 10.6)
+
+# ── Nivel 5: INCLUIDOS ───────────────────────────────────────
+box(ax, 5, 10.2, 5.5, 1.0,
+    'COHORTE INCLUIDA\n'
+    'n = 44',
+    color='#D5F5E3', fontsize=11)
+arrow(ax, 5, 9.7, 5, 8.8)
+
+# ── Nivel 6: Evaluables por endpoint ─────────────────────────
+box(ax, 5, 8.2, 7.0, 1.2,
+    'Evaluables por endpoint\n'
+    'Seronegativización: 39/44 (5 sin serología post-T₀)\n'
+    'Neg. eosinofílica: 44/44\n'
+    'Neg. parasitológica: 17/44 (27 sin microbiología post-T₀)',
+    color='#D6EAF8', fontsize=8)
+arrow(ax, 5, 7.6, 5, 6.7)
+
+# ── Nivel 7: Seguimiento ─────────────────────────────────────
+box(ax, 5, 6.0, 7.0, 1.2,
+    'Seguimiento\n'
+    'Serológico: mediana 11.7 meses (IQR 3.1–22.2)\n'
+    'Eosinófilos: mediana 17.7 meses\n'
+    'Microbiología: mediana [___] meses (solo 17 evaluables)',
+    color='#F5F5F5', fontsize=8)
+
+# ── Anotaciones ───────────────────────────────────────────────
+ax.text(0.5, 19.7, 'FUENTES', fontsize=8, fontweight='bold', color='#666666')
+ax.text(0.5, 19.4, 'CNM: Coprocultivo/concentrado\n      (Microbiología, 2017–2023)',
+        fontsize=7, color='#666666')
+ax.text(0.5, 18.8, 'HCD: Serología IgG ELISA\n      (Inmunología, 2020–2025)',
+        fontsize=7, color='#666666')
+
+ax.text(0.5, 5.0, 'Diagrama de flujo según\nnormativa STROBE',
+        fontsize=7, color='#AAAAAA', style='italic', va='top')
+
+ax.text(5, 4.5, '[___] = datos pendientes de verificación en el hospital',
+        fontsize=8, color='#E74C3C', ha='center', style='italic')
+
+plt.tight_layout()
+plt.show()
+```
+
+## Procedimiento de recogida de datos
+
+Los datos fueron extraídos retrospectivamente de la Historia Clínica Electrónica del Hospital Central de la Defensa Gómez Ulla (HCDGU), Madrid. Se consultaron dos fuentes complementarias:
+
+- **Base CNM** (Centro Nacional de Microbiología, 2017–2023): historias clínicas con petición de coprocultivo en agar o concentrado de heces para detección de *Strongyloides stercoralis*.
+- **Base HCD** (HCDGU, 2020–2025): historias clínicas con petición de serología IgG ELISA (*Strongyloides*, DRG Diagnostics).
+
+Ambas bases se fusionaron por número de historia clínica, eliminando duplicados y conservando el registro más antiguo. El proceso de curación de datos se realizó en las siguientes etapas:
+
+1. **Identificación:** Localización de historias con al menos un resultado positivo (serología IgG ≥ 1.1 y/o parasitología positiva).
+2. **Verificación del tratamiento:** Búsqueda de prescripción de ivermectina posterior a la fecha del primer positivo.
+3. **Verificación del seguimiento:** Existencia de al menos una prueba analítica (serología, eosinófilos o microbiología) posterior a la fecha de tratamiento.
+4. **Extracción:** Registro de variables basales (demográficas, comorbilidades), analíticas longitudinales (IgG, eosinófilos, microbiología) y datos de seguimiento clínico (consultas, tratamiento, síntomas).
+5. **Validación:** Doble comprobación de duplicados y omisiones.
+6. **Normalización:** Homogeneización de unidades, formatos y texto libre.
+7. **Anonimización:** Sustitución del NHC por identificador numérico secuencial.
+
+El momento cero ($T_0$) se definió como la fecha de la primera prescripción de ivermectina documentada en la historia clínica.
+
+## Datos pendientes de completar
+
+```{python}
+#| echo: false
+print("""
+PLACEHOLDERS A RELLENAR EN EL HOSPITAL
+───────────────────────────────────────
+1. N total de HC cribadas (parte superior del flowchart)
+   → Contar las HC revisadas en CNM (por año) + HCD (por año)
+   → ANTES de deduplicar
+
+2. N tras deduplicación (actualmente 198)
+   → Verificar el número exacto
+
+3. N no verificable en HCDGU (actualmente 198−84 = 114)
+   → ¿Qué pasó con esas 114 HC? Opciones:
+     a) No tenían HC accesible en HCDGU
+     b) El positivo era de otro patógeno
+     c) No se pudo confirmar el diagnóstico
+   → Documentar el motivo más frecuente
+
+4. Mediana de seguimiento microbiológico
+   → Se calcula del dato, pero verificar
+
+5. Número CEIm y fecha de aprobación
+""")
+```
+
+## Limitaciones del flujo de selección
+
+- **No se dispone de datos demográficos de los pacientes excluidos** (n=40). Esto impide realizar una comparación formal (test de Mann-Whitney) entre incluidos y excluidos para descartar sesgo de selección. Esta limitación se reportará en la sección de Discusión.
+- La base HCD solo está disponible desde 2020, lo que excluye serológicamente a pacientes diagnosticados antes de esa fecha que podrían haber sido captados solo por la base CNM.
+- El carácter retrospectivo implica que los intervalos de seguimiento no están estandarizados — reflejan la práctica clínica real, no un protocolo de investigación.

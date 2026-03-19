@@ -1,0 +1,130 @@
+% ═══════════════════════════════════════════════════════════════
+% Family Practice (OUP) — preamble.tex
+% Defines: fonts, section styles, running headers, and the two
+% generic environments (custombox, customquote) that the Lua
+% filter maps onto.
+% ═══════════════════════════════════════════════════════════════
+
+% ── Fonts ─────────────────────────────────────────────────────
+\usepackage{microtype}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\setsansfont[
+  BoldFont={TeX Gyre Heros Bold},
+  ItalicFont={TeX Gyre Heros Italic},
+  BoldItalicFont={TeX Gyre Heros Bold Italic}
+]{TeX Gyre Heros}
+
+% ── Utilities ─────────────────────────────────────────────────
+\usepackage{orcidlink}
+\usepackage{lastpage}
+\renewcommand{\maketitle}{}
+
+% ── Section headings (sans, bold) ─────────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}
+  {\sffamily\bfseries\fontsize{12}{14}\selectfont}
+  {}{0pt}{}
+\titleformat{\subsection}
+  {\sffamily\bfseries\fontsize{11}{13}\selectfont}
+  {}{0pt}{}
+\titlespacing*{\section}{0pt}{12pt plus 2pt minus 2pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt plus 1pt minus 1pt}{2pt}
+
+% ── Lists, paragraphs ────────────────────────────────────────
+\usepackage{enumitem}
+\setlist{noitemsep, topsep=4pt, parsep=0pt, leftmargin=*}
+\raggedbottom
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{1em}
+
+% ── Captions (sans) ───────────────────────────────────────────
+\usepackage{caption}
+\captionsetup{
+  font={small,sf},
+  labelfont={bf,sf},
+  labelsep=period,
+  justification=justified,
+  singlelinecheck=false}
+
+% ── Tables & floats ───────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{stfloats}
+
+% ── Links ─────────────────────────────────────────────────────
+\usepackage[dvipsnames,table]{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,citecolor=black,linkcolor=black,urlcolor=NavyBlue}
+
+% ═══════════════════════════════════════════════════════════════
+% GENERIC ENVIRONMENTS (targeted by custom-blocks.lua)
+% Each journal preamble defines these with its own visual style.
+% ═══════════════════════════════════════════════════════════════
+
+% ── custombox{Title} → titled box with thin rule ─────────────
+\usepackage{tcolorbox}\tcbuselibrary{skins}
+\newenvironment{custombox}[1]{%
+  \begin{tcolorbox}[
+    enhanced,
+    title={\sffamily\bfseries #1},
+    colback=white, colframe=black,
+    colbacktitle=white, coltitle=black,
+    fonttitle=\sffamily\bfseries\normalsize,
+    fontupper=\small\sffamily,
+    boxrule=0.5pt, arc=0pt,
+    left=8pt, right=8pt, top=4pt, bottom=4pt,
+    titlerule=0.5pt, toptitle=4pt, bottomtitle=4pt
+  ]
+}{%
+  \end{tcolorbox}
+}
+
+% ── customquote → left-ruled italic block ─────────────────────
+\usepackage{mdframed}
+\newenvironment{customquote}{%
+  \begin{mdframed}[
+    linewidth=2pt, linecolor=black!30,
+    topline=false, bottomline=false, rightline=false,
+    innerleftmargin=10pt, innerrightmargin=0pt,
+    innertopmargin=4pt, innerbottommargin=4pt,
+    skipabove=8pt, skipbelow=8pt
+  ]\itshape\small
+}{%
+  \end{mdframed}
+}
+
+% ═══════════════════════════════════════════════════════════════
+% RUNNING HEADERS
+% ═══════════════════════════════════════════════════════════════
+%   Odd  (recto): L = journal info (italic)     R = page# (bold)
+%   Even (verso): L = page# (bold)              R = short title
+\newcommand{\FPshorttitle}{Article Title}
+\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[LO]{\small\itshape Family Practice, 2026, Vol.\ XX, No.\ X}
+\fancyhead[RO]{\small\bfseries\thepage}
+\fancyhead[LE]{\small\bfseries\thepage}
+\fancyhead[RE]{\small\itshape\FPshorttitle}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[L]{
+    \parbox[b]{0.82\textwidth}{
+      \footnotesize\sffamily 
+      Family Practice, 2026, XX, 1--\pageref{LastPage}\\
+      https://doi.org/10.1093/fampra/XXXXX\\
+      Advance access publication 2026\\[2pt]
+      \upshape\bfseries\sffamily Case Report
+    }
+  }
+  \fancyhead[R]{}
+  \renewcommand{\headrulewidth}{0.5pt}
+  \fancyfoot[L]{
+    \scriptsize\textcopyright\ The Author(s) 2026. Published by Oxford University Press. 
+    All rights reserved. For permissions, please e-mail: journals.permissions@oup.com.
+  }
+}

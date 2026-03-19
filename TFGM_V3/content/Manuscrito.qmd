@@ -1,0 +1,213 @@
+---
+title: "Cinética de seronegativización en estrongiloidiasis tratada con Ivermectina"
+subtitle: "Análisis de supervivencia — Predictores basales de respuesta"
+date: today
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    fig-pos: 'H'
+execute:
+  echo: false
+  warning: false
+---
+
+# Título
+
+Población/Enfermedad, Intervención, Outcome, Predictores/Variables, Diseño/Método, Novedad
+
+- El título de IgG basal predice el tiempo hasta la cura serológica en la estrongiloidiasis tratada con ivermectina.
+- Predictores basales del tiempo hasta la negativización serológica en estrongiloidiasis tratada con ivermectina: análisis de supervivencia.
+- Los títulos basales de IgG anticipan la serorreversión tras tratamiento con ivermectina en pacientes con estrongiloidiasis.
+- Asociación de los niveles basales de IgG con el tiempo hasta la serorreversión en estrongiloidiasis tratada con ivermectina: un estudio de cohortes.
+- Tiempo hasta la negativización serológica post-tratamiento en estrongiloidiasis: título basal de IgG como factor predictor en un modelo de regresión de Cox.
+
+# Abstract
+
+IMRAD, 250 palabras : **Problema** (no hay consenso sobre definición de cura serológica), el diseño (cohorte retrospectiva, n=44, centro terciario, 2016–2025), **Endpoint primario** (tiempo hasta seronegativización), **Métodos** (KM, Log-Rank, Cox, LMM), el **Resultado principal** (mediana de negativización en X meses, variable Y acelera/retrasa con HR=Z, p=W), y **Conclusión clínica** (qué cambia esto la actitud diagnóstica o terapéutica).
+
+# Introducción
+
+## Problema 
+
+La estrongiloidiasis (infección por *Strongyloides stercoralis*) es una enfermedad tropical desatendida (ETD) que afecta a **310–600 millones de personas** en todo el mundo.
+
+A diferencia de otras geohelmintiasis, la estrongiloidiasis ha sido históricamente excluida de los programas de control de la OMS. En 2021, la hoja de ruta de ETDs (2021–2030) incluyó por primera vez un objetivo específico para su control, y en 2024 se publicó la primera guía de la OMS recomendando la administración masiva de ivermectina (200 μg/kg, dosis única) en entornos con prevalencia ≥5%.
+
+La ivermectina es el tratamiento estándar para la infección crónica, con una eficacia estimada del 86% y excelente tolerabilidad.Sin embargo, a diferencia de otras helmintiasis, la estrongiloidiasis requiere seguimiento prolongado debido a la capacidad del parásito de persistir indefinidamente mediante **autoinfección interna**, lo que puede conducir a infección crónica de por vida en el huésped no tratado. El problema clínico fundamental es que **no se ha establecido cuánto tiempo debe seguirse al paciente ni cuándo considerarlo curado**.
+
+## Consenso 
+
+El consenso actual sobre el seguimiento de la infección por *Strongyloides stercoralis* es que la **serología es útil y recomendada tras el tratamiento**, especialmente debido a la baja sensibilidad de los métodos parasitológicos en infecciones crónicas o de baja carga parasitaria.
+
+Buonfrate et al. (2015) demostraron que una caída significativa o negativización serológica se asocia con cura, lo que respalda su uso clínico cuando los métodos parasitológicos son negativos. 
+
+No obstante, la serología no está respaldada como prueba exclusiva para el seguimiento, y la OMS indica que los métodos parasitológicos (Baermann o cultivo en placa de agar) son preferidos para confirmar infección activa por su mayor especificidad.
+
+## Lagunas 
+
+### Estandarización
+
+No existe una guía clínica internacional que establezca criterios estandarizados de negativización serológica
+No hay tiempos de negativización definidos
+No hay criterios estandarizados para definir la cura
+Incluso los ensayos más nuevos basados en antígenos recombinantes (Strongy Detect) carecen de un umbral de positividad predefinido para el seguimiento
+
+Ante este vacío, algunos autores emplean criterios empíricos:
+
+- IgG 
+- Disminución de al menos dos títulos en IFAT
+- Ratio de densidad óptica post/pretratamiento ≤0.6
+
+Estos criterios carecen de validación universal y no están respaldados por consensos científicos.
+
+### Ensayos serológicos
+
+El rendimiento varía considerablemente entre ensayos
+IVD-ELISA e IFAT: mejores tasas de descenso relevante (~87–90%)
+NIE-ELISA: mejor tasa de negativización completa (72.5%)
+
+### Cinética de la serorreversión
+
+El ensayo puede permanecer positivo >12 meses post-tratamiento
+Ensayos de alta sensibilidad (Strongy Detect) muestran mayor persistencia de positividad
+La OMS menciona un rango de **12–18 meses** para serorreversión o reducción significativa del título
+
+### Literatura
+
+No existen estudios que comparen sistemáticamente las definiciones de negativización
+No se han identificado factores basales predictores de la velocidad de respuesta serológica
+
+\pagebreak
+
+# Materiales y Métodos
+
+**Diseño y población**
+
+Estudio de cohorte retrospectiva unicéntrica. Se incluyeron todos los pacientes adultos diagnosticados de estrongiloidiasis y tratados con Ivermectina en el Hospital Central de la Defensa Gómez Ulla (Madrid, España) entre Enero de 2016 y Diciembre de 2025.
+
+**Criterios de inclusión:** 
+(1) diagnóstico de infección por *Strongyloides stercoralis* confirmado por serología IgG positiva (índice ≥1.1) y/o identificación parasitológica directa (coprocultivo en agar, concentrado de heces o PCR), (2) tratamiento con al menos un ciclo de ivermectina, (3) al menos una determinación analítica de seguimiento post-tratamiento.
+
+**Criterios de exclusión:**
+Ausencia de datos de seguimiento post-tratamiento.
+
+**Aspectos éticos:**
+El estudio fue aprobado por el Comité de Ética [número]. Por tratarse de un estudio retrospectivo con datos anonimizados, no se requirió consentimiento informado.
+
+**Recogida de Datos**
+
+Todo extraído de historia clínica electrónica.
+
+**Variables**
+
+MOMENTO CERO (T0)
+  Definido como la fecha de la primera prescripción de ivermectina.
+  Se obtuvo de la hoja de seguimiento (SEG), identificando las
+  consultas con DOSIS_IVM registrada y seleccionando la más temprana.
+
+VARIABLES BASALES (medición más cercana antes de T0)
+  IgG ELISA:      Índice cuantitativo (ratio). Positivo ≥ 1.1.
+  Eosinófilos:    Recuento absoluto (×10³/µL). Eosinofilia ≥ 0.5.
+  Microbiología:  Coprocultivo en agar y/o concentrado de heces. Positivo/Negativo.
+
+COVARIABLES CLÍNICAS (a fecha de T0)
+  Sexo, edad, país de origen, años en España.
+  Inmunodepresión: VIH, quimioterapia, glucocorticoides crónicos.
+  Comorbilidad: VIH, enfermedad autoinmune, neoplasia, diabetes.
+  Confusores de eosinofilia: atopia, coinfección helmíntica.
+  Tipo de primera dosis de IVM: mono, doble consecutiva, doble separada, cuádruple.
+  Número de ciclos de tratamiento.
+
+**Definiciones**
+
+NEGATIVIZACIÓN SEROLÓGICA
+  Absoluta ×1:  Primera determinación post-T₀ con IgG < 1.1 (umbral del kit)
+  Absoluta ×2:  Dos determinaciones consecutivas con IgG < 1.1
+  Relativa ×1:  Primera determinación con IgG < 50% del valor basal
+  Relativa ×2:  Dos determinaciones consecutivas con IgG < 50% del basal
+
+NEGATIVIZACIÓN EOSINOFÍLICA
+  Primera determinación post-T₀ con eosinófilos < 500 cél/µL (0.5 ×10³/µL)
+
+NEGATIVIZACIÓN PARASITOLÓGICA
+  Dos resultados negativos consecutivos en coprocultivo/concentrado, >7 días post-T₀
+
+RECIDIVA (diagnóstico confirmado)
+  IgG ≥ 1.1 O parasitología positiva, ≥21 días después de la primera negativización
+  (cualquier criterio). El gap de 21 días evita clasificar fluctuaciones analíticas
+  como recidivas.
+
+CENSURA
+  Para cada tipo de evento, el tiempo de censura es la fecha de la última
+  determinación disponible del mismo tipo post-T₀. Si un paciente no negativizó,
+  su tiempo de seguimiento se trunca en su última medición.
+
+## Justificación del endpoint primario (criterio de valoración clínico)
+
+La negativización serológica absoluta ×1 (IgG < 1.1) fue seleccionada como endpoint primario por tres razones: (1) es el criterio más utilizado en la práctica clínica, (2) permite comparación directa con la mayoría de estudios publicados, y (3) maximiza el número de eventos observables (27/39 = 69%) lo cual optimiza la potencia estadística para el análisis de supervivencia. Los criterios ×2, relativos y parasitológico se analizan como endpoints secundarios y de sensibilidad.
+
+## Análisis Estadístico
+
+Las variables continuas se describen como **mediana** (rango intercuartílico [IQR]) y las categóricas como **frecuencia** absoluta y **porcentaje**. La normalidad se evaluó visualmente y mediante asimetría.
+
+El tiempo hasta la negativización se analizó mediante estimación de **Kaplan-Meier** con intervalos de confianza (IC) al 95%. La comparación entre subgrupos se realizó con el test de **Log-Rank**. Las variables con p < 0.20 en el test de Log-Rank o en la regresión de Cox univariable se consideraron candidatas para el modelo multivariable.
+
+Se ajustaron modelos de **Regresión de Cox Univariable** para cada covariable, obteniendo **Hazard Ratios** (HR) crudos con IC 95%. El modelo multivariable se construyó con las covariables candidatas, verificando la asunción de proporcionalidad de riesgos mediante los **Residuos de Schoenfeld**. La selección de variables se basó en criterio clínico y umbral estadístico p < 0.20, sin procedimientos automáticos de selección paso a paso.
+
+La trayectoria temporal de IgG se modeló mediante un **Modelo Lineal Mixto** (LMM) con log(IgG) como variable dependiente, tiempo en meses como efecto fijo, e intercepto aleatorio por paciente. La transformación logarítmica se justificó por la distribución asimétrica de los valores de IgG. Se evaluaron interacciones tiempo × covariable para identificar variables que modifiquen la velocidad de descenso serológico.
+
+Se compararon 4 definiciones de negativización serológica y múltiples puntos de corte para las covariables continuas (mediana, percentil 75, umbrales clínicos) como análisis de sensibilidad.
+
+El análisis se realizó con **Python 3.14** utilizando librerías validadas para análisis estadístico (pandas, lifelines, statsmodels, matplotlib). Significación bilateral con α = 0.05.
+
+\pagebreak
+
+# Resultados
+
+Módulo 3.1 — Descripción de la cohorte (~150 palabras + Tabla 1): Tabla 1 clásica: n, edad mediana (IQR), sexo, país de origen, inmunodepresión, comorbilidades, IGG basal mediana (IQR), EOS basal, microbiología basal, tipo de dosis, número de ciclos. Seguimiento mediano. Esta tabla la genera SPSS o tu notebook.
+
+Módulo 3.2 — Tasas de negativización (~150 palabras + Tabla 2): Tabla con las 6 definiciones de evento: n/N, porcentaje, mediana de tiempo (IQR). Esto es la tabla del "resumen de eventos" que ya tienes. Es puramente descriptivo pero establece el marco.
+
+Módulo 3.3 — Curvas de Kaplan-Meier (~200 palabras + Figuras 1-3):
+Figura 1: KM global de seronegativización absoluta ×1 (el endpoint primario). Con mediana, IC, n at risk.
+
+Figura 2: Análisis de sensibilidad — 4 curvas superpuestas (abs ×1, abs ×2, rel ×1, rel ×2). Esto muestra al revisor que tus conclusiones no dependen de una sola definición.
+
+Figura 3: KM estratificado por las 2-3 variables más significativas (las que salgan del Log-Rank). Un panel por variable, p-valor en cada panel.
+
+Módulo 3.4 — Regresión de Cox (~200 palabras + Tabla 3 + Figura 4):
+
+Tabla 3: Cox univariable y multivariable. Columnas: variable, HR crudo (IC 95%), p, HR ajustado (IC 95%), p.
+
+Figura 4: Forest plot del multivariable.
+
+Módulo 3.5 — Trayectoria serológica (LMM) (~150 palabras + Figura 5):
+
+Resultado del LMM: pendiente, tiempo estimado hasta negativización, efecto de la covariable más relevante. Figura con las trayectorias individuales + línea del modelo.
+
+Módulo 3.6 — Recidiva (~100 palabras): Breve: n recidivas / n negativizados, tipo de recidiva, tiempo. No es el foco del artículo pero hay que reportarlo.
+
+# Discusión
+
+Módulo 4.1 — Hallazgo principal (~200 palabras): Reformular el resultado más fuerte en lenguaje clínico. "En nuestra cohorte, la mediana de seronegativización fue de X meses. Los pacientes con [variable] negativizaron significativamente más rápido/lento (HR = Y, p = Z). Esto sugiere que [implicación clínica]."
+
+Módulo 4.2 — Comparación con la literatura (~300 palabras): ¿Qué dicen otros estudios sobre la cinética de anticuerpos post-IVM? Bisoffi, Requena-Méndez, Salvador, Buonfrate. ¿Coinciden tus medianas? ¿Tus predictores? ¿Alguien más ha comparado múltiples definiciones? Probablemente no — esa es tu contribución original.
+
+Módulo 4.3 — Implicación clínica (~250 palabras): Este es el párrafo que convence al revisor. "Nuestros resultados sugieren que los pacientes con IGG basal por encima de la mediana (≥3.13) necesitan un seguimiento más prolongado, con controles serológicos cada X meses durante al menos Y meses. En cambio, los pacientes con IGG basal bajo podrían acortar su seguimiento a Z meses si la primera serología post-tratamiento ya es negativa." Traduce los HR en recomendaciones concretas de manejo.
+
+Módulo 4.4 — Limitaciones (~250 palabras): Sé brutalmente honesto. (1) Retrospectivo, con los sesgos inherentes. (2) Centro único, población mayoritariamente latinoamericana — generalización limitada. (3) n=44, potencia baja para detectar efectos moderados, especialmente en subgrupos pequeños (INMUNO_SI 4 vs 40). (4) Intervalos de seguimiento no estandarizados (práctica clínica real, no protocolo). (5) No se evaluaron factores como carga parasitaria, cepa, o adherencia. El revisor va a pensar en todas estas — si tú las dices primero, las desarmas.
+
+Módulo 4.5 — Conclusión (~100 palabras): Una frase de resultado, una de implicación, una de futuro. "La seronegativización tras IVM ocurre en una mediana de X meses. [Variable] es el principal predictor de la velocidad de respuesta. Estos resultados apoyan un seguimiento serológico diferenciado según el perfil basal del paciente. Se necesitan estudios prospectivos multicéntricos para validar estos hallazgos y establecer protocolos de seguimiento basados en riesgo."
+
+# Bibliografía
+Necesitas ~25-35 referencias organizadas así:
+
+Epidemiología de Strongyloides: 3-4 refs (Buonfrate, Olsen, Schär)
+Diagnóstico serológico: 3-4 refs (Bisoffi, Requena-Méndez, Rascoe)
+Tratamiento con IVM: 3-4 refs (Henriquez-Camacho Cochrane, Suputtamongkol)
+Cinética de anticuerpos post-tratamiento: 3-5 refs (esto es tu nicho, pon todo lo que exista)
+Eosinofilia como marcador: 2-3 refs
+Inmunodepresión y Strongyloides: 2-3 refs (hiperinfección, HTLV-1, corticoides)
+Metodología estadística: 2-3 refs (Cox original, KM, lifelines si quieres)
+Guías clínicas: 2-3 refs (ECDC, CDC, AEI española si existe)
