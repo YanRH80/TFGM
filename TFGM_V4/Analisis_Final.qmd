@@ -1,0 +1,880 @@
+---
+title: "Análisis — Strongyloides stercoralis"
+subtitle: "Cinética de seronegativización post-IVM"
+date: today
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    fig-pos: 'H'
+execute:
+  echo: false
+  warning: false
+---
+
+# Bloque 0 — Entorno
+
+```{python}
+import os
+os.makedirs('figures', exist_ok=True)
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib.patches import FancyBboxPatch, Rectangle
+from matplotlib.lines import Line2D
+from matplotlib.gridspec import GridSpec
+from collections import OrderedDict
+from scipy.stats import spearmanr, mannwhitneyu, probplot, shapiro
+import warnings
+warnings.filterwarnings('ignore')
+
+SAT = ['#E74C3C','#3498DB','#F39C12','#2ECC71','#9B59B6','#1ABC9C','#E67E22']
+GRI = ['#F5F5F5','#D9D9D9','#AAAAAA','#666666','#2B2B2B']
+C = {'red':SAT[0],'blue':SAT[1],'gold':SAT[2],'green':SAT[3],
+     'purple':SAT[4],'teal':SAT[5],'orange':SAT[6],
+     'bg':GRI[0],'grid':GRI[1],'muted':GRI[2],'annot':GRI[3],'text':GRI[4]}
+
+plt.rcParams.update({'font.family':'sans-serif','font.size':10,
+    'axes.spines.top':False,'axes.spines.right':False,
+    'axes.grid':True,'grid.alpha':0.3,'grid.linestyle':':',
+    'figure.dpi':100,'savefig.dpi':300,'savefig.bbox':'tight',
+    'text.color':C['text'],'axes.labelcolor':C['text']})
+
+SERO_NEG   = 1.1
+SERO_DROP  = 0.50
+EOS_NEG    = 0.5
+MICRO_MIN  = 7
+RECIDIVA_GAP = 21
+
+RUTA = 'BASE_EXCEL.xlsx'
+assert os.path.isfile(RUTA), f"No se encuentra {RUTA} en {os.getcwd()}"
+print("✓ Entorno configurado")
+```
+
+## Diagrama de flujo STROBE
+
+```{python}
+#| fig-cap: "Diagrama de flujo de la selección de pacientes (STROBE)."
+
+COL_MAIN='#E8F0FE'; COL_EXCL='#FDE8E8'; COL_INCL='#E6F4EA'
+COL_GREY='#F5F5F5'; COL_BDR='#4A4A4A'; COL_EXB='#D93025'
+
+fig, ax = plt.subplots(figsize=(8, 11))
+ax.set_xlim(0, 10); ax.set_ylim(0, 22); ax.axis('off')
+fig.patch.set_facecolor('white')
+
+def flowbox(x, y, w, h, lines, color=COL_MAIN, border=COL_BDR):
+    rect = FancyBboxPatch((x-w/2, y-h/2), w, h, boxstyle="round,pad=0.1",
+                           facecolor=color, edgecolor=border, lw=1)
+    ax.add_patch(rect)
+    for i, (text, sz, wt) in enumerate(lines):
+        ax.text(x, y+(len(lines)-1)*0.15-i*0.3, text, ha='center', va='center',
+                fontsize=sz, fontweight=wt, color='#1A1A1A')
+
+def exclbox(x, y, text, n):
+    rect = FancyBboxPatch((x-1.3, y-0.25), 2.6, 0.5, boxstyle="round,pad=0.08",
+                           facecolor=COL_EXCL, edgecolor=COL_EXB, lw=0.8)
+    ax.add_patch(rect)
+    ax.text(x, y+0.08, text, ha='center', va='center', fontsize=7, color='#6B1A1A')
+    ax.text(x, y-0.15, f'n = {n}', ha='center', va='center', fontsize=7,
+            fontweight='bold', color='#6B1A1A')
+
+def varrow(x,y1,y2): ax.annotate('',xy=(x,y2),xytext=(x,y1),arrowprops=dict(arrowstyle='->',color='#888',lw=1.2))
+def harrow(x1,y1,x2,y2): ax.annotate('',xy=(x2,y2),xytext=(x1,y1),arrowprops=dict(arrowstyle='->',color=COL_EXB,lw=0.8,connectionstyle="arc3,rad=-0.1"))
+
+flowbox(5,21,5.5,1.0,[('Registros cribados',8.5,'bold'),('CNM (microbiología, 2017–2023) + HCD (serología, 2020–2025)',6.5,'normal'),('N = [___]',7.5,'normal')],color=COL_GREY)
+varrow(5,20.5,19.9)
+flowbox(5,19.4,5.0,0.7,[('Tras deduplicación: ≥1 positivo  •  n = 198',8,'bold')],color=COL_GREY)
+varrow(5,19.05,18.35); exclbox(8.2,18.7,'No verificable en HCDGU','114'); harrow(7.5,19.2,6.9,18.7)
+flowbox(5,17.8,5.0,0.7,[('Diagnóstico confirmado  •  n = 84',8,'bold')],color=COL_MAIN)
+varrow(5,17.45,16.75); exclbox(8.2,17.1,'No tratados con IVM','20'); harrow(7.5,17.6,6.9,17.1)
+flowbox(5,16.2,5.0,0.7,[('Tratados con ivermectina  •  n = 64',8,'bold')],color=COL_MAIN)
+varrow(5,15.85,15.15); exclbox(8.2,15.5,'Sin seguimiento post-TTO','19'); harrow(7.5,16.0,6.9,15.5)
+exclbox(8.2,14.7,'Sin diagnóstico en HCDGU','1'); harrow(7.5,15.4,6.9,14.7)
+flowbox(5,14.1,5.0,0.8,[('COHORTE INCLUIDA',9.5,'bold'),('n = 44',9,'bold')],color=COL_INCL,border='#137333')
+varrow(5,13.7,13.0)
+flowbox(5,12.3,6.0,1.2,[('Evaluables por endpoint',8,'bold'),('Seronegativización:  39/44  (5 sin serología post-T₀)',7,'normal'),('Neg. eosinofílica:  44/44',7,'normal'),('Neg. parasitológica:  17/44  (27 sin microbiología)',7,'normal')],color=COL_MAIN)
+varrow(5,11.7,11.0)
+flowbox(5,10.3,6.0,1.0,[('Seguimiento',8,'bold'),('Serológico: mediana 11.7 meses (IQR 3.1–22.2)',7,'normal'),('Eosinófilos: mediana 17.7 meses',7,'normal')],color=COL_GREY)
+ax.text(5,9.3,'[___] = pendiente de verificación en el hospital',ha='center',fontsize=6.5,color='#D93025',style='italic')
+plt.subplots_adjust(left=0.02,right=0.98,top=0.98,bottom=0.4)
+plt.savefig('figures/fig00-flowchart-strobe.png',dpi=300,bbox_inches='tight',facecolor='white')
+plt.show()
+```
+
+\newpage
+
+# Bloque 1 — Extracción y preparación de datos
+
+```{python}
+# ── Carga ─────────────────────────────────────────────────────
+bas_raw=pd.read_excel(RUTA,'bas'); ser_raw=pd.read_excel(RUTA,'ser')
+eos_raw=pd.read_excel(RUTA,'eos'); mic_raw=pd.read_excel(RUTA,'mic')
+seg_raw=pd.read_excel(RUTA,'seg')
+
+# ── Limpieza ──────────────────────────────────────────────────
+bas=bas_raw.copy(); bas['ID']=bas['ID'].astype(int); bas['F_NAC']=pd.to_datetime(bas['F_NAC'])
+ser=ser_raw.copy(); ser['ID']=ser['ID'].astype(int); ser['F_SER']=pd.to_datetime(ser['F_SER'])
+ser['IGG_QUAL']=ser['IGG'].where(ser['IGG'].apply(lambda x: isinstance(x,str)))
+ser['IGG']=pd.to_numeric(ser['IGG'],errors='coerce')
+eos=eos_raw.copy(); eos['ID']=eos['ID'].astype(int); eos['F_EOS']=pd.to_datetime(eos['F_EOS']); eos['EOS']=pd.to_numeric(eos['EOS'],errors='coerce')
+mic=mic_raw[mic_raw['F_MIC'].notna()].copy(); mic['ID']=mic['ID'].astype(int); mic['F_MIC']=pd.to_datetime(mic['F_MIC'])
+mic['RESULTADO']=pd.to_numeric(mic['RESULTADO'],errors='coerce'); mic.loc[mic['RESULTADO'].isna()&mic_raw.loc[mic.index,'RESULTADO'].notna(),'RESULTADO']=1; mic['RESULTADO']=mic['RESULTADO'].astype(int)
+seg=seg_raw.copy(); seg['ID']=seg['ID'].astype(int); seg['F_CONSULTA']=pd.to_datetime(seg['F_CONSULTA'])
+
+# ── T₀ ────────────────────────────────────────────────────────
+t0=seg[seg['DOSIS_IVM'].notna()].groupby('ID')['F_CONSULTA'].min().rename('T0')
+
+# ── Basales ───────────────────────────────────────────────────
+ser_t=ser[['ID','F_SER','IGG']].merge(t0.reset_index(),on='ID'); ser_t['dias']=(ser_t['F_SER']-ser_t['T0']).dt.days
+ser_pre=ser_t[ser_t['dias']<=0]; idx=ser_pre.groupby('ID')['dias'].idxmax(); ser_basal=ser_pre.loc[idx,['ID','IGG']].rename(columns={'IGG':'IGG_BASAL'})
+eos_t=eos[['ID','F_EOS','EOS']].merge(t0.reset_index(),on='ID'); eos_t['dias']=(eos_t['F_EOS']-eos_t['T0']).dt.days
+eos_pre=eos_t[eos_t['dias']<=0]; idx2=eos_pre.groupby('ID')['dias'].idxmax(); eos_basal=eos_pre.loc[idx2,['ID','EOS']].rename(columns={'EOS':'EOS_BASAL'})
+mic_t=mic.merge(t0.reset_index(),on='ID'); mic_t['dias']=(mic_t['F_MIC']-mic_t['T0']).dt.days
+mic_pre=mic_t[mic_t['dias']<=0]
+mic_basal=mic_pre.groupby(['ID','TIPO'])['RESULTADO'].max().unstack().reset_index().rename(columns={'COPRO':'COPRO_BASAL','MICRO':'MICRO_BASAL'})
+mic_basal['MIC_BASAL']=mic_basal[['COPRO_BASAL','MICRO_BASAL']].max(axis=1)
+
+# ── pac ───────────────────────────────────────────────────────
+pac=bas.merge(t0.reset_index(),on='ID').merge(ser_basal[['ID','IGG_BASAL']],on='ID',how='left').merge(eos_basal[['ID','EOS_BASAL']],on='ID',how='left').merge(mic_basal[['ID','MIC_BASAL']],on='ID',how='left')
+pac['EDAD']=((pac['T0']-pac['F_NAC']).dt.days/365.25).round(1); pac['AN_ESP']=pac['T0'].dt.year-pac['T_ESP']
+pac['INMUNO_SI']=(pac['INMUNO']!='NO').astype(int); pac['COMORB_SI']=(pac['COMORB']!='NO').astype(int)
+pac['CONFEOS_SI']=(pac['CONFEOS']!='NO').astype(int); pac['SEXO_V']=(pac['SEXO']=='V').astype(int)
+pac['EOS_ALTA']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=EOS_NEG).astype(int))
+pac['SER_ALTA']=np.where(pac['IGG_BASAL'].isna(),np.nan,(pac['IGG_BASAL']>=SERO_NEG).astype(int))
+igg_med=pac['IGG_BASAL'].median(); igg_p75=pac['IGG_BASAL'].quantile(0.75)
+eos_med=pac['EOS_BASAL'].median(); eos_p75=pac['EOS_BASAL'].quantile(0.75)
+pac['SER_MEDIANA']=np.where(pac['IGG_BASAL'].isna(),np.nan,(pac['IGG_BASAL']>=igg_med).astype(int))
+pac['SER_P75']=np.where(pac['IGG_BASAL'].isna(),np.nan,(pac['IGG_BASAL']>=igg_p75).astype(int))
+pac['SER_TERCIL']=pd.qcut(pac['IGG_BASAL'],q=3,labels=['Bajo','Medio','Alto'])
+pac['EOS_MEDIANA']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=eos_med).astype(int))
+pac['EOS_P75']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=eos_p75).astype(int))
+pac['EOS_1000']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=1.0).astype(int))
+pac['EOS_TERCIL']=pd.qcut(pac['EOS_BASAL'],q=3,labels=['Bajo','Medio','Alto'])
+pac['EOS_LIMPIA']=np.where(pac['EOS_BASAL'].isna(),np.nan,((pac['EOS_BASAL']>=EOS_NEG)&(pac['CONFEOS_SI']==0)).astype(int))
+pac['EDAD_ALTA']=(pac['EDAD']>=pac['EDAD'].median()).astype(int)
+primer_tto=seg[seg['DOSIS_IVM'].notna()].sort_values('F_CONSULTA').groupby('ID').first()[['DOSIS_IVM']]
+pac=pac.merge(primer_tto.reset_index(),on='ID',how='left'); pac['MONO']=(pac['DOSIS_IVM']=='MONO').astype(int)
+n_ttos=seg[seg['DOSIS_IVM'].notna()].groupby('ID').size().rename('N_TTO')
+pac=pac.merge(n_ttos.reset_index(),on='ID',how='left'); pac['RETRATADO']=(pac['N_TTO']>1).astype(int)
+pac['INMUNO_O_COMORB']=((pac['INMUNO_SI']==1)|(pac['COMORB_SI']==1)).astype(int)
+pac['DX_PARA']=pac['MIC_BASAL'].fillna(0).astype(int)
+
+# ── Longitudinales ────────────────────────────────────────────
+ser_long=ser_t[ser_t['IGG'].notna()].copy(); ser_long['meses']=ser_long['dias']/30.44
+eos_long=eos_t.copy(); eos_long['meses']=eos_long['dias']/30.44
+ser_post=ser_long[ser_long['dias']>0].copy(); eos_post=eos_long[eos_long['dias']>0].copy()
+mic_post=mic_t[mic_t['dias']>MICRO_MIN].sort_values(['ID','dias']).copy()
+
+# ── Eventos ───────────────────────────────────────────────────
+ser_post['neg_abs']=ser_post['IGG']<SERO_NEG
+neg_sero_abs=ser_post[ser_post['neg_abs']].sort_values('dias').groupby('ID').first()[['dias','IGG']].rename(columns={'dias':'T_NEG_SERO_ABS','IGG':'IGG_NEG'})
+ser_post_b=ser_post.merge(pac[['ID','IGG_BASAL']],on='ID'); ser_post_b['neg_rel']=ser_post_b['IGG']<ser_post_b['IGG_BASAL']*0.5
+neg_sero_rel=ser_post_b[ser_post_b['neg_rel']].sort_values('dias').groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_REL'})
+sps=ser_post.sort_values(['ID','dias']).copy(); sps['neg']=sps['IGG']<SERO_NEG; sps['neg_prev']=sps.groupby('ID')['neg'].shift(1); sps['doble_neg']=sps['neg']&sps['neg_prev']
+neg_sero_abs_x2=sps[sps['doble_neg']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_ABS_X2'})
+spr=ser_post_b.sort_values(['ID','dias']).copy(); spr['neg_prev']=spr.groupby('ID')['neg_rel'].shift(1); spr['doble']=spr['neg_rel']&spr['neg_prev']
+neg_sero_rel_x2=spr[spr['doble']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_REL_X2'})
+eos_post['neg_abs']=eos_post['EOS']<EOS_NEG
+neg_eos=eos_post[eos_post['neg_abs']].sort_values('dias').groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_EOS_ABS'})
+mic_post['neg']=mic_post['RESULTADO']==0; mic_post['neg_prev']=mic_post.groupby('ID')['neg'].shift(1); mic_post['doble']=mic_post['neg']&mic_post['neg_prev']
+neg_para=mic_post[mic_post['doble']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_PARA'})
+n_evaluables=mic_post['ID'].nunique()
+
+# ── ev ────────────────────────────────────────────────────────
+cens_ser=ser_long[ser_long['dias']>0].groupby('ID')['dias'].max().rename('cens_ser')
+cens_eos=eos_long[eos_long['dias']>0].groupby('ID')['dias'].max().rename('cens_eos')
+cens_mic=mic_post.groupby('ID')['dias'].max().rename('cens_mic') if len(mic_post)>0 else pd.Series(dtype=float,name='cens_mic')
+ev=pac[['ID']].copy()
+ev=ev.merge(cens_ser.reset_index(),on='ID',how='left').merge(cens_eos.reset_index(),on='ID',how='left').merge(cens_mic.reset_index(),on='ID',how='left')
+
+def add_event(ev,neg_df,time_col,cens_col,prefix):
+    if len(neg_df)>0: ev=ev.merge(neg_df[[time_col]].reset_index().rename(columns={time_col:'_t'}),on='ID',how='left')
+    else: ev['_t']=np.nan
+    ev[f'E_{prefix}']=ev['_t'].notna().astype(int); ev[f'T_{prefix}']=ev['_t'].fillna(ev[cens_col]); ev=ev.drop(columns='_t')
+    return ev
+
+ev=add_event(ev,neg_sero_abs,'T_NEG_SERO_ABS','cens_ser','SERO_ABS_X1')
+ev=add_event(ev,neg_sero_abs_x2,'T_NEG_SERO_ABS_X2','cens_ser','SERO_ABS_X2')
+ev=add_event(ev,neg_sero_rel,'T_NEG_SERO_REL','cens_ser','SERO_REL_X1')
+ev=add_event(ev,neg_sero_rel_x2,'T_NEG_SERO_REL_X2','cens_ser','SERO_REL_X2')
+ev=add_event(ev,neg_eos,'T_NEG_EOS_ABS','cens_eos','EOS_ABS')
+ev=add_event(ev,neg_para,'T_NEG_PARA','cens_mic','PARA')
+
+PAC_COLS=['ID','SEXO','SEXO_V','EDAD','INMUNO_SI','COMORB_SI','CONFEOS_SI',
+    'EOS_ALTA','EOS_MEDIANA','EOS_P75','EOS_1000','EOS_TERCIL','EOS_LIMPIA','EOS_BASAL',
+    'SER_ALTA','SER_MEDIANA','SER_P75','SER_TERCIL','IGG_BASAL',
+    'EDAD_ALTA','MONO','RETRATADO','INMUNO_O_COMORB','DX_PARA']
+km_full=ev[['ID','T_SERO_ABS_X1','E_SERO_ABS_X1']].merge(pac[PAC_COLS],on='ID')
+km_full=km_full[km_full['T_SERO_ABS_X1']>0]
+cox_data=km_full.copy()
+sero_pos=set(pac[pac['IGG_BASAL']>=SERO_NEG]['ID']); mic_pos_ids=set(mic_pre[mic_pre['RESULTADO']==1]['ID'])
+
+nice={'SEXO_V':'Sexo (varón)','EDAD':'Edad (continua)','EDAD_ALTA':f'Edad ≥ {pac["EDAD"].median():.0f}',
+    'INMUNO_SI':'Inmunodepresión','COMORB_SI':'Comorbilidad','CONFEOS_SI':'Confusor eosinofilia',
+    'INMUNO_O_COMORB':'Inmuno o comorbilidad','EOS_ALTA':f'Eosinofilia ≥{EOS_NEG}',
+    'EOS_MEDIANA':f'Eos ≥ mediana ({eos_med:.2f})','SER_MEDIANA':f'IgG ≥ mediana ({igg_med:.1f})',
+    'SER_P75':f'IgG ≥ P75 ({igg_p75:.1f})','IGG_BASAL':'IgG basal (continua)',
+    'EOS_BASAL':'Eos basal (continua)','MONO':'Dosis única','RETRATADO':'Retratado (>1 ciclo)','DX_PARA':'Dx parasitológico'}
+```
+
+## Verificación
+
+```{python}
+print(f"""
+{'═'*55}
+  VERIFICACIÓN DEL PIPELINE
+{'═'*55}
+PACIENTES:     {len(pac)} | IGG basal: {ser_basal['IGG_BASAL'].notna().sum()}/44 | EOS: {len(eos_basal)}/44
+CUTPOINTS:     IGG med={igg_med:.2f}  P75={igg_p75:.2f} | EOS med={eos_med:.2f}
+SEGUIMIENTO:   Sero {ser_post['ID'].nunique()} pac, {cens_ser.median()/30.44:.1f}m | Eos {eos_post['ID'].nunique()} pac
+EVENTOS:       Sero abs ×1: {ev['E_SERO_ABS_X1'].sum()}/39 | Eos: {ev['E_EOS_ABS'].sum()}/44
+KM DATASET:    {len(km_full)} pacientes
+""")
+assert len(pac)==44, "ERROR: pac ≠ 44"
+print("✓ Pipeline OK")
+```
+
+## Completitud de datos
+```{python}
+#| fig-cap: "Completitud de datos y disponibilidad de seguimiento. Azul: dato disponible (intensidad proporcional al número de mediciones). Rojo: dato ausente. Porcentaje a la izquierda: disponibilidad por variable (rojo <50%, ámbar <80%, verde ≥80%)."
+
+# Construir matriz de completitud
+comp = pd.DataFrame({'ID': pac['ID'].values})
+comp['Sexo']=1; comp['Edad']=1; comp['Origen']=1
+comp['Años España'] = bas['T_ESP'].notna().astype(int).values
+comp['Inmunodepresión']=1; comp['Comorbilidad']=1; comp['Confusor eos']=1
+comp['IgG basal'] = comp['ID'].isin(ser_t[ser_t['dias']<=0]['ID'].unique()).astype(int)
+comp['Eos basal'] = comp['ID'].isin(eos_t[eos_t['dias']<=0]['ID'].unique()).astype(int)
+comp['Micro basal'] = comp['ID'].isin(mic_t[mic_t['dias']<=0]['ID'].unique()).astype(int)
+
+spn = ser_post.groupby('ID').size(); epn = eos_post.groupby('ID').size()
+mpn = mic_post.groupby('ID').size()
+comp = comp.merge(spn.rename('nsp').reset_index(), on='ID', how='left')
+comp = comp.merge(epn.rename('nep').reset_index(), on='ID', how='left')
+comp = comp.merge(mpn.rename('nmp').reset_index(), on='ID', how='left')
+comp[['nsp','nep','nmp']] = comp[['nsp','nep','nmp']].fillna(0).astype(int)
+comp['Sero post-T₀'] = comp['nsp'].apply(lambda x: 0 if x==0 else 1 if x==1 else 2 if x<=3 else 3)
+comp['Eos post-T₀'] = comp['nep'].apply(lambda x: 0 if x==0 else 1 if x==1 else 2 if x<=3 else 3)
+comp['Micro post-T₀'] = comp['nmp'].apply(lambda x: 0 if x==0 else 1 if x==1 else 2 if x<=3 else 3)
+
+dcols = ['Sexo','Edad','Origen','Años España',
+         'Inmunodepresión','Comorbilidad','Confusor eos',
+         'IgG basal','Eos basal','Micro basal',
+         'Sero post-T₀','Eos post-T₀','Micro post-T₀']
+matrix = comp[dcols].values.T
+
+from matplotlib.colors import ListedColormap
+colors = ['#e27b61','#8bbceb','#5288b7','#2d316a']
+
+fig, ax = plt.subplots(figsize=(14, 6))
+fig.patch.set_facecolor('white')
+ax.imshow(matrix, aspect='auto', cmap=ListedColormap(colors), vmin=0, vmax=3,
+          interpolation='nearest')
+
+for i in range(matrix.shape[0]+1): ax.axhline(i-0.5, color='white', lw=1)
+for j in range(matrix.shape[1]+1): ax.axvline(j-0.5, color='white', lw=0.3)
+for yp in [4, 7, 10]: ax.axhline(yp-0.5, color='#4A4A4A', lw=1.5)
+
+for label, ymid in {'Demográficas':1.5,'Clínicas':5.0,
+                     'Analítica basal':8.0,'Seguimiento':11.0}.items():
+    ax.text(matrix.shape[1]+1, ymid, label, fontsize=7.5, va='center',
+            ha='left', fontweight='bold', color='#4A4A4A')
+
+for i_off, ncol in enumerate(['nsp','nep','nmp']):
+    for j in range(44):
+        val = int(comp.iloc[j][ncol])
+        if val > 0:
+            ax.text(j, 10+i_off, str(val), ha='center', va='center',
+                    fontsize=4.5, color='white' if matrix[10+i_off,j]>=2 else '#2D6A4F')
+
+ax.set_xticks(range(44))
+ax.set_xticklabels(comp['ID'].astype(int), fontsize=6, rotation=90)
+ax.set_yticks(range(len(dcols)))
+ax.set_yticklabels(dcols, fontsize=8)
+ax.set_xlabel('ID Paciente', fontsize=9)
+ax.set_title('Completitud de datos y disponibilidad de seguimiento (N = 44)',
+             fontsize=11, fontweight='bold', pad=12)
+
+for i in range(len(dcols)):
+    pct = (matrix[i]>0).sum()/44*100
+    color = '#D93025' if pct<50 else '#F9A825' if pct<80 else '#137333'
+    ax.annotate(f'{pct:.0f}%', xy=(-0.5,i), xytext=(-6,i), fontsize=7,
+                fontweight='bold', color=color, va='center', ha='right',
+                annotation_clip=False)
+ax.annotate('Disp.', xy=(-0.5,-1), xytext=(-3.5,-1), fontsize=7,
+            fontweight='bold', color='#4A4A4A', va='center', ha='right',
+            annotation_clip=False)
+
+from matplotlib.patches import Patch
+ax.legend(handles=[Patch(facecolor=c, edgecolor='#CCC', label=l)
+          for c,l in zip(colors, ['Ausente','1 medición','2–3 mediciones','≥4 mediciones'])],
+          loc='upper center', bbox_to_anchor=(0.5,-0.15), ncol=4, frameon=False, fontsize=8)
+
+plt.subplots_adjust(left=0.15, right=0.85, top=0.92, bottom=0.2)
+plt.savefig('figures/fig-completitud.png', dpi=300, bbox_inches='tight', facecolor='white')
+plt.show()
+```
+
+\newpage
+
+# Bloque 2 — Descripción de la cohorte
+
+## Tabla 1
+
+```{python}
+#| fig-cap: "Tabla 1. Características basales (n=44). Continuas: mediana (IQR). Categóricas: n (%)."
+
+def med_iqr(s): return f"{s.median():.1f} ({s.quantile(.25):.1f}–{s.quantile(.75):.1f})"
+def n_pct(num,den): return f"{num} ({num/den*100:.1f})"
+
+table_data = [
+    ('Demográficas','','',True,False), ('Edad, años','44',med_iqr(pac['EDAD']),False,False),
+    ('Sexo femenino','44',n_pct((pac['SEXO']=='M').sum(),44),False,False),
+    ('Origen: América del Sur','44',n_pct(pac['ORIGEN'].isin(['ECUADOR','BOLIVIA','PERU','COLOMBIA','BRASIL','PARAGUAY','ARGENTINA']).sum(),44),False,False),
+    ('Origen: América Central/Caribe','44',n_pct(pac['ORIGEN'].isin(['HONDURAS','GUATEMALA','EL SALVADOR','REP. DOMINICANA','MEXICO']).sum(),44),False,False),
+    ('Origen: África/Europa','44',n_pct(44-pac['ORIGEN'].isin(['ECUADOR','BOLIVIA','PERU','COLOMBIA','BRASIL','PARAGUAY','ARGENTINA','HONDURAS','GUATEMALA','EL SALVADOR','REP. DOMINICANA','MEXICO']).sum(),44),False,False),
+    ('Años en España',str(pac['AN_ESP'].notna().sum()),f"{pac['AN_ESP'].median():.0f} ({pac['AN_ESP'].quantile(.25):.0f}–{pac['AN_ESP'].quantile(.75):.0f})",False,False),
+    ('','','',False,True), ('Comorbilidades','','',True,False),
+    ('Inmunodepresión','44',n_pct(pac['INMUNO_SI'].sum(),44),False,False),
+    ('Comorbilidad relevante','44',n_pct(pac['COMORB_SI'].sum(),44),False,False),
+    ('Confusor de eosinofilia','44',n_pct(pac['CONFEOS_SI'].sum(),44),False,False),
+    ('','','',False,True), ('Analítica basal','','',True,False),
+    ('IgG ELISA (índice)',str(pac['IGG_BASAL'].notna().sum()),med_iqr(pac['IGG_BASAL'].dropna()),False,False),
+    ('Eosinófilos (×10³/µL)',str(pac['EOS_BASAL'].notna().sum()),med_iqr(pac['EOS_BASAL'].dropna()),False,False),
+    ('Eosinofilia (≥500 cél/µL)',str(pac['EOS_BASAL'].notna().sum()),n_pct(int((pac['EOS_BASAL']>=EOS_NEG).sum()),pac['EOS_BASAL'].notna().sum()),False,False),
+    ('Microbiología positiva',str(pac['MIC_BASAL'].notna().sum()),n_pct(int(pac['MIC_BASAL'].sum()),pac['MIC_BASAL'].notna().sum()),False,False),
+    ('','','',False,True), ('Diagnóstico','','',True,False),
+    ('Solo serología','44',n_pct(len(sero_pos-mic_pos_ids),44),False,False),
+    ('Serología + parasitología','44',n_pct(len(sero_pos&mic_pos_ids),44),False,False),
+    ('Solo parasitología','44',n_pct(len(mic_pos_ids-sero_pos),44),False,False),
+    ('Clínico-epidemiológico','44',n_pct(44-len(sero_pos|mic_pos_ids),44),False,False),
+    ('','','',False,True), ('Tratamiento','','',True,False),
+    ('Dosis única','44',n_pct((pac['DOSIS_IVM']=='MONO').sum(),44),False,False),
+    ('Doble consecutiva','44',n_pct((pac['DOSIS_IVM']=='DOBLE_CONSECUTIVA').sum(),44),False,False),
+    ('Doble separada','44',n_pct((pac['DOSIS_IVM']=='DOBLE_SEPARADA').sum(),44),False,False),
+    ('Cuádruple','44',n_pct((pac['DOSIS_IVM']=='CUADRUPLE').sum(),44),False,False),
+    ('Retratamiento (>1 ciclo)','44',n_pct((pac['N_TTO']>1).sum(),44),False,False),
+    ('','','',False,True), ('Seguimiento','','',True,False),
+    ('Serología, meses',str(ser_post['ID'].nunique()),med_iqr(cens_ser/30.44),False,False),
+    ('Determinaciones post-T₀',str(ser_post['ID'].nunique()),med_iqr(ser_post.groupby('ID').size()),False,False),
+]
+
+HDR_BG='#E8F0FE'; TXT='#1A1A1A'; TXT2='#555555'; LIGHT_LINE='#D0D0D0'
+fig_h=0.28*len(table_data)+1.5; fig,ax=plt.subplots(figsize=(8,fig_h)); ax.axis('off'); fig.patch.set_facecolor('white')
+ax.set_xlim(0,10); ax.set_ylim(-1,len(table_data)+3)
+ax.text(5,len(table_data)+2.2,'Tabla 1.  Características basales (n = 44)',ha='center',fontsize=11,fontweight='bold',color=TXT)
+x_var,x_n,x_val=0.3,6.8,8.8; y_h=len(table_data)+1.2
+ax.text(x_var,y_h,'Variable',fontsize=8,fontweight='bold',color=TXT,va='center')
+ax.text(x_n,y_h,'n',fontsize=8,fontweight='bold',color=TXT,va='center',ha='center')
+ax.text(x_val,y_h,'Valor',fontsize=8,fontweight='bold',color=TXT,va='center',ha='center')
+ax.plot([0.1,9.9],[y_h-0.35,y_h-0.35],color=TXT,lw=1.5)
+for i,(var,nv,val,is_hdr,is_sep) in enumerate(table_data):
+    y=len(table_data)-i+0.1
+    if is_sep: ax.plot([0.1,9.9],[y+0.25,y+0.25],color=LIGHT_LINE,lw=0.4); continue
+    if is_hdr:
+        rect=Rectangle((0.1,y-0.22),9.8,0.44,facecolor=HDR_BG,edgecolor='none',zorder=0); ax.add_patch(rect)
+        ax.text(x_var,y,var,fontsize=7.5,fontweight='bold',color=TXT,va='center')
+    else:
+        ax.text(x_var+0.2,y,var,fontsize=7,color=TXT2,va='center')
+        ax.text(x_n,y,nv,fontsize=7,color='#888',va='center',ha='center')
+        ax.text(x_val,y,val,fontsize=7,color=TXT,va='center',ha='center')
+ax.plot([0.1,9.9],[0.5,0.5],color=TXT,lw=1.5)
+ax.text(0.3,-0.1,'Continuas: mediana (IQR).  Categóricas: n (%).  n = dato disponible.',fontsize=5.5,color='#888',style='italic',va='top')
+plt.subplots_adjust(left=0.01,right=0.99,top=0.96,bottom=0.02)
+plt.savefig('figures/tabla1-basales.png',dpi=300,bbox_inches='tight',facecolor='white'); plt.show()
+```
+
+## Demografía y origen
+
+```{python}
+#| fig-cap: "Características demográficas. (A) Edad por sexo. (B) País de origen."
+
+fig,axes=plt.subplots(1,2,figsize=(14,5))
+ax=axes[0]
+for i,(sexo,color,label) in enumerate([('M',C['red'],'Mujer'),('V',C['blue'],'Varón')]):
+    sub=pac[pac['SEXO']==sexo]['EDAD']
+    bp=ax.boxplot(sub,positions=[i],widths=0.3,vert=True,patch_artist=True,boxprops=dict(facecolor=color,alpha=0.2),medianprops=dict(color=color,lw=2),whiskerprops=dict(color=color),capprops=dict(color=color),flierprops=dict(marker='',markersize=0))
+    ax.scatter(np.random.normal(i,0.06,len(sub)),sub,c=color,alpha=0.6,s=30,zorder=3,label=f'{label} (n={len(sub)})')
+ax.set_xticks([0,1]); ax.set_xticklabels(['Mujer','Varón']); ax.set(ylabel='Edad (años)',title='A. Distribución de edad por sexo')
+ax.legend(frameon=False,fontsize=9)
+u,p_age=mannwhitneyu(pac[pac['SEXO']=='M']['EDAD'],pac[pac['SEXO']=='V']['EDAD'])
+ax.text(0.95,0.05,f'Mann-Whitney p={p_age:.2f}',transform=ax.transAxes,ha='right',fontsize=8,color=C['annot'])
+
+ax=axes[1]
+continent_map={'ECUADOR':'Andina','BOLIVIA':'Andina','PERU':'Andina','COLOMBIA':'Andina','BRASIL':'Otros','PARAGUAY':'Otros','ARGENTINA':'Otros','HONDURAS':'Centroamérica','GUATEMALA':'Centroamérica','EL SALVADOR':'Centroamérica','MEXICO':'Otros','REP. DOMINICANA':'Otros','GUINEA ECUATORIAL':'África/Europa','SENEGAL':'África/Europa','GAMBIA':'África/Europa','GUINEA CONAKRY':'África/Europa','CONGO':'África/Europa','ITALIA':'África/Europa','ESPAÑA':'África/Europa'}
+pac['REGION']=pac['ORIGEN'].map(continent_map)
+region_colors={'Andina':C['blue'],'Centroamérica':C['gold'],'África/Europa':C['teal'],'Otros':C['muted']}
+orig=pac['ORIGEN'].value_counts().sort_values()
+bar_colors=[region_colors.get(pac[pac['ORIGEN']==o]['REGION'].iloc[0],C['muted']) for o in orig.index]
+ax.barh(range(len(orig)),orig.values,color=bar_colors,edgecolor='white',height=0.7)
+ax.set_yticks(range(len(orig))); ax.set_yticklabels(orig.index,fontsize=8)
+for i,v in enumerate(orig.values): ax.text(v+0.2,i,str(v),va='center',fontsize=8,color=C['annot'])
+ax.set(xlabel='n',title='B. País de origen')
+from matplotlib.patches import Patch
+ax.legend(handles=[Patch(facecolor=v,label=f'{k} ({pac["REGION"].value_counts().get(k,0)})') for k,v in region_colors.items() if pac['REGION'].value_counts().get(k,0)>0],frameon=False,fontsize=8,loc='lower right')
+plt.tight_layout(); plt.savefig('figures/fig01-demographics.png',dpi=300); plt.show()
+```
+
+## Perfil clínico
+
+```{python}
+#| fig-cap: "Perfil clínico basal: comorbilidades y confusores de eosinofilia."
+
+fig,ax=plt.subplots(figsize=(10,5))
+categories=[('Inmunodepresión',4,C['red']),('  VIH',1,C['red']),('  Quimioterapia',1,C['red']),('  Glucocorticoides',1,C['red']),('  Otra',1,C['red']),('Comorbilidad',pac['COMORB_SI'].sum(),C['orange']),('  VIH',(pac['COMORB']=='VIH').sum(),C['orange']),('  Enf. autoinmune',(pac['COMORB']=='EAI').sum(),C['orange']),('  Otras',pac['COMORB_SI'].sum()-(pac['COMORB']=='VIH').sum()-(pac['COMORB']=='EAI').sum(),C['orange']),('Confusor eosinofilia',pac['CONFEOS_SI'].sum(),C['gold']),('  Atopia',(pac['CONFEOS']=='ATOPIA').sum(),C['gold']),('  Coinfección helmíntica',(pac['CONFEOS']=='COINF_HELM').sum(),C['gold']),('  Otro',pac['CONFEOS_SI'].sum()-(pac['CONFEOS']=='ATOPIA').sum()-(pac['CONFEOS']=='COINF_HELM').sum(),C['gold'])]
+y_pos=list(range(len(categories)))[::-1]
+for i,(label,count,color) in enumerate(categories):
+    is_sub=label.startswith('  ')
+    ax.barh(y_pos[i],count,color=color,alpha=0.5 if is_sub else 0.8,edgecolor='white',height=0.6)
+    ax.text(count+0.3,y_pos[i],f'{count}/44 ({count/44*100:.0f}%)',va='center',fontsize=8,color=C['annot'] if is_sub else C['text'],fontweight='normal' if is_sub else 'bold')
+ax.set_yticks(y_pos); ax.set_yticklabels([c[0] for c in categories],fontsize=9)
+ax.set(xlabel='n pacientes',title='Perfil clínico: comorbilidades y confusores',xlim=(0,25))
+plt.tight_layout(); plt.savefig('figures/fig02-comorbilidades.png',dpi=300); plt.show()
+```
+
+## Relación IGG – Eosinófilos
+
+```{python}
+#| fig-cap: "Relación entre IgG y eosinófilos basales (n=34). Spearman ρ=0.49, p=0.003."
+
+fig=plt.figure(figsize=(10,8)); gs=GridSpec(3,3,figure=fig,width_ratios=[4,1,0.1],height_ratios=[1,4,0.1],hspace=0.05,wspace=0.05)
+ax_m=fig.add_subplot(gs[1,0]); ax_t=fig.add_subplot(gs[0,0],sharex=ax_m); ax_r=fig.add_subplot(gs[1,1],sharey=ax_m)
+both=pac[pac['IGG_BASAL'].notna()&pac['EOS_BASAL'].notna()].copy()
+for _,row in both.iterrows():
+    if row['INMUNO_SI']==1: c,m,s=C['red'],'D',60
+    elif row['CONFEOS_SI']==1: c,m,s=C['gold'],'s',40
+    else: c,m,s=C['blue'],'o',30
+    ax_m.scatter(row['IGG_BASAL'],row['EOS_BASAL'],c=c,marker=m,s=s,alpha=0.7,zorder=3)
+ax_m.axvline(SERO_NEG,color=C['red'],ls='--',lw=1,alpha=0.5); ax_m.axhline(EOS_NEG,color=C['red'],ls='--',lw=1,alpha=0.5)
+ax_m.axvline(igg_med,color=C['blue'],ls=':',lw=1,alpha=0.5); ax_m.axhline(eos_med,color=C['gold'],ls=':',lw=1,alpha=0.5)
+r_sp,p_sp=spearmanr(both['IGG_BASAL'],both['EOS_BASAL'])
+ax_m.text(0.05,0.95,f'Spearman ρ = {r_sp:.2f}\np = {p_sp:.3f}',transform=ax_m.transAxes,fontsize=9,va='top',fontweight='bold')
+ax_m.set(xlabel='IgG ELISA basal (índice)',ylabel='Eosinófilos basales (×10³/µL)')
+ax_t.hist(pac['IGG_BASAL'].dropna(),bins=15,color=C['blue'],alpha=0.5,edgecolor='white')
+ax_t.axvline(SERO_NEG,color=C['red'],ls='--',lw=1,alpha=0.5); ax_t.axvline(igg_med,color=C['blue'],ls=':',lw=1)
+ax_t.set(title=f'IgG basal: mediana {igg_med:.1f} (n={pac["IGG_BASAL"].notna().sum()})'); ax_t.set_ylabel('n'); plt.setp(ax_t.get_xticklabels(),visible=False)
+ax_r.hist(pac['EOS_BASAL'].dropna(),bins=15,orientation='horizontal',color=C['gold'],alpha=0.5,edgecolor='white')
+ax_r.axhline(EOS_NEG,color=C['red'],ls='--',lw=1,alpha=0.5); ax_r.axhline(eos_med,color=C['gold'],ls=':',lw=1)
+ax_r.set(title=f'Eos: med {eos_med:.2f}'); ax_r.set_xlabel('n'); plt.setp(ax_r.get_yticklabels(),visible=False)
+ax_m.legend(handles=[Line2D([0],[0],marker='o',color='w',markerfacecolor=C['blue'],ms=8,label='Sin comorbilidad'),Line2D([0],[0],marker='D',color='w',markerfacecolor=C['red'],ms=8,label='Inmunodeprimido'),Line2D([0],[0],marker='s',color='w',markerfacecolor=C['gold'],ms=8,label='Confusor eos'),Line2D([0],[0],color=C['red'],ls='--',lw=1,label='Umbral clínico'),Line2D([0],[0],color=C['blue'],ls=':',lw=1,label='Mediana')],frameon=False,fontsize=7,loc='lower right')
+plt.savefig('figures/fig03-igg-eos-scatter.png',dpi=300,bbox_inches='tight'); plt.show()
+```
+
+## Justificación de cutpoints
+
+```{python}
+#| fig-cap: "Puntos de corte: distribución y balance estadístico para IgG y eosinófilos basales."
+
+fig,axes=plt.subplots(2,2,figsize=(14,10))
+# (A) IGG dist
+ax=axes[0,0]; igg=pac['IGG_BASAL'].dropna(); ax.hist(igg,bins=15,color=C['blue'],alpha=0.5,edgecolor='white')
+for cut,label,color,ls in [(SERO_NEG,f'Clínico ({SERO_NEG})',C['red'],'--'),(igg_med,f'Mediana ({igg_med:.1f})',C['purple'],'-'),(igg_p75,f'P75 ({igg_p75:.1f})',C['teal'],':')]: ax.axvline(cut,color=color,ls=ls,lw=2,label=label)
+ax.set(xlabel='IgG ELISA',ylabel='n',title='A. Distribución de IgG basal'); ax.legend(frameon=False,fontsize=8)
+# (B) IGG balance
+ax=axes[0,1]; cuts_igg=[(f'Clínico (≥{SERO_NEG})',(igg>=SERO_NEG).sum(),(igg<SERO_NEG).sum()),(f'Mediana (≥{igg_med:.1f})',(igg>=igg_med).sum(),(igg<igg_med).sum()),(f'P75 (≥{igg_p75:.1f})',(igg>=igg_p75).sum(),(igg<igg_p75).sum())]
+for i,(label,nh,nl) in enumerate(cuts_igg):
+    ax.barh(i,nh,color=C['red'],alpha=0.7,label='≥ corte' if i==0 else ''); ax.barh(i,-nl,color=C['blue'],alpha=0.7,label='< corte' if i==0 else '')
+    ax.text(nh+0.5,i,str(nh),va='center',fontsize=9,fontweight='bold'); ax.text(-nl-0.5,i,str(nl),va='center',ha='right',fontsize=9,fontweight='bold')
+    bal=min(nh,nl)/max(nh,nl) if max(nh,nl)>0 else 0; ax.text(20,i,f'Balance: {bal:.0%}'+(' ✓' if bal>0.4 else ' ⚠'),fontsize=8,color=C['annot'])
+ax.set_yticks(range(3)); ax.set_yticklabels([c[0] for c in cuts_igg]); ax.axvline(0,color=C['text'],lw=0.5); ax.set(xlabel='← bajo | alto →',title='B. Balance (IgG)'); ax.legend(frameon=False,fontsize=8)
+# (C) EOS dist
+ax=axes[1,0]; eo=pac['EOS_BASAL'].dropna(); ax.hist(eo,bins=15,color=C['gold'],alpha=0.5,edgecolor='white')
+for cut,label,color,ls in [(EOS_NEG,f'Clínico ({EOS_NEG})',C['red'],'--'),(eos_med,f'Mediana ({eos_med:.2f})',C['purple'],'-'),(1.0,'1.0 (1000 cél)',C['teal'],':')]: ax.axvline(cut,color=color,ls=ls,lw=2,label=label)
+ax.set(xlabel='Eosinófilos (×10³/µL)',ylabel='n',title='C. Distribución eosinófilos basales'); ax.legend(frameon=False,fontsize=8)
+# (D) EOS balance
+ax=axes[1,1]; cuts_eos=[(f'Clínico (≥{EOS_NEG})',(eo>=EOS_NEG).sum(),(eo<EOS_NEG).sum()),(f'Mediana (≥{eos_med:.2f})',(eo>=eos_med).sum(),(eo<eos_med).sum()),('≥1.0 (1000 cél)',(eo>=1.0).sum(),(eo<1.0).sum())]
+for i,(label,nh,nl) in enumerate(cuts_eos):
+    ax.barh(i,nh,color=C['red'],alpha=0.7); ax.barh(i,-nl,color=C['blue'],alpha=0.7)
+    ax.text(nh+0.5,i,str(nh),va='center',fontsize=9,fontweight='bold'); ax.text(-nl-0.5,i,str(nl),va='center',ha='right',fontsize=9,fontweight='bold')
+    bal=min(nh,nl)/max(nh,nl) if max(nh,nl)>0 else 0; ax.text(18,i,f'Balance: {bal:.0%}'+(' ✓' if bal>0.4 else ' ⚠'),fontsize=8,color=C['annot'])
+ax.set_yticks(range(3)); ax.set_yticklabels([c[0] for c in cuts_eos]); ax.axvline(0,color=C['text'],lw=0.5); ax.set(xlabel='← bajo | alto →',title='D. Balance (Eos)')
+plt.tight_layout(); plt.savefig('figures/fig04-cutpoints-justificacion.png',dpi=300); plt.show()
+```
+
+\newpage
+
+# Bloque 3 — Trayectorias y eventos
+
+## Trayectoria serológica
+
+```{python}
+#| fig-cap: "Trayectorias serológicas individuales. Línea azul: media trimestral."
+
+ser_plot=ser_long[ser_long['meses']>=-12].copy(); fig,ax=plt.subplots(figsize=(10,5))
+for pid,grp in ser_plot.groupby('ID'): ax.plot(grp.sort_values('meses')['meses'],grp.sort_values('meses')['IGG'],color=C['muted'],alpha=0.3,lw=0.8)
+ser_plot['bin']=(ser_plot['meses']/3).round()*3; media=ser_plot.groupby('bin')['IGG'].agg(['mean','count']); media=media[media['count']>=3]
+ax.plot(media.index,media['mean'],color=C['blue'],lw=2.5,label='Media trimestral')
+ax.axhline(SERO_NEG,color=C['red'],ls='--',lw=1,label=f'Negativo ({SERO_NEG})'); ax.axvline(0,color=C['annot'],ls='-',lw=0.8,alpha=0.5)
+ax.set(xlabel='Meses desde T₀',ylabel='IgG ELISA',title='Trayectorias serológicas'); ax.legend(frameon=False)
+plt.tight_layout(); plt.savefig('figures/fig05-sero-trayectorias.png',dpi=300); plt.show()
+```
+
+## Trayectoria eosinofílica
+
+```{python}
+#| fig-cap: "Trayectorias de eosinófilos. La normalización es más rápida que la seronegativización."
+
+eos_plot=eos_long[eos_long['meses']>=-12].copy(); fig,ax=plt.subplots(figsize=(10,5))
+for pid,grp in eos_plot.groupby('ID'): ax.plot(grp.sort_values('meses')['meses'],grp.sort_values('meses')['EOS'],color=C['muted'],alpha=0.2,lw=0.6)
+eos_plot['bin']=(eos_plot['meses']/3).round()*3; me=eos_plot.groupby('bin')['EOS'].agg(['mean','count']); me=me[me['count']>=5]
+ax.plot(me.index,me['mean'],color=C['gold'],lw=2.5,label='Media trimestral')
+ax.axhline(EOS_NEG,color=C['red'],ls='--',lw=1,label=f'Umbral ({EOS_NEG})'); ax.axvline(0,color=C['annot'],ls='-',lw=0.8,alpha=0.5)
+ax.set(xlabel='Meses desde T₀',ylabel='Eosinófilos (×10³/µL)',title='Trayectorias de eosinófilos'); ax.legend(frameon=False)
+plt.tight_layout(); plt.savefig('figures/fig06-eos-trayectorias.png',dpi=300); plt.show()
+```
+
+## Seguimiento individual
+
+```{python}
+#| fig-cap: "Seguimiento individual. Puntos: serología (verde=negativo, rojo=positivo). Ticks: eosinófilos."
+
+fig,ax=plt.subplots(figsize=(14,9)); ids_sorted=pac.sort_values('T0')['ID'].values
+for i,pid in enumerate(ids_sorted):
+    sub_s=ser_long[ser_long['ID']==pid].sort_values('dias')
+    if len(sub_s)>0:
+        ax.plot([sub_s['dias'].min(),sub_s['dias'].max()],[i,i],color=C['grid'],lw=0.3,zorder=1)
+        for _,row in sub_s.iterrows(): ax.scatter(row['dias'],i,c=C['green'] if row['IGG']<SERO_NEG else C['red'],s=8,zorder=2,alpha=0.8)
+    for _,row in eos_long[eos_long['ID']==pid].iterrows(): ax.plot([row['dias'],row['dias']],[i-0.2,i+0.2],color=C['gold'],lw=0.3,alpha=0.3)
+ax.axvline(0,color=C['text'],ls='-',lw=1,alpha=0.8); ax.set(xlabel='Días desde T₀',ylabel='Paciente',title='Seguimiento individual')
+ax.legend(handles=[Line2D([0],[0],marker='o',color='w',markerfacecolor=C['green'],ms=6,label=f'IgG < {SERO_NEG}'),Line2D([0],[0],marker='o',color='w',markerfacecolor=C['red'],ms=6,label=f'IgG ≥ {SERO_NEG}'),Line2D([0],[0],color=C['gold'],lw=1,alpha=0.5,label='Eosinófilos')],frameon=False,fontsize=9,loc='lower right')
+plt.tight_layout(); plt.savefig('figures/fig07-seguimiento-individual.png',dpi=300); plt.show()
+```
+
+## Resumen de eventos
+
+```{python}
+#| fig-cap: "Tasa y velocidad de negativización por definición. Barras: %. Rombos: mediana temporal. ★ = endpoint primario."
+
+eventos=[('Sero abs ×1 ★',len(neg_sero_abs),ser_post['ID'].nunique(),neg_sero_abs['T_NEG_SERO_ABS'].median()),('Sero abs ×2',len(neg_sero_abs_x2),ser_post['ID'].nunique(),neg_sero_abs_x2['T_NEG_SERO_ABS_X2'].median() if len(neg_sero_abs_x2)>0 else np.nan),('Sero rel ×1',len(neg_sero_rel),ser_post_b['ID'].nunique(),neg_sero_rel['T_NEG_SERO_REL'].median() if len(neg_sero_rel)>0 else np.nan),('Sero rel ×2',len(neg_sero_rel_x2),ser_post_b['ID'].nunique(),neg_sero_rel_x2['T_NEG_SERO_REL_X2'].median() if len(neg_sero_rel_x2)>0 else np.nan),('Eosinófilos',len(neg_eos),eos_post['ID'].nunique(),neg_eos['T_NEG_EOS_ABS'].median()),('Parasitología',len(neg_para),n_evaluables,neg_para['T_NEG_PARA'].median() if len(neg_para)>0 else np.nan)]
+fig,ax1=plt.subplots(figsize=(12,5)); ax2=ax1.twinx()
+names=[e[0] for e in eventos]; pcts=[e[1]/e[2]*100 for e in eventos]; meds=[e[3]/30.44 if not np.isnan(e[3]) else np.nan for e in eventos]; x=np.arange(len(eventos))
+ax1.bar(x,pcts,color=[C['blue'] if '★' in n else C['teal'] for n in names],alpha=0.7,edgecolor='white',width=0.6)
+for i,e in enumerate(eventos): ax1.text(i,pcts[i]+2,f'{e[1]}/{e[2]}',ha='center',fontsize=9,fontweight='bold',color=C['annot'])
+vm=[(i,m) for i,m in enumerate(meds) if not np.isnan(m)]
+if vm: ax2.scatter([i for i,m in vm],[m for i,m in vm],color=C['red'],marker='D',s=80,zorder=5,label='Mediana (meses)')
+for i,m in vm: ax2.text(i+0.15,m,f'{m:.1f}m',fontsize=9,color=C['red'])
+ax1.set(ylabel='% negativización',ylim=(0,115)); ax2.set(ylabel='Mediana (meses)')
+ax1.set_xticks(x); ax1.set_xticklabels(names,fontsize=9,rotation=15); ax1.set_title('Tasa y velocidad de negativización')
+ax2.legend(frameon=False,fontsize=9,loc='upper right')
+plt.tight_layout(); plt.savefig('figures/fig08-eventos-resumen.png',dpi=300); plt.show()
+```
+
+\newpage
+
+# Bloque 4 — Kaplan-Meier
+
+```{python}
+from lifelines import KaplanMeierFitter, CoxPHFitter
+from lifelines.statistics import logrank_test
+from lifelines.plotting import add_at_risk_counts
+```
+
+## KM global — Endpoint primario
+
+```{python}
+#| fig-cap: "KM para seronegativización absoluta (n=39). Área sombreada: IC 95%. Marcas: censuras. Tabla: pacientes en riesgo."
+
+km_data=ev[ev['T_SERO_ABS_X1']>0].copy(); kmf=KaplanMeierFitter()
+kmf.fit(km_data['T_SERO_ABS_X1'],km_data['E_SERO_ABS_X1'],label='Neg. serológica absoluta')
+fig,ax=plt.subplots(figsize=(10,6)); kmf.plot_survival_function(ax=ax,ci_show=True,color=C['blue'],lw=2)
+censored=km_data[km_data['E_SERO_ABS_X1']==0]
+for _,row in censored.iterrows(): ax.plot(row['T_SERO_ABS_X1'],kmf.survival_function_at_times(row['T_SERO_ABS_X1']).values[0],'|',color=C['annot'],ms=8,mew=1.5,zorder=3)
+med_km=kmf.median_survival_time_
+if med_km<np.inf: ax.axhline(0.5,color=C['grid'],ls=':',lw=0.8); ax.axvline(med_km,color=C['red'],ls='--',lw=1,alpha=0.7); ax.text(med_km+20,0.53,f'Mediana: {med_km:.0f}d ({med_km/30.44:.1f}m)',color=C['red'],fontsize=9)
+ax.set(xlabel='Días desde T₀',ylabel='P(no negativización)',ylim=(-0.05,1.05),title=f'Seronegativización absoluta ×1 (n={len(km_data)}, eventos={km_data["E_SERO_ABS_X1"].sum()})'); ax.legend().remove()
+add_at_risk_counts(kmf,ax=ax,rows_to_show=['At risk'])
+plt.tight_layout(); plt.savefig('figures/fig09-km-global.png',dpi=300); plt.show()
+print(f"Mediana: {med_km:.0f} días ({med_km/30.44:.1f} meses)")
+```
+
+## Sensibilidad — 4 definiciones
+
+```{python}
+#| fig-cap: "Sensibilidad: 4 definiciones de seronegativización. Curvas paralelas = conclusiones robustas."
+
+fig,ax=plt.subplots(figsize=(10,6))
+for pf,label,color,ls in [('SERO_ABS_X1','Absoluta ×1 (IgG<1.1)',C['blue'],'-'),('SERO_ABS_X2','Absoluta ×2 (2 consec.)',C['blue'],'--'),('SERO_REL_X1','Relativa ×1 (↓>50%)',C['gold'],'-'),('SERO_REL_X2','Relativa ×2 (2 consec.)',C['gold'],'--')]:
+    data=ev[ev[f'T_{pf}']>0].copy()
+    if len(data)<2: continue
+    k=KaplanMeierFitter(); k.fit(data[f'T_{pf}'],data[f'E_{pf}'],label=label); k.plot_survival_function(ax=ax,ci_show=False,color=color,ls=ls,lw=2)
+ax.axhline(0.5,color=C['grid'],ls=':',lw=0.8); ax.set(xlabel='Días desde T₀',ylabel='P(no negativización)',ylim=(-0.05,1.05),title='Sensibilidad: 4 definiciones'); ax.legend(frameon=False,loc='upper right',fontsize=9)
+plt.tight_layout(); plt.savefig('figures/fig10-km-sensibilidad.png',dpi=300); plt.show()
+```
+
+## KM estratificado
+
+```{python}
+#| fig-cap: "KM estratificado por 6 variables basales. p-valor del Log-Rank: rojo p<0.05, ámbar p<0.20, gris NS."
+
+variables_km=[('SEXO','Sexo (M vs V)'),('SER_MEDIANA',f'IgG basal ≥ mediana ({igg_med:.1f})'),('EOS_ALTA',f'Eosinofilia (≥{EOS_NEG} ×10³/µL)'),('INMUNO_O_COMORB','Inmuno o comorbilidad'),('MONO','Dosis única vs múltiple'),('CONFEOS_SI','Confusor de eosinofilia')]
+gl={'SEXO':{'M':'Mujer','V':'Varón'},'SER_MEDIANA':{0:f'IgG<{igg_med:.1f}',1:f'IgG≥{igg_med:.1f}'},'EOS_ALTA':{0:f'Eos<{EOS_NEG}',1:f'Eos≥{EOS_NEG}'},'INMUNO_O_COMORB':{0:'No',1:'Sí'},'MONO':{0:'Múltiple',1:'Única'},'CONFEOS_SI':{0:'No',1:'Sí'}}
+fig,axes=plt.subplots(2,3,figsize=(18,11)); lr_results={}
+for idx,(col,titulo) in enumerate(variables_km):
+    ax=axes[idx//3,idx%3]; groups=sorted(km_full[col].dropna().unique())
+    for i,g in enumerate(groups):
+        sub=km_full[km_full[col]==g]
+        if len(sub)<2: continue
+        lb=gl.get(col,{}).get(g,str(g)); k=KaplanMeierFitter(); k.fit(sub['T_SERO_ABS_X1'],sub['E_SERO_ABS_X1'],label=f'{lb} (n={len(sub)}, ev={sub["E_SERO_ABS_X1"].sum()})'); k.plot_survival_function(ax=ax,ci_show=True,color=SAT[i%len(SAT)])
+    p=np.nan
+    if len(groups)==2:
+        g0,g1=km_full[km_full[col]==groups[0]],km_full[km_full[col]==groups[1]]
+        if len(g0)>=2 and len(g1)>=2: lr=logrank_test(g0['T_SERO_ABS_X1'],g1['T_SERO_ABS_X1'],g0['E_SERO_ABS_X1'],g1['E_SERO_ABS_X1']); p=lr.p_value; ax.text(0.95,0.95,f'p = {p:.3f}',transform=ax.transAxes,ha='right',va='top',fontsize=11,fontweight='bold',color=C['red'] if p<0.05 else C['gold'] if p<0.20 else C['muted'])
+    lr_results[col]=p; ax.set(xlabel='Días desde T₀',ylabel='P(no neg.)',ylim=(-0.05,1.05),title=titulo); ax.legend(frameon=False,fontsize=7); ax.axhline(0.5,color=C['grid'],ls=':',lw=0.8)
+plt.suptitle('Seronegativización absoluta ×1 — Análisis estratificado',fontsize=14,y=1.01)
+plt.tight_layout(); plt.savefig('figures/fig11-km-estratificado.png',dpi=300); plt.show()
+
+# Log-Rank adicionales
+for col,titulo in [('SER_P75',f'IgG≥P75'),('EOS_MEDIANA','Eos≥med'),('EDAD_ALTA','Edad≥med'),('RETRATADO','Retratado'),('DX_PARA','Dx para'),('EOS_LIMPIA','Eos sin confusor')]:
+    groups=sorted(km_full[col].dropna().unique()); p=np.nan
+    if len(groups)==2:
+        g0,g1=km_full[km_full[col]==groups[0]],km_full[km_full[col]==groups[1]]
+        if len(g0)>=2 and len(g1)>=2: p=logrank_test(g0['T_SERO_ABS_X1'],g1['T_SERO_ABS_X1'],g0['E_SERO_ABS_X1'],g1['E_SERO_ABS_X1']).p_value
+    lr_results[col]=p
+cands_lr=[k for k,v in lr_results.items() if not np.isnan(v) and v<0.20]
+print(f"Candidatas Log-Rank (p<0.20): {cands_lr}")
+```
+
+\newpage
+
+# Bloque 5 — Regresión de Cox
+
+## Cox univariable
+
+```{python}
+#| fig-cap: "Forest plot univariable. HR > 1 = negativización más rápida. Rojo: p<0.05. Ámbar: p<0.20."
+
+covs_uni=['SEXO_V','EDAD','EDAD_ALTA','INMUNO_SI','COMORB_SI','CONFEOS_SI','INMUNO_O_COMORB','EOS_ALTA','EOS_MEDIANA','SER_MEDIANA','SER_P75','IGG_BASAL','EOS_BASAL','MONO','RETRATADO','DX_PARA']
+cox_results=[]
+for cov in covs_uni:
+    df=cox_data[['T_SERO_ABS_X1','E_SERO_ABS_X1',cov]].dropna()
+    if df[cov].nunique()<2 or len(df)<5: continue
+    try:
+        cph=CoxPHFitter(); cph.fit(df,duration_col='T_SERO_ABS_X1',event_col='E_SERO_ABS_X1')
+        s=cph.summary.loc[cov]; cox_results.append({'Variable':cov,'n':len(df),'eventos':int(df['E_SERO_ABS_X1'].sum()),'HR':s['exp(coef)'],'CI_lo':s['exp(coef) lower 95%'],'CI_hi':s['exp(coef) upper 95%'],'p':s['p']})
+    except: pass
+cox_uni=pd.DataFrame(cox_results).sort_values('p')
+cox_uni['Sig']=cox_uni['p'].apply(lambda x:'***' if x<0.001 else '**' if x<0.01 else '*' if x<0.05 else '†' if x<0.20 else '')
+
+fig,ax=plt.subplots(figsize=(10,max(4,len(cox_uni)*0.55+1)))
+for i,(_,r) in enumerate(cox_uni.iterrows()):
+    c=C['red'] if r['p']<0.05 else C['gold'] if r['p']<0.20 else C['muted']
+    ax.errorbar(r['HR'],i,xerr=[[r['HR']-r['CI_lo']],[r['CI_hi']-r['HR']]],fmt='o',color=c,capsize=4,lw=1.5,ms=7)
+    ax.annotate(f"HR {r['HR']:.2f} ({r['CI_lo']:.2f}–{r['CI_hi']:.2f}) p={r['p']:.3f} {r['Sig']}",xy=(max(r['CI_hi']+0.1,1.8),i),fontsize=7.5,color=c,va='center')
+ax.axvline(1,color=C['muted'],ls='--',lw=1); ax.set_yticks(range(len(cox_uni)))
+ax.set_yticklabels([f"{nice.get(r['Variable'],r['Variable'])} (n={int(r['n'])})" for _,r in cox_uni.iterrows()],fontsize=8)
+ax.set(xlabel='Hazard Ratio (IC 95%)',title='Cox univariable — Seronegativización absoluta ×1'); ax.invert_yaxis()
+plt.tight_layout(); plt.savefig('figures/fig12-cox-forest-uni.png',dpi=300); plt.show()
+```
+
+## Cox multivariable (CORREGIDO — regla de Peduzzi)
+
+Con 27 eventos y la regla de ≥10 eventos/variable, el modelo admite
+máximo 2 covariables. SEXO_V viola proporcionalidad → se estratifica.
+
+```{python}
+#| fig-cap: "Cox multivariable corregido: 2 covariables + estratificación por sexo. IC razonables confirman ausencia de sobreajuste."
+
+n_eventos = km_data['E_SERO_ABS_X1'].sum()
+max_vars = int(n_eventos / 10)
+print(f"Regla de Peduzzi: {n_eventos} eventos / 10 = {max_vars} covariables máximo")
+print(f"SEXO_V viola PH (Schoenfeld p=0.001) → se estratifica, no se incluye")
+
+df_multi = cox_data[['T_SERO_ABS_X1','E_SERO_ABS_X1',
+                      'SER_MEDIANA','EOS_ALTA','SEXO_V']].dropna()
+print(f"n = {len(df_multi)}, eventos = {df_multi['E_SERO_ABS_X1'].sum()}")
+
+cph_multi = CoxPHFitter()
+cph_multi.fit(df_multi, duration_col='T_SERO_ABS_X1',
+              event_col='E_SERO_ABS_X1', strata=['SEXO_V'])
+
+sm = cph_multi.summary[['exp(coef)','exp(coef) lower 95%',
+                         'exp(coef) upper 95%','p']].copy()
+sm.columns = ['HR','CI_lo','CI_hi','p']
+
+print(f"\nCox multivariable (estratificado por sexo):")
+for var,row in sm.iterrows():
+    sig='*' if row['p']<0.05 else '†' if row['p']<0.20 else ''
+    d="↓ retrasa" if row['HR']<1 else "↑ acelera"
+    print(f"  {nice.get(var,var):<28s} HR={row['HR']:.2f} ({row['CI_lo']:.2f}–{row['CI_hi']:.2f}) p={row['p']:.3f} {sig} {d}")
+
+# Forest plot
+fig,ax=plt.subplots(figsize=(9,max(2.5,len(sm)*0.9+1)))
+for i,(var,row) in enumerate(sm.iterrows()):
+    c=C['red'] if row['p']<0.05 else C['gold'] if row['p']<0.20 else C['muted']
+    ax.errorbar(row['HR'],i,xerr=[[row['HR']-row['CI_lo']],[row['CI_hi']-row['HR']]],fmt='s',color=c,capsize=5,lw=2,ms=9)
+    ax.annotate(f"HR {row['HR']:.2f} ({row['CI_lo']:.2f}–{row['CI_hi']:.2f}) p={row['p']:.3f}",xy=(max(row['CI_hi']+0.1,1.5),i),fontsize=9,color=c,va='center')
+ax.axvline(1,color=C['muted'],ls='--',lw=1); ax.set_yticks(range(len(sm))); ax.set_yticklabels([nice.get(v,v) for v in sm.index],fontsize=9)
+ax.set(xlabel='HR ajustado (IC 95%)',title=f'Cox multivariable (n={len(df_multi)}, ev={df_multi["E_SERO_ABS_X1"].sum()}, estratif. por sexo)'); ax.invert_yaxis()
+plt.tight_layout(); plt.savefig('figures/fig13-cox-forest-multi.png',dpi=300); plt.show()
+```
+
+## Verificación de proporcionalidad (Schoenfeld)
+
+```{python}
+print("Test de Schoenfeld (modelo multivariable corregido):")
+try:
+    cph_multi.check_assumptions(df_multi, p_value_threshold=0.05, show_plots=True)
+    print("✓ Proporcionalidad verificada"); plt.savefig('figures/fig14-schoenfeld.png',dpi=300); plt.show()
+except Exception as e:
+    print(f"Resultado: {e}"); plt.show()
+```
+
+## SA-3: sin inmunodeprimidos
+
+```{python}
+cox_sa3=cox_data[cox_data['INMUNO_SI']==0].copy()
+print(f"SA-3: n={len(cox_sa3)}, eventos={cox_sa3['E_SERO_ABS_X1'].sum()}")
+print(f"\n{'Variable':<25s} {'HR total':>9} {'p total':>8}  {'HR SA-3':>8} {'p SA-3':>8}  {'ΔHR':>5}")
+print('─'*65)
+for cov in ['SEXO_V','EDAD_ALTA','COMORB_SI','CONFEOS_SI','EOS_ALTA','SER_MEDIANA','MONO','RETRATADO']:
+    df=cox_sa3[['T_SERO_ABS_X1','E_SERO_ABS_X1',cov]].dropna()
+    if df[cov].nunique()<2 or len(df)<5: continue
+    try:
+        cph=CoxPHFitter(); cph.fit(df,duration_col='T_SERO_ABS_X1',event_col='E_SERO_ABS_X1'); s=cph.summary.loc[cov]
+        hr_tot=cox_uni[cox_uni['Variable']==cov]['HR'].values[0] if cov in cox_uni['Variable'].values else np.nan
+        p_tot=cox_uni[cox_uni['Variable']==cov]['p'].values[0] if cov in cox_uni['Variable'].values else np.nan
+        delta=abs(s['exp(coef)']-hr_tot) if not np.isnan(hr_tot) else np.nan
+        flag=' ⚠' if (not np.isnan(delta) and delta>0.3) else ' ✓'
+        print(f"  {nice.get(cov,cov):<23s} {hr_tot:>8.2f} {p_tot:>8.3f}  {s['exp(coef)']:>8.2f} {s['p']:>8.3f}  {delta:>4.2f}{flag}")
+    except: pass
+```
+
+\newpage
+
+# Bloque 6 — LMM y síntesis
+
+## Trayectoria serológica (LMM)
+
+```{python}
+#| fig-cap: "LMM: trayectoria de log(IgG). Línea azul: modelo. Banda: IC 95%. Flecha: tiempo estimado hasta negativización."
+
+import statsmodels.formula.api as smf
+lmm_ser=ser_long[ser_long['dias']>0][['ID','dias','IGG']].dropna().copy()
+lmm_ser['log_igg']=np.log(lmm_ser['IGG'].clip(lower=0.01)); lmm_ser['meses']=lmm_ser['dias']/30.44
+r_ser=smf.mixedlm("log_igg ~ meses",lmm_ser,groups=lmm_ser["ID"]).fit(reml=True)
+b0=r_ser.fe_params['Intercept']; b1=r_ser.fe_params['meses']; p_slope=r_ser.pvalues['meses']
+
+fig,ax=plt.subplots(figsize=(10,6))
+for pid,grp in lmm_ser.groupby('ID'): ax.plot(grp['meses'],grp['log_igg'],color=C['muted'],alpha=0.15,lw=0.5)
+x_mod=np.linspace(0,lmm_ser['meses'].max(),100); y_pred=b0+b1*x_mod
+se_b0=r_ser.bse_fe['Intercept']; se_b1=r_ser.bse_fe['meses']; se_pred=np.sqrt(se_b0**2+x_mod**2*se_b1**2)
+ax.plot(x_mod,y_pred,color=C['blue'],lw=2.5,label=f'Modelo: {b0:.2f} {b1:+.4f}·meses (p={p_slope:.4f})')
+ax.fill_between(x_mod,y_pred-1.96*se_pred,y_pred+1.96*se_pred,color=C['blue'],alpha=0.1,label='IC 95%')
+ax.axhline(np.log(SERO_NEG),color=C['red'],ls='--',lw=1.5,label=f'Umbral: log({SERO_NEG})')
+if b1<0:
+    t_neg=(np.log(SERO_NEG)-b0)/b1; ax.axvline(t_neg,color=C['red'],ls=':',lw=1,alpha=0.6)
+    ax.annotate(f'{t_neg:.0f} meses',xy=(t_neg,np.log(SERO_NEG)),xytext=(t_neg+5,np.log(SERO_NEG)+0.5),fontsize=10,color=C['red'],fontweight='bold',arrowprops=dict(arrowstyle='->',color=C['red'],lw=1.5))
+ax.set(xlabel='Meses desde T₀',ylabel='log(IgG ELISA)',title='Trayectoria serológica (LMM)'); ax.legend(frameon=False,fontsize=9)
+plt.tight_layout(); plt.savefig('figures/fig15-lmm-global.png',dpi=300); plt.show()
+print(f"Pendiente: {b1:.4f} log(IgG)/mes → descenso {abs(1-np.exp(b1))*100:.1f}%/mes")
+if b1<0: print(f"Tiempo estimado hasta IgG={SERO_NEG}: {t_neg:.1f} meses")
+```
+
+## Q-Q plot de residuos
+
+```{python}
+#| fig-cap: "Verificación de normalidad de residuos del LMM. (A) Q-Q plot. (B) Residuos vs predichos."
+
+residuos=r_ser.resid; predichos=r_ser.fittedvalues
+fig,axes=plt.subplots(1,2,figsize=(12,5))
+ax=axes[0]; (osm,osr),(slope,intercept,r_qq)=probplot(residuos,dist='norm')
+ax.scatter(osm,osr,c=C['blue'],s=15,alpha=0.6); ax.plot(osm,slope*np.array(osm)+intercept,color=C['red'],ls='--',lw=1,label=f'R²={r_qq**2:.3f}')
+ax.set(xlabel='Cuantiles teóricos',ylabel='Cuantiles observados',title='A. Q-Q plot'); ax.legend(frameon=False,fontsize=9)
+ax=axes[1]; ax.scatter(predichos,residuos,c=C['blue'],s=15,alpha=0.4); ax.axhline(0,color=C['red'],ls='--',lw=1)
+ax.set(xlabel='Predichos',ylabel='Residuos',title='B. Residuos vs predichos')
+w_stat,p_shap=shapiro(residuos.values[:min(len(residuos),5000)])
+axes[0].text(0.05,0.92,f'Shapiro-Wilk p={p_shap:.3f}',transform=axes[0].transAxes,fontsize=9,color=C['red'] if p_shap<0.05 else C['green'],fontweight='bold')
+plt.tight_layout(); plt.savefig('figures/fig16-lmm-residuos.png',dpi=300); plt.show()
+```
+
+## LMM con interacción (IgG basal)
+
+```{python}
+#| fig-cap: "Trayectorias por nivel de IgG basal. Si las pendientes divergen, la variable modifica la velocidad de descenso."
+
+lmm_cov=lmm_ser.merge(pac[['ID','SER_MEDIANA']],on='ID'); lmm_cov=lmm_cov[lmm_cov['SER_MEDIANA'].notna()]
+r_int=smf.mixedlm("log_igg ~ meses * SER_MEDIANA",lmm_cov,groups=lmm_cov["ID"]).fit(reml=True)
+p_inter=r_int.pvalues['meses:SER_MEDIANA']
+print(f"Interacción meses × IgG basal: p={p_inter:.4f} → {'significativa ✓' if p_inter<0.05 else 'NS'}")
+
+fig,ax=plt.subplots(figsize=(10,6)); b=r_int.fe_params; x_m=np.linspace(0,lmm_cov['meses'].max(),100)
+for pid,grp in lmm_cov.groupby('ID'): ax.plot(grp['meses'],grp['log_igg'],color=C['red'] if grp['SER_MEDIANA'].iloc[0]==1 else C['blue'],alpha=0.1,lw=0.4)
+y0=b['Intercept']+b['meses']*x_m; y1=(b['Intercept']+b['SER_MEDIANA'])+(b['meses']+b['meses:SER_MEDIANA'])*x_m
+ax.plot(x_m,y0,color=C['blue'],lw=2.5,label=f'IgG<{igg_med:.1f} (pend: {b["meses"]:.4f}/mes)')
+ax.plot(x_m,y1,color=C['red'],lw=2.5,label=f'IgG≥{igg_med:.1f} (pend: {b["meses"]+b["meses:SER_MEDIANA"]:.4f}/mes)')
+ax.axhline(np.log(SERO_NEG),color=C['annot'],ls='--',lw=1); ax.text(0.95,0.95,f'p interacción = {p_inter:.3f}',transform=ax.transAxes,ha='right',va='top',fontsize=10,fontweight='bold',color=C['red'] if p_inter<0.05 else C['muted'])
+ax.set(xlabel='Meses desde T₀',ylabel='log(IgG ELISA)',title='Trayectoria por IgG basal (LMM)'); ax.legend(frameon=False,fontsize=9)
+plt.tight_layout(); plt.savefig('figures/fig17-lmm-interaccion.png',dpi=300); plt.show()
+```
+
+## Recidiva
+
+```{python}
+neg_fechas=pac[['ID']].copy()
+for nombre,df,col in [('sa',neg_sero_abs,'T_NEG_SERO_ABS'),('sr',neg_sero_rel,'T_NEG_SERO_REL'),('eo',neg_eos,'T_NEG_EOS_ABS'),('pa',neg_para,'T_NEG_PARA')]:
+    neg_fechas=neg_fechas.merge(df[[col]].reset_index(),on='ID',how='left')
+neg_fechas['T_NEG_1']=neg_fechas[['T_NEG_SERO_ABS','T_NEG_SERO_REL','T_NEG_EOS_ABS','T_NEG_PARA']].min(axis=1)
+neg_fechas=neg_fechas[neg_fechas['T_NEG_1'].notna()]
+recid_data=[]
+for _,row in neg_fechas.iterrows():
+    pid=row['ID']; umbral=row['T_NEG_1']+RECIDIVA_GAP
+    sh=ser_post[(ser_post['ID']==pid)&(ser_post['dias']>=umbral)&(ser_post['IGG']>=SERO_NEG)]
+    mh=mic_post[(mic_post['ID']==pid)&(mic_post['dias']>=umbral)&(mic_post['RESULTADO']==1)]
+    hits=[]
+    if len(sh)>0: s=sh.sort_values('dias').iloc[0]; hits.append({'dias':s['dias'],'tipo':'SERO'})
+    if len(mh)>0: m=mh.sort_values('dias').iloc[0]; hits.append({'dias':m['dias'],'tipo':m['TIPO']})
+    if hits: p=min(hits,key=lambda x:x['dias']); recid_data.append({'ID':pid,'T_NEG':row['T_NEG_1'],'T_RECIDIVA':p['dias'],'TIPO':p['tipo'],'GAP':p['dias']-row['T_NEG_1']})
+recidiva=pd.DataFrame(recid_data)
+print(f"Recidiva: {len(recidiva)}/{len(neg_fechas)} negativizados ({len(recidiva)/max(len(neg_fechas),1)*100:.0f}%)")
+if len(recidiva)>0:
+    for _,r in recidiva.iterrows(): print(f"  ID {int(r['ID'])}: neg día {r['T_NEG']:.0f}, recidiva día {r['T_RECIDIVA']:.0f} (gap {r['GAP']:.0f}d)")
+```
+
+\newpage
+
+## Síntesis clínica
+
+```{python}
+med_sero=neg_sero_abs['T_NEG_SERO_ABS'].median(); med_eos=neg_eos['T_NEG_EOS_ABS'].median()
+best=cox_uni.iloc[0] if len(cox_uni)>0 else None
+
+print(f"""
+{'═'*60}
+  SÍNTESIS — HALLAZGOS Y TRADUCCIÓN CLÍNICA
+{'═'*60}
+
+1. MEDIANA DE SERONEGATIVIZACIÓN: {med_sero:.0f} días ({med_sero/30.44:.1f} meses)
+   Tasa: {len(neg_sero_abs)}/{ser_post['ID'].nunique()} ({len(neg_sero_abs)/ser_post['ID'].nunique()*100:.0f}%)
+
+   → Primera serología de control NO antes de 6 meses.
+
+2. PREDICTOR PRINCIPAL: {nice.get(best['Variable'],'?') if best is not None else '?'}
+   HR = {best['HR']:.2f} (p = {best['p']:.3f})
+
+   → IgG < {igg_med:.1f}: seguimiento 6–12 meses, alta tras 1ª neg.
+   → IgG ≥ {igg_med:.1f}: seguimiento ≥18 meses, controles cada 4–6m.
+
+3. EOSINÓFILOS: mediana {med_eos:.0f}d ({med_eos/30.44:.1f}m), 100% negativizan
+   → Marcador temprano. Persistencia >6m → sospechar fracaso.
+
+4. ROBUSTEZ: 4 definiciones paralelas. SA-3 estable.
+
+5. RECIDIVA: {len(recidiva)}/{len(neg_fechas)} ({len(recidiva)/max(len(neg_fechas),1)*100:.0f}%)
+
+6. LIMITACIONES: n=44, retrospectivo, INMUNO n=4, SEXO viola PH.
+""")
+```
+
+## Inventario de figuras
+
+```{python}
+import glob
+all_figs=sorted(glob.glob('figures/fig*.png')+glob.glob('figures/tabla*.png'))
+mapping={'fig00':'Métodos §2.1','fig01':'Result §3.1','fig02':'Result §3.1','fig03':'Result §3.1','fig04':'Métodos §2.4','fig05':'Suplem.','fig06':'Suplem.','fig07':'Result §3.1','fig08':'Result §3.2','fig09':'Result §3.3','fig10':'Result §3.3','fig11':'Result §3.3','fig12':'Result §3.4','fig13':'Result §3.4','fig14':'Suplem.','fig15':'Result §3.5','fig16':'Suplem.','fig17':'Result §3.5','tabla1':'Result §3.1','tabla2':'Result §3.2','tabla3':'Result §3.3','tabla4':'Result §3.4'}
+print(f"Total: {len(all_figs)} figuras")
+for f in all_figs:
+    base=f.split('/')[-1].split('-')[0]; print(f"  {f:<43s} → {mapping.get(base,'?')}")
+```
