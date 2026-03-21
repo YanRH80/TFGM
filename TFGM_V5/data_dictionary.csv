@@ -1,0 +1,33 @@
+Variable,Type,Units,Source,Transformation,N_missing,Description
+ID,int,—,Excel (NHC hash),Anonymized patient ID,0,Unique patient identifier
+SEXO,categorical,M/V,Excel,Original,0,Sex (M=female V=male)
+SEXO_V,binary,0/1,Derived,1 if SEXO=='V',0,Male sex indicator
+EDAD,continuous,years,Excel,Original,0,Age at diagnosis
+EDAD_ALTA,binary,0/1,Derived,1 if EDAD >= median,0,Age above median
+INMUNO_SI,binary,0/1,Excel,Original,0,Immunosuppression present
+COMORB_SI,binary,0/1,Excel,Original,0,Comorbidity present
+INMUNO_O_COMORB,binary,0/1,Derived,INMUNO_SI | COMORB_SI,0,Immunosuppression or comorbidity
+CONFEOS_SI,binary,0/1,Excel,Original,0,Eosinophil confounding factor
+IGG_BASAL,continuous,ratio (ELISA),Excel,First pre-treatment IgG,8,"Baseline IgG value (DRG ELISA, cutoff 1.1)"
+SER_MEDIANA,binary,0/1,Derived,1 if IGG_BASAL >= median,8,IgG above cohort median
+SER_P75,binary,0/1,Derived,1 if IGG_BASAL >= P75,8,IgG above 75th percentile
+EOS_BASAL,continuous,×10³/µL,Excel,First pre-treatment eosinophil count,0,Baseline eosinophil count
+EOS_ALTA,binary,0/1,Derived,1 if EOS_BASAL >= 0.5,0,"Eosinophilia (OMS cutoff 500 cells/µL)"
+EOS_MEDIANA,binary,0/1,Derived,1 if EOS_BASAL >= median,0,Eosinophils above cohort median
+EOS_LIMPIA,binary,0/1,Derived,EOS_ALTA & ~CONFEOS_SI,0,Eosinophilia without confounders
+MONO,binary,0/1,Derived,1 if single dose IVM,0,Single-dose ivermectin
+RETRATADO,binary,0/1,Derived,1 if retreated,0,Retreated patient
+DX_PARA,binary,0/1,Excel,1 if parasitological diagnosis,0,Parasitological diagnosis method
+T_SERO_ABS_X1,continuous,days,Derived,Time to first IgG < 1.1,0,Time to absolute seronegativization (×1)
+E_SERO_ABS_X1,binary,0/1,Derived,1 if event observed,0,Event indicator for absolute seroneg ×1
+T_SERO_ABS_X2,continuous,days,Derived,Time to 2nd consecutive IgG < 1.1,0,Time to absolute seroneg (×2 consecutive)
+E_SERO_ABS_X2,binary,0/1,Derived,1 if event observed,0,Event indicator for absolute seroneg ×2
+T_SERO_REL_X1,continuous,days,Derived,Time to IgG < 60% of baseline,0,Time to relative seroneg ×1 (Salvador criterion)
+E_SERO_REL_X1,binary,0/1,Derived,1 if event observed,0,Event indicator for relative seroneg ×1
+T_SERO_REL_X2,continuous,days,Derived,Time to 2nd consecutive relative neg,0,Time to relative seroneg ×2
+E_SERO_REL_X2,binary,0/1,Derived,1 if event observed,0,Event indicator for relative seroneg ×2
+IGG,continuous,ratio (ELISA),Excel (longitudinal),Raw IgG at each visit,varies,Longitudinal IgG measurements
+dias,continuous,days,Derived,Days from T₀ (treatment start),0,Days since treatment initiation
+log_igg,continuous,log ratio,Derived,np.log(IGG.clip(0.01)),varies,Log-transformed IgG for LMM
+meses,continuous,months,Derived,dias / 30.44,0,Months since treatment
+IGG_BASAL_IMP,continuous,ratio,MICE (m=20),miceforest imputed IGG_BASAL,0,MICE-imputed baseline IgG

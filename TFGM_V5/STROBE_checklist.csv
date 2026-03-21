@@ -1,0 +1,34 @@
+Item,Section,Recommendation,Page/Section,Notes
+1a,Title and abstract,Indicate the study's design with a commonly used term in the title or the abstract,Title + Abstract,Retrospective cohort stated in title
+1b,Title and abstract,Provide in the abstract an informative and balanced summary of what was done and what was found,Abstract,Structured abstract (250 words)
+2,Introduction - Background/rationale,Explain the scientific background and rationale for the investigation being reported,Introducción §1,S. stercoralis serology monitoring gap
+3,Introduction - Objectives,State specific objectives including any prespecified hypotheses,Introducción §1,"Primary: time to seronegativization; Secondary: predictors"
+4,Methods - Study design,Present key elements of study design early in the paper,Métodos §2.1,Retrospective cohort 2004-2024
+5,Methods - Setting,"Describe the setting, locations, and relevant dates including periods of recruitment, exposure, follow-up, and data collection",Métodos §2.1,"Hospital Clínic Barcelona, 2004-2024"
+6a,Methods - Participants,"(Cohort) Give the eligibility criteria, and the sources and methods of selection of participants",Métodos §2.1 + STROBE flowchart,Inclusion/exclusion criteria + Fig 1
+6b,Methods - Participants,(Cohort) For matched studies give matching criteria and number of exposed and unexposed,N/A,Not a matched study
+7,Methods - Variables,"Clearly define all outcomes, exposures, predictors, potential confounders, and effect modifiers",Métodos §2.2-2.3,"Seronegativization (4 definitions), 16 covariates"
+8,Methods - Data sources/measurement,"For each variable of interest give sources of data and details of methods of assessment (measurement)",Métodos §2.2,"DRG ELISA IgG, eosinophil count, parasitology"
+9,Methods - Bias,Describe any efforts to address potential sources of bias,Métodos §2.3 + Limitaciones,"Sensitivity analyses ×4, SA-3, stratification"
+10,Methods - Study size,Explain how the study size was arrived at,Métodos §2.1 + Limitaciones,"N=44 (consecutive), post-hoc power analysis"
+11,Methods - Quantitative variables,"Explain how quantitative variables were handled in the analyses. If applicable, describe which groupings were chosen, and why",Métodos §2.3,"Median split for IgG/Eos, clinical cutpoints justified"
+12a,Methods - Statistical methods,"Describe all statistical methods, including those used to control for confounding",Métodos §2.3,"KM, Cox PH, LMM-REML, MICE, FDR"
+12b,Methods - Statistical methods,Describe any methods used to examine subgroups and interactions,Métodos §2.3,"Stratified KM, interaction terms in LMM"
+12c,Methods - Statistical methods,Explain how missing data were addressed,Métodos §2.3,"MICE (miceforest m=20), Little's MCAR, complete-case SA"
+12d,Methods - Statistical methods,(Cohort) If applicable explain how loss to follow-up was addressed,Métodos §2.3,"Censoring at last visit, KM handles right-censoring"
+12e,Methods - Statistical methods,Describe any sensitivity analyses,Métodos §2.3,"4 seroneg definitions, SA-3 (excl. immunosuppressed)"
+13a,Results - Participants,"Report the numbers of individuals at each stage of the study—eg numbers potentially eligible, examined for eligibility, confirmed eligible, included in the study, completing follow-up, and analysed",Resultados §3.1 + Fig 1,STROBE flowchart
+13b,Results - Participants,Give reasons for non-participation at each stage,Fig 1,Exclusion reasons in flowchart
+13c,Results - Participants,Consider use of a flow diagram,Fig 1,STROBE flowchart (fig00)
+14a,Results - Descriptive data,"Give characteristics of study participants and information on exposures and potential confounders",Resultados §3.1 + Tabla 1,"Demographics, baseline IgG, eosinophils"
+14b,Results - Descriptive data,Indicate the number of participants with missing data for each variable of interest,Resultados §3.1,"Missing IGG_BASAL: 8/44 (18%), complete for other vars"
+15,Results - Outcome data,(Cohort) Report numbers of outcome events or summary measures over time,Resultados §3.2-3.3,"27/39 events (69%), KM curves"
+16a,Results - Main results,"Give unadjusted estimates and, if applicable, confounder-adjusted estimates and their precision (eg 95% CI)",Resultados §3.4,"Univariable + multivariable HR with 95% CI"
+16b,Results - Main results,Report category boundaries when continuous variables were categorized,Resultados §3.1,"IgG median split, Eos ≥0.5"
+16c,Results - Main results,"If relevant, consider translating estimates of relative risk into absolute risk for a meaningful time period",Resultados §3.3,KM survival probabilities at landmark times
+17,Results - Other analyses,"Report other analyses done—eg analyses of subgroups and interactions, and sensitivity analyses",Resultados §3.4-3.5,"SA ×4 definitions, SA-3, LMM interaction"
+18,Discussion - Key results,Summarise key results with reference to study objectives,Discusión §4.1,IgG basal as primary predictor
+19,Discussion - Limitations,"Discuss limitations of the study, taking into account sources of potential bias or imprecision",Discusión §4.2,"N=44, retrospective, post-hoc power, competing risks"
+20,Discussion - Interpretation,"Give a cautious overall interpretation of results considering objectives, limitations, multiplicity of analyses, results from similar studies, and other relevant evidence",Discusión §4.3,Clinical translation with caveats
+21,Discussion - Generalisability,Discuss the generalisability (external validity) of the study results,Discusión §4.3,Single-center referral cohort limitation
+22,Other - Funding,"Give the source of funding and the role of the funders for the present study and, if applicable, for the original study on which the present article is based",Financiación,To be completed

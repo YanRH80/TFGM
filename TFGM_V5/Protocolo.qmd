@@ -1,0 +1,750 @@
+---
+title: "Protocolo de análisis de datos"
+subtitle: "Cinética de seronegativización post-ivermectina en estrongiloidiasis: pipeline completo y comparación metodológica"
+date: today
+format:
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    fig-pos: 'H'
+    geometry: margin=2.5cm
+    fontsize: 11pt
+---
+
+\newpage
+
+# Introducción
+
+Este documento describe exhaustivamente el pipeline de análisis de datos del estudio "Predictores basales del tiempo hasta la negativización serológica en estrongiloidiasis tratada con ivermectina". Se detalla cada operación sobre los DataFrames, desde la carga de datos hasta la síntesis clínica final. Además, se compara la implementación actual (V5, basada en librerías validadas) con la implementación original desde cero (V1, `TFGM_V1/Avanzado.py` y `TFGM_V1/Analisis.ipynb`).
+
+## Pregunta de investigación
+
+¿Cuál es el tiempo mediano hasta la seronegativización tras tratamiento con ivermectina en estrongiloidiasis crónica, y qué variables basales predicen la velocidad de negativización serológica?
+
+## Endpoints
+
+Se definieron seis endpoints:
+
+1. **Seronegativización absoluta $\times$1** (primario): primera IgG $<$ 1.1
+2. **Seronegativización absoluta $\times$2**: dos consecutivas IgG $<$ 1.1
+3. **Seronegativización relativa $\times$1**: IgG $<$ 60\% del basal
+4. **Seronegativización relativa $\times$2**: dos consecutivas relativas
+5. **Negativización eosinofílica**: eosinófilos $<$ 500 cél/$\mu$L
+6. **Negativización parasitológica**: dos resultados negativos consecutivos
+
+## Software
+
+- Python 3.10+ con pandas, numpy, scipy, matplotlib
+- Supervivencia: `lifelines` (KaplanMeierFitter, CoxPHFitter, logrank\_test)
+- Modelos mixtos: `statsmodels` (MixedLM con REML)
+- Imputación múltiple: `miceforest` (Random Forest, m=20)
+- Reproducibilidad: verificación SHA-256 del archivo fuente
+
+\newpage
+
+# Fuente de datos
+
+## Archivo fuente
+
+`BASE_EXCEL.xlsx` — archivo Excel con 5 hojas, verificado por hash SHA-256 al inicio de cada ejecución.
+
+## Estructura de las hojas
+
+| Hoja | Contenido | Columnas clave |
+|------|-----------|----------------|
+| `bas` | Datos demográficos | ID, F\_NAC, SEXO, ORIGEN, T\_ESP, INMUNO, COMORB, CONFEOS |
+| `ser` | Serología IgG | ID, F\_SER, IGG (mixto: numérico o texto como "POS"/"NEG") |
+| `eos` | Eosinófilos | ID, F\_EOS, EOS ($\times 10^3$/$\mu$L) |
+| `mic` | Microbiología | ID, F\_MIC, TIPO (COPRO/MICRO), RESULTADO |
+| `seg` | Seguimiento clínico | ID, F\_CONSULTA, DOSIS\_IVM |
+
+Cada hoja puede contener múltiples filas por paciente (datos longitudinales), excepto `bas` que tiene una fila por paciente.
+
+\newpage
+
+# Limpieza y tipado de datos
+
+## Procedimiento por DataFrame
+
+### `bas` (demografía)
+
+```
+bas['ID'] = bas['ID'].astype(int)
+bas['F_NAC'] = pd.to_datetime(bas['F_NAC'])
+```
+
+Conversión de ID a entero y fecha de nacimiento a datetime.
+
+### `ser` (serología)
+
+```
+ser['ID'] = ser['ID'].astype(int)
+ser['F_SER'] = pd.to_datetime(ser['F_SER'])
+ser['IGG_QUAL'] = ser['IGG'].where(isinstance(x, str))  # Texto: "POS", "NEG"
+ser['IGG'] = pd.to_numeric(ser['IGG'], errors='coerce')  # Numérico: índice ELISA
+```
+
+La columna IGG original contiene valores mixtos: índices numéricos (ej. 3.5) y cualitativos (ej. "POS"). Se separan en dos columnas: `IGG` (numérico, NaN si cualitativo) e `IGG_QUAL` (texto).
+
+### `eos` (eosinófilos)
+
+```
+eos['ID'] = eos['ID'].astype(int)
+eos['F_EOS'] = pd.to_datetime(eos['F_EOS'])
+eos['EOS'] = pd.to_numeric(eos['EOS'], errors='coerce')
+```
+
+### `mic` (microbiología)
+
+```
+mic = mic_raw[mic_raw['F_MIC'].notna()].copy()  # Eliminar filas sin fecha
+mic['ID'] = mic['ID'].astype(int)
+mic['F_MIC'] = pd.to_datetime(mic['F_MIC'])
+mic['RESULTADO'] = pd.to_numeric(mic['RESULTADO'], errors='coerce')
+# Resultados no numéricos (texto descriptivo) se codifican como positivos (1)
+mic.loc[mic['RESULTADO'].isna() & mic_raw['RESULTADO'].notna(), 'RESULTADO'] = 1
+mic['RESULTADO'] = mic['RESULTADO'].astype(int)
+```
+
+Lógica: si `RESULTADO` no es numérico pero existe texto (descripción del parásito), se interpreta como resultado positivo.
+
+### `seg` (seguimiento)
+
+```
+seg['ID'] = seg['ID'].astype(int)
+seg['F_CONSULTA'] = pd.to_datetime(seg['F_CONSULTA'])
+```
+
+\newpage
+
+# Definición de T$_0$ y extracción de basales
+
+## T$_0$: primera dosis de ivermectina
+
+```
+t0 = seg[seg['DOSIS_IVM'].notna()]
+       .groupby('ID')['F_CONSULTA'].min()
+       .rename('T0')
+```
+
+T$_0$ se define como la fecha de la primera consulta en la que se registra una dosis de ivermectina. Este es el punto de referencia temporal para todo el análisis: los valores "pre-T$_0$" son basales y los "post-T$_0$" son de seguimiento.
+
+## Serología basal (IGG\_BASAL)
+
+```
+ser_t = ser[['ID','F_SER','IGG']].merge(t0, on='ID')
+ser_t['dias'] = (ser_t['F_SER'] - ser_t['T0']).dt.days
+ser_pre = ser_t[ser_t['dias'] <= 0]
+idx = ser_pre.groupby('ID')['dias'].idxmax()  # Más cercano a T₀
+ser_basal = ser_pre.loc[idx, ['ID','IGG']].rename(columns={'IGG': 'IGG_BASAL'})
+```
+
+Operación paso a paso:
+
+1. **Merge** serología con T$_0$ por ID $\rightarrow$ añade columna `T0` a cada medición
+2. **Calcular días** desde T$_0$: negativo = pre-tratamiento
+3. **Filtrar** solo mediciones pre-T$_0$ ($\leq$ 0 días)
+4. **Seleccionar la más cercana** a T$_0$ por paciente: `idxmax()` sobre días (el más cercano a 0 entre valores negativos)
+5. **Renombrar** IGG $\rightarrow$ IGG\_BASAL
+
+## Eosinófilos basales (EOS\_BASAL)
+
+Procedimiento idéntico al serológico:
+
+```
+eos_t = eos.merge(t0, on='ID')
+eos_t['dias'] = (eos_t['F_EOS'] - eos_t['T0']).dt.days
+eos_pre = eos_t[eos_t['dias'] <= 0]
+idx2 = eos_pre.groupby('ID')['dias'].idxmax()
+eos_basal = eos_pre.loc[idx2, ['ID','EOS']].rename(columns={'EOS': 'EOS_BASAL'})
+```
+
+## Microbiología basal (MIC\_BASAL)
+
+```
+mic_t = mic.merge(t0, on='ID')
+mic_t['dias'] = (mic_t['F_MIC'] - mic_t['T0']).dt.days
+mic_pre = mic_t[mic_t['dias'] <= 0]
+mic_basal = mic_pre.groupby(['ID','TIPO'])['RESULTADO'].max()
+                   .unstack()
+                   .rename(columns={'COPRO': 'COPRO_BASAL', 'MICRO': 'MICRO_BASAL'})
+mic_basal['MIC_BASAL'] = mic_basal[['COPRO_BASAL','MICRO_BASAL']].max(axis=1)
+```
+
+Operación:
+
+1. **groupby** por ID y TIPO (COPRO vs MICRO): tomar el máximo resultado (1 = positivo gana sobre 0)
+2. **unstack**: convertir filas COPRO/MICRO en columnas separadas
+3. **MIC\_BASAL**: máximo entre coprocultivo y examen microscópico
+
+\newpage
+
+# DataFrame de pacientes (`pac`)
+
+## Construcción por merges secuenciales
+
+```
+pac = bas
+      .merge(t0, on='ID')
+      .merge(ser_basal[['ID','IGG_BASAL']], on='ID', how='left')
+      .merge(eos_basal[['ID','EOS_BASAL']], on='ID', how='left')
+      .merge(mic_basal[['ID','MIC_BASAL']], on='ID', how='left')
+```
+
+Se usa `how='left'` para conservar todos los pacientes de `bas`, incluso si les falta serología o microbiología basal (quedan como NaN).
+
+## Variables derivadas
+
+| Variable | Cálculo | Tipo |
+|----------|---------|------|
+| EDAD | (T$_0$ $-$ F\_NAC) / 365.25, redondeado | Continua |
+| AN\_ESP | T$_0$.año $-$ T\_ESP | Continua |
+| INMUNO\_SI | INMUNO $\neq$ "NO" | Binaria |
+| COMORB\_SI | COMORB $\neq$ "NO" | Binaria |
+| CONFEOS\_SI | CONFEOS $\neq$ "NO" | Binaria |
+| SEXO\_V | SEXO $=$ "V" | Binaria |
+| EOS\_ALTA | EOS\_BASAL $\geq$ 0.5 | Binaria |
+| SER\_ALTA | IGG\_BASAL $\geq$ 1.1 | Binaria |
+
+## Variables de estratificación
+
+Para IgG y eosinófilos se calculan tres cutpoints cada uno:
+
+| Variable | Cutpoint | Fórmula |
+|----------|----------|---------|
+| SER\_MEDIANA | Mediana de IGG\_BASAL | IGG\_BASAL $\geq$ mediana |
+| SER\_P75 | Percentil 75 | IGG\_BASAL $\geq$ P75 |
+| SER\_TERCIL | Terciles | `pd.qcut(IGG_BASAL, q=3)` $\rightarrow$ Bajo/Medio/Alto |
+| EOS\_MEDIANA | Mediana de EOS\_BASAL | EOS\_BASAL $\geq$ mediana |
+| EOS\_P75 | Percentil 75 | EOS\_BASAL $\geq$ P75 |
+| EOS\_1000 | 1.0 $\times 10^3$/$\mu$L | EOS\_BASAL $\geq$ 1.0 |
+| EOS\_TERCIL | Terciles | `pd.qcut(EOS_BASAL, q=3)` |
+| EOS\_LIMPIA | Eosinofilia sin confusores | (EOS\_BASAL $\geq$ 0.5) $\wedge$ (CONFEOS\_SI $=$ 0) |
+| EDAD\_ALTA | Mediana de EDAD | EDAD $\geq$ mediana |
+
+Todas las variables de estratificación propagan NaN si el valor basal es faltante (`np.where(isna, nan, ...)`).
+
+## Variables de tratamiento
+
+| Variable | Fuente | Cálculo |
+|----------|--------|---------|
+| DOSIS\_IVM | Primera fila de `seg` con dosis | Categoría: MONO, DOBLE\_CONSECUTIVA, etc. |
+| MONO | Derivada | DOSIS\_IVM $=$ "MONO" |
+| N\_TTO | Conteo de filas en `seg` con dosis | `groupby('ID').size()` |
+| RETRATADO | Derivada | N\_TTO $>$ 1 |
+| INMUNO\_O\_COMORB | Derivada | INMUNO\_SI $\vee$ COMORB\_SI |
+| DX\_PARA | Derivada | MIC\_BASAL rellenado con 0 si NaN |
+
+\newpage
+
+# Datasets longitudinales
+
+## Construcción
+
+| Dataset | Fuente | Filtro | Columnas añadidas |
+|---------|--------|--------|-------------------|
+| `ser_long` | ser\_t | IGG no nulo | meses = dias / 30.44 |
+| `eos_long` | eos\_t | Ninguno | meses = dias / 30.44 |
+| `ser_post` | ser\_long | dias $>$ 0 | (hereda meses) |
+| `eos_post` | eos\_long | dias $>$ 0 | (hereda meses) |
+| `mic_post` | mic\_t | dias $>$ 7 (MICRO\_MIN) | Ordenado por ID, dias |
+
+El filtro `dias > MICRO_MIN` en microbiología excluye muestras tomadas demasiado pronto tras el tratamiento (período de eliminación del fármaco), que podrían dar falsos negativos.
+
+\newpage
+
+# Detección de eventos
+
+## Seronegativización absoluta $\times$1
+
+```
+ser_post['neg_abs'] = ser_post['IGG'] < SERO_NEG  # < 1.1
+neg_sero_abs = ser_post[ser_post['neg_abs']]
+              .sort_values('dias')
+              .groupby('ID').first()
+              [['dias','IGG']]
+              .rename(columns={'dias': 'T_NEG_SERO_ABS', 'IGG': 'IGG_NEG'})
+```
+
+1. Marcar cada medición post-T$_0$ como negativa o positiva
+2. Filtrar solo las negativas
+3. Ordenar por días (cronológicamente)
+4. Tomar la **primera** por paciente: primer evento de negativización
+5. ID se convierte en **índice** del DataFrame resultante (importante: no es columna)
+
+## Seronegativización absoluta $\times$2 (confirmada)
+
+```
+sps = ser_post.sort_values(['ID','dias'])
+sps['neg'] = sps['IGG'] < SERO_NEG
+sps['neg_prev'] = sps.groupby('ID')['neg'].shift(1)  # Medición anterior
+sps['doble_neg'] = sps['neg'] & sps['neg_prev']       # Ambas negativas
+neg_sero_abs_x2 = sps[sps['doble_neg']].groupby('ID').first()
+```
+
+Se requiere que la medición **actual** y la **inmediatamente anterior** sean ambas negativas. `shift(1)` desplaza una posición dentro de cada paciente.
+
+## Seronegativización relativa $\times$1
+
+```
+ser_post_b = ser_post.merge(pac[['ID','IGG_BASAL']], on='ID')
+ser_post_b['neg_rel'] = ser_post_b['IGG'] < ser_post_b['IGG_BASAL'] * SERO_DROP
+```
+
+SERO\_DROP = 0.60: la IgG debe caer por debajo del 60\% del valor basal individual. Esto personaliza el umbral a cada paciente.
+
+## Seronegativización relativa $\times$2
+
+Misma lógica que absoluta $\times$2 pero aplicada a `neg_rel`.
+
+## Negativización eosinofílica
+
+```
+eos_post['neg_abs'] = eos_post['EOS'] < EOS_NEG  # < 0.5
+neg_eos = eos_post[eos_post['neg_abs']]
+         .sort_values('dias').groupby('ID').first()
+```
+
+## Negativización parasitológica
+
+```
+mic_post['neg'] = mic_post['RESULTADO'] == 0
+mic_post['neg_prev'] = mic_post.groupby('ID')['neg'].shift(1)
+mic_post['doble'] = mic_post['neg'] & mic_post['neg_prev']
+neg_para = mic_post[mic_post['doble']].groupby('ID').first()
+```
+
+Se requieren dos resultados negativos consecutivos para reducir falsos negativos (baja carga parasitaria).
+
+\newpage
+
+# Dataset de supervivencia
+
+## Tiempos de censura
+
+```
+cens_ser = ser_long[ser_long['dias'] > 0].groupby('ID')['dias'].max()
+cens_eos = eos_long[eos_long['dias'] > 0].groupby('ID')['dias'].max()
+cens_mic = mic_post.groupby('ID')['dias'].max()
+```
+
+El tiempo de censura es la **última** medición disponible para cada paciente. Si el evento no ocurre, el paciente se censura en su última visita.
+
+## Función `add_event()`
+
+```
+def add_event(ev, neg_df, time_col, cens_col, prefix):
+    ev = ev.merge(neg_df[[time_col]], on='ID', how='left')
+    ev[f'E_{prefix}'] = ev[time_col].notna().astype(int)  # 1 = evento, 0 = censurado
+    ev[f'T_{prefix}'] = ev[time_col].fillna(ev[cens_col])  # Tiempo del evento o censura
+    return ev
+```
+
+Esta función se aplica 6 veces (una por endpoint), generando pares (E\_, T\_) para cada definición de negativización.
+
+## Dataset final (`km_full`)
+
+```
+km_full = ev[['ID','T_SERO_ABS_X1','E_SERO_ABS_X1']]
+         .merge(pac[PAC_COLS], on='ID')
+km_full = km_full[km_full['T_SERO_ABS_X1'] > 0]  # Excluir sin seguimiento
+```
+
+PAC\_COLS incluye 21 variables de estratificación y covariables. El filtro `T > 0` excluye pacientes sin seguimiento post-T$_0$ (n = 5 excluidos $\rightarrow$ n = 39 evaluables).
+
+\newpage
+
+# Datos faltantes e imputación múltiple
+
+## Evaluación del mecanismo
+
+Se evalúa si los datos faltantes de IGG\_BASAL son MCAR (Missing Completely At Random) mediante regresión logística:
+
+```
+P(IGG_BASAL faltante) ~ EDAD + SEXO_V + EOS_BASAL + INMUNO_SI
+```
+
+Se compara el modelo completo con el modelo nulo mediante test de razón de verosimilitud ($\chi^2$). Si p $>$ 0.05, no hay evidencia de que el mecanismo de falta dependa de las covariables observadas $\rightarrow$ se asume MAR (Missing At Random), justificando MICE.
+
+## MICE (Multiple Imputation by Chained Equations)
+
+```
+kernel = mf.ImputationKernel(data, num_datasets=20, random_state=42)
+kernel.mice(iterations=10)
+```
+
+- **m = 20** imputaciones (regla: m $\geq$ \% de missing)
+- **10 iteraciones** por imputación para convergencia
+- **Predictores**: EDAD, SEXO\_V, EOS\_BASAL, INMUNO\_SI
+- **Método**: Random Forest (default de miceforest) con predictive mean matching
+- **Pooling**: media aritmética de las 20 imputaciones (reglas de Rubin simplificadas)
+
+Los valores imputados se almacenan en `IGG_BASAL_IMP` y se recalculan las medianas de estratificación.
+
+\newpage
+
+# Análisis descriptivo
+
+## Tabla 1 (características basales)
+
+Generada como tabla LaTeX nativa con `#| output: asis`. Funciones auxiliares:
+
+- `med_iqr(s)`: mediana (Q1--Q3) para variables continuas
+- `n_pct(num, den)`: n (porcentaje\%) para variables categóricas
+
+## Tabla comparativa (negativizadores vs no)
+
+Tabla LaTeX comparando los dos grupos:
+
+- **Continuas**: Mann-Whitney U bilateral (`scipy.stats.mannwhitneyu`)
+- **Categóricas**: Test exacto de Fisher para tablas 2$\times$2 (`scipy.stats.fisher_exact`)
+
+## Correlación IgG--Eosinófilos
+
+Spearman $\rho$ (`scipy.stats.spearmanr`) entre IGG\_BASAL y EOS\_BASAL, estratificado visualmente por estado inmunitario.
+
+## Justificación de cutpoints
+
+Para cada variable (IGG, EOS) se evalúan tres cutpoints:
+
+1. Umbral clínico (1.1 para IgG; 0.5 para EOS)
+2. Mediana muestral
+3. Percentil 75
+
+Se selecciona la mediana como cutpoint primario por producir el mejor balance entre grupos (ratio $\geq$ 40\%).
+
+\newpage
+
+# Análisis de supervivencia
+
+## Kaplan-Meier
+
+```python
+from lifelines import KaplanMeierFitter
+kmf = KaplanMeierFitter()
+kmf.fit(durations=km_data['T_SERO_ABS_X1'],
+        event_observed=km_data['E_SERO_ABS_X1'])
+```
+
+El estimador de Kaplan-Meier calcula:
+
+$$\hat{S}(t) = \prod_{t_i \leq t} \left(1 - \frac{d_i}{n_i}\right)$$
+
+donde $d_i$ = eventos en $t_i$ y $n_i$ = pacientes en riesgo justo antes de $t_i$.
+
+IC 95\% por fórmula de Greenwood:
+
+$$\text{Var}[\hat{S}(t)] = \hat{S}(t)^2 \sum_{t_i \leq t} \frac{d_i}{n_i(n_i - d_i)}$$
+
+## Análisis de sensibilidad (4 definiciones)
+
+Se superponen las curvas KM de las 4 definiciones serológicas para evaluar robustez. Si las curvas son paralelas, las conclusiones son independientes de la definición elegida.
+
+## KM estratificado + Log-Rank
+
+Para cada variable de estratificación:
+
+```python
+from lifelines.statistics import logrank_test
+result = logrank_test(T_grupo1, T_grupo2, E_grupo1, E_grupo2)
+```
+
+El test log-rank compara curvas de supervivencia bajo $H_0$: $S_1(t) = S_2(t)$ para todo $t$.
+
+\newpage
+
+# Regresión de Cox
+
+## Cox univariable
+
+Para cada una de 16 covariables:
+
+```python
+from lifelines import CoxPHFitter
+cph = CoxPHFitter()
+cph.fit(df, duration_col='T_SERO_ABS_X1', event_col='E_SERO_ABS_X1')
+```
+
+Se extraen: HR, IC 95\%, p-valor, C-statistic (concordancia).
+
+### Corrección por comparaciones múltiples
+
+Se aplica Benjamini-Hochberg (FDR) a los 16 p-valores:
+
+```python
+from statsmodels.stats.multitest import multipletests
+reject, p_adj, _, _ = multipletests(p_values, method='fdr_bh')
+```
+
+## Cox multivariable
+
+### Regla de Peduzzi
+
+Con 27 eventos, el número máximo de covariables es $\lfloor 27/10 \rfloor = 2$.
+
+### Proporcionalidad de riesgos
+
+Test de Schoenfeld para cada covariable. SEXO\_V viola la asunción (p = 0.001) $\rightarrow$ se estratifica en lugar de incluirse como covariable.
+
+### Modelo final
+
+```python
+cph_multi = CoxPHFitter()
+cph_multi.fit(df[['T','E','SER_MEDIANA','EOS_ALTA','SEXO_V']],
+              duration_col='T', event_col='E',
+              strata=['SEXO_V'])
+```
+
+## Diagnósticos
+
+1. **Residuos de Martingale vs IGG\_BASAL**: evalúa linealidad del log-HR
+2. **Residuos deviance**: identifica valores atípicos ($|r_D| > 2$)
+3. **dfbeta (score residuals)**: identifica observaciones influyentes ($|dfbeta| > 2/\sqrt{n}$)
+
+## Análisis de sensibilidad SA-3
+
+Repetición del modelo excluyendo inmunodeprimidos (n = 4). Se compara $\Delta$HR: si $< 0.3$, el resultado es estable.
+
+\newpage
+
+# Modelos lineales mixtos
+
+## Especificación
+
+$$\log(\text{IgG})_{it} = \beta_0 + \beta_1 \cdot \text{meses}_t + u_{0i} + \varepsilon_{it}$$
+
+donde $u_{0i} \sim N(0, \sigma^2_u)$ es el intercepto aleatorio por paciente.
+
+```python
+import statsmodels.formula.api as smf
+lmm = smf.mixedlm("log_igg ~ meses", data=df, groups=df['ID'])
+result = lmm.fit(reml=True)
+```
+
+## Comparación RI vs RIS
+
+Se comparan dos modelos:
+
+- **RI**: intercepto aleatorio solamente
+- **RIS**: intercepto + pendiente aleatorios (`re_formula="~meses"`)
+
+Selección por AIC/BIC más bajo.
+
+## R$^2$ de Nakagawa-Schielzeth
+
+$$R^2_{\text{marginal}} = \frac{\text{Var}(X\beta)}{\text{Var}(X\beta) + \sigma^2_u + \sigma^2_\varepsilon}$$
+
+$$R^2_{\text{condicional}} = \frac{\text{Var}(X\beta) + \sigma^2_u}{\text{Var}(X\beta) + \sigma^2_u + \sigma^2_\varepsilon}$$
+
+## Predicción del tiempo a negativización
+
+Resolviendo $\log(\text{IgG}) = \log(1.1)$:
+
+$$t_{\text{neg}} = \frac{\log(1.1) - \hat{\beta}_0}{\hat{\beta}_1}$$
+
+## Interacción con IgG basal
+
+$$\log(\text{IgG})_{it} = \beta_0 + \beta_1 \cdot \text{meses} + \beta_2 \cdot \text{SER\_MEDIANA} + \beta_3 \cdot \text{meses} \times \text{SER\_MEDIANA} + u_{0i} + \varepsilon_{it}$$
+
+Si $\beta_3$ es significativo, las trayectorias de descenso difieren según el nivel de IgG basal.
+
+## Diagnósticos
+
+- **Q-Q plot**: normalidad de residuos (Shapiro-Wilk)
+- **Residuos vs ajustados**: homocedasticidad (patrón de embudo = violación)
+
+\newpage
+
+# Análisis de recidiva
+
+## Definición
+
+Recidiva = reaparición de positividad $\geq$ 21 días después de la primera negativización.
+
+## Algoritmo
+
+```
+Para cada paciente con al menos un evento de negativización:
+  1. T_NEG = min(T_NEG_SERO_ABS, T_NEG_SERO_REL, T_NEG_EOS_ABS, T_NEG_PARA)
+  2. umbral = T_NEG + 21 días
+  3. Buscar en ser_post: IGG >= 1.1 después de umbral
+  4. Buscar en mic_post: RESULTADO == 1 después de umbral
+  5. Si hay hallazgos: registrar el más temprano como recidiva
+  6. GAP = T_RECIDIVA - T_NEG
+```
+
+\newpage
+
+# Comparación: implementación from-scratch (V1) vs librerías validadas (V5)
+
+## Kaplan-Meier
+
+### V1 (`TFGM_V1/Avanzado.py`, líneas 51--86)
+
+Implementación manual del producto-límite:
+
+- Iteración por tiempos de evento únicos
+- Cálculo incremental de $n_i$ y $d_i$
+- IC Greenwood con acumulación de varianza
+- Truncación de IC a [0, 1]
+
+### V5 (`lifelines.KaplanMeierFitter`)
+
+- Estimador optimizado con manejo de empates y censuras simultáneas
+- IC por transformación log-log (más estable en colas)
+- Tabla at-risk integrada
+
+### Concordancia
+
+$\hat{S}(t)$ y mediana idénticos. Diferencias menores en IC en colas extremas por la transformación log-log de lifelines vs Greenwood directo en V1.
+
+## Regresión de Cox
+
+### V1 (`Avanzado.py`, líneas 126--176)
+
+- Maximización de la log-verosimilitud parcial con BFGS (`scipy.optimize.minimize`)
+- Truco de estabilidad numérica: $X\beta - \max(X\beta)$ antes de `exp()`
+- Hessiana por diferencias finitas centrales ($\varepsilon = 10^{-5}$)
+- SE = $\sqrt{\text{diag}(H^{-1})}$
+
+### V5 (`lifelines.CoxPHFitter`)
+
+- Método de Efron para empates (vs Breslow implícito en V1)
+- Hessiana analítica (segunda derivada exacta de la log-verosimilitud)
+- Test de Schoenfeld integrado (`check_assumptions()`)
+- C-statistic y diagnósticos (Martingale, deviance, dfbeta)
+
+### Concordancia
+
+HR concordantes ($\Delta < 0.01$). SE ligeramente diferente por Hessiana analítica (V5) vs numérica (V1). V5 permite diagnósticos que V1 no implementa.
+
+## Test Log-Rank
+
+### V1 (Analisis.ipynb)
+
+Implementación manual del estadístico de Mantel-Cox:
+
+$$\chi^2 = \frac{(\sum O_{1i} - \sum E_{1i})^2}{\sum V_i}$$
+
+con varianza hipergeométrica en cada tiempo de evento.
+
+### V5 (`lifelines.statistics.logrank_test`)
+
+Implementación equivalente con manejo robusto de grupos vacíos y empates.
+
+### Concordancia
+
+$\chi^2$ y p-valor idénticos a 4 decimales.
+
+## Imputación múltiple (MICE)
+
+### V1 (`Avanzado.py`, líneas 206--291)
+
+- Regresión lineal iterativa para cada variable con missing
+- Ruido residual: $y_{\text{imp}} = \hat{y} + N(0, \hat{\sigma}_\varepsilon)$ (PMM simplificado)
+- m = 5 imputaciones, 20 iteraciones
+- Pooling: media simple
+
+### V5 (`miceforest`)
+
+- Random Forest como modelo predictivo (captura no linealidades)
+- Predictive mean matching (PMM completo): selección del donante más cercano
+- m = 20 imputaciones, 10 iteraciones
+- Convergencia monitorizada
+
+### Concordancia
+
+Valores imputados similares en tendencia central. V5 produce intervalos de imputación más realistas por la flexibilidad del Random Forest y PMM completo.
+
+## Modelos lineales mixtos
+
+### V1 (`Avanzado.py`, líneas 368--506)
+
+- Efectos fijos: OLS marginal ($\beta = (X'X)^{-1}X'y$)
+- Efectos aleatorios: regresiones individuales por paciente, method-of-moments para $\text{Var}(u_0)$, $\text{Var}(u_1)$
+- SE por $\sigma^2(X'X)^{-1}$
+
+### V5 (`statsmodels.MixedLM`)
+
+- Estimación REML (Restricted Maximum Likelihood)
+- Optimización conjunta de efectos fijos y componentes de varianza
+- Comparación RI vs RIS por AIC/BIC
+- R$^2$ Nakagawa-Schielzeth
+
+### Concordancia
+
+$\hat{\beta}_1$ (pendiente) concordante. SE difiere: REML (V5) es insesgado para componentes de varianza; OLS (V1) subestima SE en presencia de correlación intra-sujeto.
+
+## Tests estadísticos básicos
+
+| Test | V1 | V5 | Concordancia |
+|------|----|----|--------------|
+| Mann-Whitney U | `scipy.stats` | `scipy.stats` | Idéntico |
+| Fisher exact | `scipy.stats` | `scipy.stats` | Idéntico |
+| Spearman $\rho$ | `scipy.stats` | `scipy.stats` | Idéntico |
+| Shapiro-Wilk | `scipy.stats` | `scipy.stats` | Idéntico |
+
+## Pipeline de datos
+
+| Aspecto | V1 | V5 |
+|---------|----|----|
+| Fuente | `BASE_SPSS.xlsx` (pre-procesada) | `BASE_EXCEL.xlsx` (cruda, 5 hojas) |
+| T$_0$ | Pre-calculado externamente | Calculado en el pipeline |
+| Basales | Pre-extraídos | Extraídos con merge + filtro + idxmax |
+| Eventos | Pre-computados (EVENT, TIME) | Detectados algorítmicamente |
+| Reproducibilidad | Depende de ETL externo | Autónomo, verificado por SHA-256 |
+
+\newpage
+
+# Discusión metodológica
+
+## Ventajas de la implementación from-scratch (V1)
+
+1. **Transparencia total**: cada paso del algoritmo es visible y auditable
+2. **Independencia de versiones**: no depende de actualizaciones de librerías
+3. **Valor educativo**: demuestra comprensión profunda de los métodos estadísticos
+4. **Portabilidad**: solo requiere numpy y scipy
+
+## Ventajas de las librerías validadas (V5)
+
+1. **Estabilidad numérica**: Hessiana analítica, transformaciones log-log, manejo de edge cases
+2. **Diagnósticos integrados**: test de Schoenfeld, residuos, C-statistic
+3. **Estimación correcta**: REML para LMM, PMM completo para MICE
+4. **Eficiencia**: código más conciso, menor riesgo de errores de implementación
+5. **Validación comunitaria**: miles de usuarios, tests automatizados, revisión por pares
+
+## Recomendación
+
+Para publicación y uso clínico, se recomienda V5 (librerías validadas). V1 es valioso como ejercicio de validación: la concordancia entre ambas implementaciones confirma la corrección de los resultados.
+
+\newpage
+
+# Inventario de figuras y tablas
+
+| Figura | Contenido | Sección |
+|--------|-----------|---------|
+| fig-completitud | Completitud de datos por variable y paciente | Métodos |
+| fig01 | Demografía: edad por sexo + origen | Resultados |
+| fig02 | Perfil clínico, diagnóstico, tratamiento | Resultados |
+| fig03 | Scatter IgG--Eosinófilos con estratificación | Resultados |
+| fig04 | Justificación de cutpoints (histogramas + balance) | Métodos |
+| fig05 | Trayectorias serológicas individuales + media trimestral | Suplementario |
+| fig06 | Trayectorias eosinófilos individuales + media | Suplementario |
+| fig07 | Seguimiento individual (swimmer plot) | Resultados |
+| fig08 | Resumen de eventos: tasas y medianas | Resultados |
+| fig09 | KM global (endpoint primario) | Resultados |
+| fig10 | KM sensibilidad (4 definiciones) | Resultados |
+| fig11 | KM estratificado (6 variables) | Resultados |
+| fig12 | Forest plot Cox univariable | Resultados |
+| fig13 | Forest plot Cox multivariable | Resultados |
+| fig14 | Residuos de Schoenfeld | Suplementario |
+| fig15 | LMM global: trayectoria media + predicción | Resultados |
+| fig16 | LMM diagnósticos: Q-Q + residuos | Suplementario |
+| fig17 | LMM interacción por IgG basal | Resultados |
+
+| Tabla | Contenido | Formato |
+|-------|-----------|---------|
+| Tabla 1 | Características basales (n = 44) | LaTeX |
+| Tabla 2 | Comparativa negativizadores vs no | LaTeX |
+| Tabla 3 | Cox univariable (16 variables) | LaTeX |
