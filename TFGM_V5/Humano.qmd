@@ -1,0 +1,234 @@
+---
+title: "Resultados"
+subtitle: "Seronegativización IgG-ELISA post-ivermectina en estrongiloidiasis"
+author: "Yan Rodríguez Hachimaru"
+date: today
+format:
+  pdf:
+    documentclass: article
+    papersize: a4
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    colorlinks: true
+    keep-tex: false
+    fig-pos: 'H'
+    include-in-header:
+      text: |
+        \usepackage{booktabs}
+        \usepackage{float}
+        \usepackage{setspace}
+        \onehalfspacing
+        \usepackage{geometry}
+        \geometry{margin=2cm}
+        \usepackage{enumitem}
+        \setlist{nosep, leftmargin=1.5em}
+        \usepackage{tikz}
+        \usetikzlibrary{positioning, arrows.meta, shapes.geometric}
+        \usepackage{longtable}
+execute:
+  echo: false
+  warning: false
+---
+
+### Título
+Cinética de seronegativización por IgG-ELISA tras ivermectina en estrongiloidiasis
+
+### Objetivos
+El objetivo principal de este estudio es analizar la asociación independiente de variables basales específicas—eosinofilia >500 células/µL, título serológico inicial elevado, coprocultivo positivo al diagnóstico y estado de inmunosupresión—con el tiempo hasta la seronegativización de anticuerpos IgG anti-Strongyloides stercoralis tras el tratamiento con ivermectina en pacientes adultos. Los objetivos específicos incluyen comparar la probabilidad acumulada de seronegativización entre subgrupos definidos por variables demográficas (sexo y procedencia), analíticas (presencia o ausencia de eosinofilia >500 células/µL), inmunológicas (títulos serológicos iniciales elevados versus normales), parasitológicas (coprocultivo positivo o negativo) y clínicas (inmunosupresión o comorbilidad significativa); cuantificar la asociación cruda entre cada variable basal y el hazard de seronegativización; describir la cinética temporal de los títulos de IgG cuantitativos post-tratamiento y explorar su asociación con las variables basales; y estimar la tasa de recidiva o persistencia a los 24 meses y su asociación con las variables basales mediante análisis univariables.
+
+Adicionalmente, se estimará la mediana y la cinética de seronegativización (definida como IgG-ELISA <1,1) mediante análisis de supervivencia de Kaplan-Meier, incluyendo landmark estimates y tasa de incidencia por persona-año. Como objetivos secundarios, se identificarán predictores basales de la velocidad de seronegativización mediante regresión de Cox univariable y multivariable con corrección por multiplicidad; se modelizará la trayectoria continua de descenso de log(IgG) post-tratamiento mediante un modelo lineal mixto para evaluar posibles diferencias en la velocidad de descenso entre sexos; y se evaluará la robustez del endpoint primario mediante ocho definiciones alternativas de negativización como análisis de sensibilidad.
+
+### Diseño del Estudio
+Estudio piloto observacional, descriptivo y exploratorio, de tipo EOM (según RD 957/2020), unicéntrico, independiente y sin ánimo comercial. Duración de 10 años, desde el 1 de enero de 2015 hasta el 31 de diciembre de 2025, llevado a cabo en el Hospital Central de la Defensa Gómez Ulla. La población de estudio está compuesta por adultos con diagnóstico confirmado de infección por *Strongyloides stercoralis* que han sido tratados con ivermectina. El muestreo es consecutivo, incluyendo todos los casos que cumplen los criterios de inclusión identificados mediante una búsqueda sistemática en las bases de datos de microbiología del hospital.
+
+### Recogida de Datos
+
+Se cribaron registros del Centro Nacional de Microbiologia (concentrados de heces y coprocultivos 2017-2023) y del Hospital Central de la Defensa (serologías 2020-2025). Se incluyeron pacientes que cumplían los siguientes criterios: edad mayor o igual a 18 años al momento del diagnóstico; diagnóstico confirmado mediante coprocultivo en agar, concentrado en heces o PCR positivo, o bien mediante serología positiva (índice >1.1) asociada a un contexto epidemiológico o clínico compatible; diagnóstico realizado en el HDCGU entre el 01/01/2015 y el 31/12/2025; y tratamiento con ivermectina, que consistió en ivermectina oral a 200 μg/kg en monodosis para inmunocompetentes e inmunodeprimidos en ausencia de enfermedad diseminada/hiperinfección, o en ivermectina oral a 200 μg/kg/día, hasta al menos dos semanas después de la negativización de larvas en fluidos biológicos, en caso de enfermedad diseminada/hiperinfección.
+
+![[Pasted image 20260411171218.png]]
+
+Los métodos diagnósticos que se utilizaron en el HCDGU para la estrongiloidiasis fueron el coprocultivo en agar, con una sensibilidad del 96%; la serología (IgG ELISA DRG International), con una sensibilidad del 83–93% y una especificidad del 89-99%; el concentrado de parásitos en heces y observación directa (Mini Parasep SF), con una sensibilidad del 6-28% y una especificidad del 100%; y la eosinofilia. 
+En la práctica clínica habitual del centro, el seguimiento serológico de estos pacientes se realiza en los puntos temporales basal (pretratamiento), a los 3, 6, 12, 18 y 24 meses post-tratamiento, y posteriormente según criterio clínico.
+
+
+### Definiciones
+
+La negativización postratamiento se confirma mediante criterios parasitológicos o serológicos: dos coprocultivos o concentrados de heces negativos separados entre 7 y 21 días, una PCR negativa en ese mismo intervalo, o dos determinaciones consecutivas de ELISA IgG con índice <0,9. La recidiva corresponde a la reaparición de la infección, ya sea parasitológica (coprocultivo, concentrado o PCR positivo tras al menos 3 semanas de negativización) o serológica (aumento ≥50% del título basal tras ese mismo período). La persistencia se define como positividad parasitológica o serológica mantenida a las 3 semanas sin negativización previa.
+
+La eosinofilia se considera con un recuento >500 eosinófilos/μL. Se califica como persistente cuando dicho recuento se mantiene elevado más allá de los 6 meses postratamiento. Se considera inmunosupresión significativa la administración de corticoides >20 mg/día durante ≥2 semanas, la recepción de quimioterapia, la infección por VIH con CD4 <200 células/μL, o un trasplante en los últimos seis meses. Las comorbilidades significativas incluyen neoplasia hematológica, infección por VIH o HTLV-1, asma, EPOC, cirrosis hepática, diabetes, insuficiencia cardíaca y enfermedad renal crónica.
+
+El tiempo T0 se define como la fecha de la primera dosis de ivermectina; en pacientes con múltiples ciclos, T0 corresponde al primero. La serología basal es la determinación de IgG-ELISA más próxima a T0 (mediana 18 días previos). Se utilizó el mismo ensayo en todas las mediciones para garantizar comparabilidad.
+
+Las covariables se seleccionaron a priori por plausibilidad biológica: edad (inmunosenescencia), sexo (dimorfismo en respuesta Th2), IgG basal (reflejo de carga parasitaria y estimulación antigénica acumulada), eosinófilos basales (marcador de respuesta Th2 y posible efecto helmintotóxico directo), estado de inmunodepresión y régimen de tratamiento (monodosis vs. múltiples dosis).
+
+El endpoint primario (evento utilizado para generar todas las curvas Kaplan-Meier) es la primera determinación post-T0 con IgG-ELISA <1,1 (índice), que representa un umbral intermedio entre la seronegativización completa y la reducción relativa ≥50%. Como análisis de sensibilidad se evaluaron ocho definiciones alternativas, incluyendo umbrales más estrictos (IgG <0,9), confirmación por doble determinación, descenso relativo ≥40%, normalización de eosinófilos (<0,5×10³/μL) y negativización parasitológica.
+
+### Descripción de la Cohorte
+
+**Tabla 1. Características basales de la cohorte (n = 44).**
+
+| Variable                                     | n   | Valor            | Rango     |
+| -------------------------------------------- | --- | ---------------- | --------- |
+| **_Demográficas_**                           |     |                  |           |
+| Edad, años (mediana, IQR)                    | 44  | 47.5 (36.6–56.2) | 18.1–70.1 |
+| Sexo femenino, n (%)                         | 44  | 25 (56.8%)       | —         |
+| **_Analítica basal_**                        |     |                  |           |
+| IgG ELISA, índice (mediana, IQR)             | 36  | 3.1 (1.3–6.6)    | 0.5–12.6  |
+| Eosinófilos, ×10³/μL (mediana, IQR)          | 42  | 0.8 (0.2–1.2)    | 0.0–3.6   |
+| Eosinofilia (≥500 cel/μL), n (%)             | 42  | 24 (57.1%)       | —         |
+| **_Tratamiento y seguimiento_**              |     |                  |           |
+| Monodosis, n (%)                             | 44  | 23 (52.3%)       | —         |
+| Inmunodepresión, n (%)                       | 44  | 4 (9.1%)         | —         |
+| Comorbilidad, n (%)                          | 44  | 18 (41%)         | —         |
+| Seguimiento serológico, meses (mediana, IQR) | 39  | 11.7 (3.1–22.2)  | 1.1–72.1  |
+_Variables continuas: mediana (IQR P25–P75). Rango = mínimo–máximo._
+
+
+![[Pasted image 20260411171058.png]]
+*Figura 1: Descripción de la cohorte: (A) origen, (B) diagnóstico, (C) régimen IVM, (D) inmunodepresión.*
+
+### Cinética de Seronegativización
+
+**Objetivo** : Estimar la mediana de tiempo a seronegativizacion IgG-ELISA (endpoint primario: índice < 1,1) con intervalo de confianza formal, y evaluar la sensibilidad del resultado frente a 7 definiciones alternativas.
+
+**Métodos** : Análisis de supervivencia con estimador de Kaplan–Meier. El tiempo 0 es T0 (primera dosis de ivermectina); el evento es la primera determinacion con IgG < 1,1. Los pacientes sin evento al cierre se censuran en su ultima serología. Se excluyen pacientes con serologia basal cualitativa negativa (n = 8). La mediana y su IC 95% se calculan con el metodo de Greenwood. Los landmarks a 6, 12, 18 y 24 meses estiman la proporcion acumulada de negativizacion. El panel de sensibilidad evalua 7 endpoints alternativos: umbral 0,9; doble confirmacion; caida relativa ≥40%; eosinofilos < 0,5; parasitologia con 2 negativos consecutivos
+
+**Hallazgos** 
+
+#### Mediana de Seronegativización
+![[Pasted image 20260411173818.png]]
+*Figura 3: Curva de Kaplan-Meier para seronegativización absoluta (IgG < 1,1). Área sombreada: IC 95% Greenwood. Marcas verticales: censuras. Línea roja: mediana.*
+
+La mediana KM de seronegativización fue 267 días (8,8 meses; IC 95% Greenwood: 132–348 días, 4,3–11,4 meses). El 69% de los pacientes evaluables (27/39) alcanzó seronegativización durante el seguimiento. La curva KM muestra una pendiente pronunciada en los primeros 12 meses, con aplanamiento posterior.
+Tasa de incidencia: 0.84 seronegativizaciones/persona-año (IC 95% Poisson: 0.53–1.19; 32.0 personas-año).
+
+| Meses | % Seronegativizados | %Persistentes |
+| ----- | ------------------- | ------------- |
+| 6     | 36                  | 64            |
+| 12    | 68                  | 32            |
+| 18    | 76                  | 24            |
+| 24    | 88                  | 12            |
+
+- [ ] Elegir presentación tasa de incidencia (tabla, curva, texto)
+
+#### Análisis de Sensibilidad
+
+![[Pasted image 20260411171534.png]]
+La reducción del umbral de 1,1 a 0,9 apenas modificó la cinética: 27 vs 25 eventos, medianas 8,8 vs 10,8 meses, confirmando la robustez del endpoint. La exigencia de doble confirmación duplicó la mediana (8,8 a 16,4 meses) y redujo los eventos al 31%
+
+Sensibilidad: umbral 0,9 vs 1,1: 25 vs 27 ev, medianas 10,8 vs 8,8m (robusto). Doble confirmación duplica mediana (16,4m). Eos normaliza rápido (3,0m). Parasitología lenta (25,5m)
+
+- [ ] Unificar landmarks con curva principal
+#### Estratificación
+
+![[Pasted image 20260411174316.png]]
+
+
+**Interpretación** 
+
+La mediana de tiempo a seronegativizacion es de aproximadamente 8,8 meses (IC 95% Greenwood: 4,3–11,4 m). Es la primera estimacion KM con IC formal publicada para S. stercoralis.
+A los 6 meses, el 36% de los pacientes ha negativizado, porcentaje coherente con el 34,4% de Salvador 2014 bajo criterio estricto (IgG negativa), pero inferior al 82–86% del Strong Treat bajo criterio amplio
+(negativa O reduccion ≥50% OD).
+La robustez del endpoint se confirma al variar el umbral (0,9 vs 1,1): las medianas solo difieren en 2 meses, y el numero de eventos es similar.
+La doble confirmacion duplica la mediana, lo que sugiere que un porcentaje relevante de negativizaciones transitorias pasan a reconvertirse.
+Los eosinofilos normalizan mucho antes que la IgG (mediana 3,0 vs 8,8 m), coherente con la vida media de eosinofilos (8–18 h) frente a la de IgG (21–28 d mas reservorio de celulas plasmaticas de larga vida).
+La parasitologia tiene la mediana mas lenta (25,5 m), reflejo de la baja sensibilidad del cultivo en heces y de la posible persistencia parasitologica descrita por Repetto 2018.
+
+### Predictores de Seronegativización
+
+**Objetivo**
+Identificar factores basales asociados al tiempo de seronegativizacion mediante regresion de Cox univariable (15 covariables), corregir por comparaciones multiples (BH–FDR) y construir un modelo multivariable robusto.
+
+**Métodos**
+Se ajusto un modelo de Cox univariable para cada una de 15 covariables preseleccionadas. Los p-valores se corrigieron por BH–FDR. Las variables con p crudo < 0,05 se representan en curvas KM estratificadas (log-rank test). Se construyo un forest plot para las 2 variables con p < 0,01. 
+El modelo multivariable incluyo las covariables seleccionadas por significacion y relevancia clinica, estratificando por sexo (violacion de   proporcionalidad, Schoenfeld p = 0,007). Se evaluo la ausencia de datos (test MCAR logistico) y la potencia post-hoc.
+
+**Hallazgos** 
+
+![[Pasted image 20260411174859.png]]
+
+
+**Tabla 2. Cox univariable: 15 covariables con corrección BH–FDR.**
+
+| Variable                       | n   | HR (IC 95%)          | p crudo   | p_adj     |
+| ------------------------------ | --- | -------------------- | --------- | --------- |
+| **IgG ≥ mediana (3.1)**        | 32  | **0.19 (0.06–0.59)** | **0.004** | **0.053** |
+| **Sexo (varón)**               | 39  | **3.29 (1.38–7.81)** | **0.007** | **0.053** |
+| IgG basal (continua)           | 32  | 0.79 (0.65–0.97)     | 0.021     | 0.100     |
+| Eosinofilia ≥ 0.5 ×10³/µL      | 37  | 0.40 (0.18–0.90)     | 0.027     | 0.100     |
+| Eosinófilos ≥ mediana (0.80)   | 37  | 0.45 (0.20–1.02)     | 0.055     | 0.166     |
+| Dosis única (monodosis)        | 39  | 1.86 (0.86–3.99)     | 0.114     | 0.268     |
+| Edad (continua)                | 39  | 0.98 (0.94–1.01)     | 0.158     | 0.268     |
+| IgG ≥ P75 (6.6)                | 32  | 0.41 (0.12–1.41)     | 0.159     | 0.268     |
+| Inmunodepresión                | 39  | 2.42 (0.70–8.33)     | 0.161     | 0.268     |
+| Retratado (>1 ciclo)           | 39  | 0.51 (0.19–1.37)     | 0.183     | 0.274     |
+| Diagnóstico parasitológico     | 39  | 2.21 (0.49–10.01)    | 0.304     | 0.394     |
+| Comorbilidad                   | 39  | 1.46 (0.67–3.15)     | 0.341     | 0.394     |
+| Inmunodepresión o comorbilidad | 39  | 1.46 (0.67–3.15)     | 0.341     | 0.394     |
+| Eosinófilos basales (continua) | 37  | 0.80 (0.45–1.41)     | 0.436     | 0.467     |
+| Edad ≥ 47 años                 | 39  | 1.02 (0.48–2.20)     | 0.950     | 0.950     |
+
+_Variables en negrita: incluidas en forest plot (p < 0,01). Ninguna p_adj < 0,05 tras BH–FDR._
+
+Ninguna variable alcanzó significación tras BH-FDR (padj mínimo = 0.053). El test MCAR confirmó que la ausencia de IgG basal no se asoció con covariables observadas (LR p = 0.11), compatible con datos faltantes completamente al azar
+
+MCAR: ausencia de IgG basal no asociada a covariables (LR p = 0.11)
+Cox multivariable (n=30, ev=19, estratificado por sexo):
+	IgG ≥ mediana (3.1): HR 0.20 (0.03–1.27), p = 0.088
+	Eosinofilia ≥ 0.5 ×10³/μL: HR 0.63 (0.15–2.62), p = 0.526
+	Sexo: estratificado (Schoenfeld p = 0,007)
+	C-statistic: 0.676
+	Potencia: HR minimo detectable = 3.62; potencia HR=2,0: 33%
+
+**Interpretación**
+Dos variables alcanzan p < 0,01 en Cox univariable: IgG ≥ mediana (HR 0,19, p = 0,004) y sexo varon   (HR 3,29, p = 0,007). Ambas pierden significacion tras BH-FDR, lo que refleja la penalizacion por multiples   comparaciones sobre 15 variables con n = 39.  
+El hallazgo de IgG basal como predictor es inedito: ningun estudio previo, incluido el Strong Treat (n = 310), evaluo la IgG basal como covariable en modelos de tiempo a seronegativizacion. 
+La eosinofilia basal ≥0,5×103/uL muestra HR 0,40 (p = 0,027), en la misma direccion que Strong Treat (eos > 400 cel/uL predice aclaramiento), pero no alcanza p < 0,01.  
+El sexo viola el supuesto de proporcionalidad (Schoenfeld p = 0,007), por lo que se estratifica en el   modelo multivariable. Esto indica que el efecto del sexo sobre la velocidad de negativizacion no es constante en el tiempo.  
+El modelo multivariable (estratificado por sexo) tiene un C-statistic moderado, coherente con el tamano muestral limitado y la naturaleza exploratoria del estudio.  
+La potencia post-hoc para detectar un HR = 2,0 es baja, confirmando que el estudio solo tiene capacidad para detectar efectos grandes (HR ≥3,6 con potencia 80%).
+
+El test de Schoenfeld detectó violación de proporcionalidad para el sexo (p = 0,007) pero no para IgG ≥ mediana ni eosinofilia. El sexo se manejó por estratificación. Ninguna covariable alcanzó significación en el modelo multivariable. Con 19 eventos, el HR mínimo detectable con 80% de potencia fue 3,62
+
+### Trayectoria Paramétrica
+
+**Objetivo**
+Modelar la trayectoria longitudinal de log(IgG) post-tratamiento mediante un modelo lineal mixto, estimar el coeficiente parametrico de descenso mensual y evaluar si el sexo modifica la pendiente
+
+**Métodos**
+Se construyo un LMM con log(IgG) como variable dependiente, meses como efecto fijo y paciente como efecto  
+aleatorio (intercepto aleatorio; se evaluo pendiente aleatoria por AIC). Se incluyeron solo pacientes seropositivos  
+basales (IgG ≥1,1) con IgG cuantitativa. Se ajusto un segundo modelo con interaccion meses ×sexo. La bondad  
+de ajuste se reporta como 𝑅2 marginal y condicional. El tiempo estimado de cruce del umbral de negatividad se  
+calculo extrapolando la recta de regresion
+
+**Hallazgos**
+
+![[Pasted image 20260411175104.png]]
+![[Pasted image 20260411175054.png]]
+
+
+**Interpretación**
+La pendiente global de descenso es de aproximadamente –0,068 log(IgG)/mes (p < 0,001), equivalente a una vida media estimada de 10,2 meses en escala log-lineal. Es el primer coeficiente parametrico publicado   para S. stercoralis.  
+El 𝑅2 marginal (0,43) indica que el tiempo explica el 43% de la varianza de log(IgG); el condicional (0,66) muestra que las diferencias individuales entre pacientes aportan un 23% adicional.  
+El tiempo estimado de cruce del umbral de negatividad por LMM (10,9 m) es mayor que la mediana  KM (8,8 m). La diferencia se explica por los supuestos distintos: el LMM asume descenso lineal continuo,   mientras que KM es no parametrico y capta la censura de forma diferente.  
+La interaccion meses × sexo es no significativa (p = 0,501), lo que indica que la pendiente de descenso   de IgG no difiere entre varones y mujeres a largo plazo. Esto es coherente con la literatura: la respuesta al tratamiento no se ve afectada por el sexo.  
+La discordancia entre la violacion de proporcionalidad del sexo en Cox (Schoenfeld p = 0,007) y la interaccion NS en LMM se explica porque Cox detecta un cambio transitorio en la velocidad del hazard,   mientras que LMM mide la pendiente media sostenida.  
+Ningun estudio previo publico coeficientes de LMM para IgG en estrongiloidiasis. Buonfrate 2015 utilizo LMM pero solo informo tendencias categoricas sin reportar los coeficientes numericos
+
+
+### Limitaciones
+
+1. **Diseño retrospectivo unicéntrico**: comparable a series europeas pero no generalizable [@salvador2019].
+2. **Tamaño muestral** (n = 44, 19 eventos): potencia insuficiente para HR < 3,6 [@schoenfeld1983].
+3. **Censura informativa posible**: pérdida de seguimiento no necesariamente aleatoria.
+4. **T0 como primera dosis**: Strong Treat demostró equivalencia dosis única/múltiple [@buonfrate2019].
+5. **Ventana basal variable**: sensibilidad $\leq$ 90 días consistente (7,9 *vs* 8,8 meses).
+6. **Caso completo**: 18% sin IgG basal; MCAR p = 0,11 [@little1988].
+7. **Seronegativización $\neq$ curación parasitológica** [@repetto2018].
+8. ***Assay-specificity***: resultados específicos al kit [@buonfrate2015; @sears2022].
+9. **Kit ELISA**: posibles cambios de lote [pendiente especificación].
+10. **Inmunodepresión**: n = 4, insuficiente para análisis [@buonfrate2019].
+11. **Modelo no bifásico**: el LMM asume descenso log-lineal [@yman2019].
+12. **Censura por intervalo**: mediana KM conservadora.

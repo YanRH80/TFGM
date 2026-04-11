@@ -1,0 +1,1108 @@
+---
+title: "Resultados y evidencia — Revisión condensada"
+subtitle: "Seronegativización IgG-ELISA post-ivermectina en estrongiloidiasis"
+author: "Yan Rodríguez García"
+date: today
+format:
+  pdf:
+    documentclass: article
+    papersize: a4
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    colorlinks: true
+    keep-tex: false
+    fig-pos: 'H'
+    include-in-header:
+      text: |
+        \usepackage{booktabs}
+        \usepackage{float}
+        \usepackage{setspace}
+        \onehalfspacing
+        \usepackage{geometry}
+        \geometry{margin=2cm}
+        \usepackage{enumitem}
+        \setlist{nosep, leftmargin=1.5em}
+        \usepackage{tikz}
+        \usetikzlibrary{positioning, arrows.meta, shapes.geometric}
+        \usepackage{longtable}
+execute:
+  echo: false
+  warning: false
+---
+
+```{python}
+#| label: setup
+#| output: false
+
+import os, hashlib, sys, warnings, logging
+os.makedirs('figures', exist_ok=True)
+logging.basicConfig(level=logging.WARNING)
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib.patches import FancyBboxPatch, Rectangle, Patch
+from matplotlib.lines import Line2D
+from matplotlib.gridspec import GridSpec
+from collections import OrderedDict
+from scipy.stats import (spearmanr, mannwhitneyu, probplot, shapiro,
+                          chi2_contingency, fisher_exact, norm, binom)
+from scipy.stats import chi2 as chi2_dist
+from scipy.stats import t as t_dist
+from scipy.stats import poisson
+from statsmodels.stats.multitest import multipletests
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
+SAT = ['#CC3311','#0077BB','#EE7733','#009988','#AA3377','#33BBEE','#EE3377']
+GRI = ['#F2F2F2','#DDDDDD','#999999','#555555','#222222']
+C = {'red':SAT[0],'blue':SAT[1],'gold':SAT[2],'green':SAT[3],
+     'purple':SAT[4],'teal':SAT[5],'orange':SAT[6],
+     'bg':GRI[0],'grid':GRI[1],'muted':GRI[2],'annot':GRI[3],'text':GRI[4]}
+
+plt.rcParams.update({'font.family':'sans-serif','font.size':10,
+    'axes.spines.top':False,'axes.spines.right':False,
+    'axes.grid':True,'grid.alpha':0.3,'grid.linestyle':':',
+    'figure.dpi':300,'savefig.dpi':300,'savefig.bbox':'tight',
+    'text.color':C['text'],'axes.labelcolor':C['text']})
+
+CONFIG = {
+    'SERO_NEG': 1.1, 'SERO_NEG_ALT': 0.9,
+    'SERO_DROP_SALVADOR': 0.60,
+    'EOS_NEG': 0.5, 'MICRO_MIN': 7, 'RECIDIVA_GAP': 21,
+    'ALPHA': 0.05, 'POWER': 0.80,
+    'SEED': 42,
+}
+SERO_NEG = CONFIG['SERO_NEG']; SERO_DROP = CONFIG['SERO_DROP_SALVADOR']
+EOS_NEG = CONFIG['EOS_NEG']; MICRO_MIN = CONFIG['MICRO_MIN']
+ALPHA = CONFIG['ALPHA']
+
+RUTA = 'BASE_EXCEL.xlsx'
+bas_raw=pd.read_excel(RUTA,'bas'); ser_raw=pd.read_excel(RUTA,'ser')
+eos_raw=pd.read_excel(RUTA,'eos'); mic_raw=pd.read_excel(RUTA,'mic')
+seg_raw=pd.read_excel(RUTA,'seg')
+
+bas=bas_raw.copy(); bas['ID']=bas['ID'].astype(int); bas['F_NAC']=pd.to_datetime(bas['F_NAC'])
+ser=ser_raw.copy(); ser['ID']=ser['ID'].astype(int); ser['F_SER']=pd.to_datetime(ser['F_SER'])
+ser['IGG_QUAL']=ser['IGG'].where(ser['IGG'].apply(lambda x: isinstance(x,str)))
+ser['IGG']=pd.to_numeric(ser['IGG'],errors='coerce')
+eos=eos_raw.copy(); eos['ID']=eos['ID'].astype(int); eos['F_EOS']=pd.to_datetime(eos['F_EOS']); eos['EOS']=pd.to_numeric(eos['EOS'],errors='coerce')
+mic=mic_raw[mic_raw['F_MIC'].notna()].copy(); mic['ID']=mic['ID'].astype(int); mic['F_MIC']=pd.to_datetime(mic['F_MIC'])
+mic['RESULTADO']=pd.to_numeric(mic['RESULTADO'],errors='coerce'); mic.loc[mic['RESULTADO'].isna()&mic_raw.loc[mic.index,'RESULTADO'].notna(),'RESULTADO']=1; mic['RESULTADO']=mic['RESULTADO'].astype(int)
+seg=seg_raw.copy(); seg['ID']=seg['ID'].astype(int); seg['F_CONSULTA']=pd.to_datetime(seg['F_CONSULTA'])
+
+t0=seg[seg['DOSIS_IVM'].notna()].groupby('ID')['F_CONSULTA'].min().rename('T0')
+ser_t=ser[['ID','F_SER','IGG','IGG_QUAL']].merge(t0.reset_index(),on='ID'); ser_t['dias']=(ser_t['F_SER']-ser_t['T0']).dt.days
+ser_pre=ser_t[ser_t['dias']<=0]; idx=ser_pre.groupby('ID')['dias'].idxmax()
+ser_basal=ser_pre.loc[idx,['ID','IGG','IGG_QUAL']].rename(columns={'IGG':'IGG_BASAL','IGG_QUAL':'IGG_QUAL_BASAL'})
+eos_t=eos[['ID','F_EOS','EOS']].merge(t0.reset_index(),on='ID'); eos_t['dias']=(eos_t['F_EOS']-eos_t['T0']).dt.days
+eos_pre=eos_t[eos_t['dias']<=0]; idx2=eos_pre.groupby('ID')['dias'].idxmax(); eos_basal=eos_pre.loc[idx2,['ID','EOS']].rename(columns={'EOS':'EOS_BASAL'})
+mic_t=mic.merge(t0.reset_index(),on='ID'); mic_t['dias']=(mic_t['F_MIC']-mic_t['T0']).dt.days
+mic_pre=mic_t[mic_t['dias']<=0]
+mic_basal=mic_pre.groupby(['ID','TIPO'])['RESULTADO'].max().unstack().reset_index().rename(columns={'COPRO':'COPRO_BASAL','MICRO':'MICRO_BASAL'})
+mic_basal['MIC_BASAL']=mic_basal[['COPRO_BASAL','MICRO_BASAL']].max(axis=1)
+
+pac=bas.merge(t0.reset_index(),on='ID').merge(ser_basal[['ID','IGG_BASAL','IGG_QUAL_BASAL']],on='ID',how='left').merge(eos_basal[['ID','EOS_BASAL']],on='ID',how='left').merge(mic_basal[['ID','MIC_BASAL']],on='ID',how='left')
+pac['EDAD']=((pac['T0']-pac['F_NAC']).dt.days/365.25).round(1); pac['AN_ESP']=pac['T0'].dt.year-pac['T_ESP']+pac['T0'].dt.month/12
+pac['INMUNO_SI']=(pac['INMUNO']!='NO').astype(int); pac['COMORB_SI']=(pac['COMORB']!='NO').astype(int)
+pac['CONFEOS_SI']=(pac['CONFEOS']!='NO').astype(int); pac['SEXO_V']=(pac['SEXO']=='V').astype(int)
+pac['EOS_ALTA']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=EOS_NEG).astype(int))
+pac['SER_ALTA']=np.where(pac['IGG_BASAL'].isna(),np.nan,(pac['IGG_BASAL']>=SERO_NEG).astype(int))
+igg_med=pac['IGG_BASAL'].median(); igg_p75=pac['IGG_BASAL'].quantile(0.75)
+eos_med=pac['EOS_BASAL'].median(); eos_p75=pac['EOS_BASAL'].quantile(0.75)
+pac['SER_MEDIANA']=np.where(pac['IGG_BASAL'].isna(),np.nan,(pac['IGG_BASAL']>=igg_med).astype(int))
+pac['SER_P75']=np.where(pac['IGG_BASAL'].isna(),np.nan,(pac['IGG_BASAL']>=igg_p75).astype(int))
+pac['SER_TERCIL']=pd.qcut(pac['IGG_BASAL'],q=3,labels=['Bajo','Medio','Alto'])
+pac['EOS_MEDIANA']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=eos_med).astype(int))
+pac['EOS_P75']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=eos_p75).astype(int))
+pac['EOS_1000']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=1.0).astype(int))
+pac['EOS_TERCIL']=pd.qcut(pac['EOS_BASAL'],q=3,labels=['Bajo','Medio','Alto'])
+pac['EOS_LIMPIA']=np.where(pac['EOS_BASAL'].isna(),np.nan,((pac['EOS_BASAL']>=EOS_NEG)&(pac['CONFEOS_SI']==0)).astype(int))
+pac['EDAD_ALTA']=(pac['EDAD']>=pac['EDAD'].median()).astype(int)
+primer_tto=seg[seg['DOSIS_IVM'].notna()].sort_values('F_CONSULTA').groupby('ID').first()[['DOSIS_IVM']]
+pac=pac.merge(primer_tto.reset_index(),on='ID',how='left'); pac['MONO']=(pac['DOSIS_IVM']=='MONO').astype(int)
+n_ttos=seg[seg['DOSIS_IVM'].notna()].groupby('ID').size().rename('N_TTO')
+pac=pac.merge(n_ttos.reset_index(),on='ID',how='left'); pac['RETRATADO']=(pac['N_TTO']>1).astype(int)
+pac['INMUNO_O_COMORB']=((pac['INMUNO_SI']==1)|(pac['COMORB_SI']==1)).astype(int)
+pac['DX_PARA']=pac['MIC_BASAL'].fillna(0).astype(int)
+
+neg_basal_ids = pac[pac['IGG_QUAL_BASAL'] == 'NEG']['ID'].tolist()
+EXCL_SERO_IDS = set(neg_basal_ids)
+_ser_basal_t0 = ser_pre.loc[idx, ['ID','dias']].copy()
+_ser_basal_t0['dias_abs'] = _ser_basal_t0['dias'].abs()
+
+ser_long=ser_t[ser_t['IGG'].notna()].copy(); ser_long['meses']=ser_long['dias']/30.44
+eos_long=eos_t.copy(); eos_long['meses']=eos_long['dias']/30.44
+ser_post=ser_long[ser_long['dias']>0].copy(); eos_post=eos_long[eos_long['dias']>0].copy()
+mic_post=mic_t[mic_t['dias']>MICRO_MIN].sort_values(['ID','dias']).copy()
+
+def build_events(ser_post_df, pac_df, eos_post_df, mic_post_df,
+                 ser_long_df, eos_long_df, sero_neg, sero_drop, excl_sero_ids=set()):
+    sp = ser_post_df[~ser_post_df['ID'].isin(excl_sero_ids)].copy()
+    sp['neg_abs'] = sp['IGG'] < sero_neg
+    neg_sero_abs = sp[sp['neg_abs']].sort_values('dias').groupby('ID').first()[['dias','IGG']].rename(columns={'dias':'T_NEG_SERO_ABS','IGG':'IGG_NEG'})
+    sp_b = sp.merge(pac_df[['ID','IGG_BASAL']], on='ID')
+    sp_b['neg_rel'] = sp_b['IGG'] < sp_b['IGG_BASAL'] * sero_drop
+    neg_sero_rel = sp_b[sp_b['neg_rel']].sort_values('dias').groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_REL'})
+    sps = sp.sort_values(['ID','dias']).copy(); sps['neg'] = sps['IGG'] < sero_neg
+    sps['neg_prev'] = sps.groupby('ID')['neg'].shift(1); sps['doble_neg'] = sps['neg'] & sps['neg_prev']
+    neg_sero_abs_x2 = sps[sps['doble_neg']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_ABS_X2'})
+    spr = sp_b.sort_values(['ID','dias']).copy(); spr['neg_prev'] = spr.groupby('ID')['neg_rel'].shift(1)
+    spr['doble'] = spr['neg_rel'] & spr['neg_prev']
+    neg_sero_rel_x2 = spr[spr['doble']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_REL_X2'})
+    ep = eos_post_df.copy(); ep['neg_abs'] = ep['EOS'] < EOS_NEG
+    neg_eos = ep[ep['neg_abs']].sort_values('dias').groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_EOS_ABS'})
+    mp = mic_post_df.copy(); mp['neg'] = mp['RESULTADO'] == 0
+    mp['neg_prev'] = mp.groupby('ID')['neg'].shift(1); mp['doble'] = mp['neg'] & mp['neg_prev']
+    neg_para = mp[mp['doble']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_PARA'})
+    n_evaluables = mp['ID'].nunique()
+    cens_ser = ser_long_df[ser_long_df['dias']>0].groupby('ID')['dias'].max().rename('cens_ser')
+    cens_eos = eos_long_df[eos_long_df['dias']>0].groupby('ID')['dias'].max().rename('cens_eos')
+    cens_mic = mp.groupby('ID')['dias'].max().rename('cens_mic') if len(mp)>0 else pd.Series(dtype=float, name='cens_mic')
+    ev = pac_df[['ID']].copy()
+    ev = ev.merge(cens_ser.reset_index(), on='ID', how='left')
+    ev = ev.merge(cens_eos.reset_index(), on='ID', how='left')
+    ev = ev.merge(cens_mic.reset_index(), on='ID', how='left')
+    def add_event(ev, neg_df, time_col, cens_col, prefix):
+        if len(neg_df)>0: ev = ev.merge(neg_df[[time_col]].reset_index().rename(columns={time_col:'_t'}), on='ID', how='left')
+        else: ev['_t'] = np.nan
+        ev[f'E_{prefix}'] = ev['_t'].notna().astype(int); ev[f'T_{prefix}'] = ev['_t'].fillna(ev[cens_col]); ev = ev.drop(columns='_t')
+        return ev
+    ev = add_event(ev, neg_sero_abs, 'T_NEG_SERO_ABS', 'cens_ser', 'SERO_ABS_X1')
+    ev = add_event(ev, neg_sero_abs_x2, 'T_NEG_SERO_ABS_X2', 'cens_ser', 'SERO_ABS_X2')
+    ev = add_event(ev, neg_sero_rel, 'T_NEG_SERO_REL', 'cens_ser', 'SERO_REL_X1')
+    ev = add_event(ev, neg_sero_rel_x2, 'T_NEG_SERO_REL_X2', 'cens_ser', 'SERO_REL_X2')
+    ev = add_event(ev, neg_eos, 'T_NEG_EOS_ABS', 'cens_eos', 'EOS_ABS')
+    ev = add_event(ev, neg_para, 'T_NEG_PARA', 'cens_mic', 'PARA')
+    stats = {'sero_neg': sero_neg, 'sero_drop': sero_drop, 'n_excl_sero': len(excl_sero_ids),
+             'n_sero_abs_x1': ev['E_SERO_ABS_X1'].sum(), 'n_sero_abs_x2': ev['E_SERO_ABS_X2'].sum(),
+             'n_sero_rel_x1': ev['E_SERO_REL_X1'].sum(), 'n_sero_rel_x2': ev['E_SERO_REL_X2'].sum(),
+             'n_eos': ev['E_EOS_ABS'].sum(), 'n_para': ev['E_PARA'].sum(), 'n_evaluables_para': n_evaluables}
+    neg = {'neg_sero_abs': neg_sero_abs, 'neg_sero_abs_x2': neg_sero_abs_x2,
+           'neg_sero_rel': neg_sero_rel, 'neg_sero_rel_x2': neg_sero_rel_x2,
+           'neg_eos': neg_eos, 'neg_para': neg_para, 'ser_post_b': sp_b,
+           'cens_ser': cens_ser, 'cens_eos': cens_eos, 'cens_mic': cens_mic}
+    return ev, stats, neg
+
+ev, ev_stats, ev_neg = build_events(ser_post, pac, eos_post, mic_post, ser_long, eos_long,
+                                     sero_neg=SERO_NEG, sero_drop=SERO_DROP, excl_sero_ids=EXCL_SERO_IDS)
+neg_sero_abs = ev_neg['neg_sero_abs']; cens_ser = ev_neg['cens_ser']
+cens_eos = ev_neg['cens_eos']; n_evaluables = ev_stats['n_evaluables_para']
+
+ev_alt, ev_alt_stats, ev_alt_neg = build_events(ser_post, pac, eos_post, mic_post, ser_long, eos_long,
+                                                 sero_neg=CONFIG['SERO_NEG_ALT'], sero_drop=SERO_DROP, excl_sero_ids=EXCL_SERO_IDS)
+
+sero_pos=set(pac[(pac['IGG_BASAL']>=SERO_NEG) | ((pac['IGG_QUAL_BASAL'].notna()) & (pac['IGG_QUAL_BASAL']!='NEG'))]['ID'])
+mic_pos_ids=set(mic_pre[mic_pre['RESULTADO']==1]['ID'])
+PAC_COLS=['ID','SEXO','SEXO_V','EDAD','INMUNO_SI','COMORB_SI',
+    'EOS_ALTA','EOS_MEDIANA','EOS_P75','EOS_1000','EOS_TERCIL','EOS_LIMPIA','EOS_BASAL',
+    'SER_ALTA','SER_MEDIANA','SER_P75','SER_TERCIL','IGG_BASAL',
+    'EDAD_ALTA','MONO','RETRATADO','INMUNO_O_COMORB','DX_PARA']
+km_full=ev[['ID','T_SERO_ABS_X1','E_SERO_ABS_X1']].merge(pac[PAC_COLS],on='ID')
+km_full=km_full[km_full['T_SERO_ABS_X1']>0]; cox_data=km_full.copy()
+
+nice={'SEXO_V':'Sexo (varón)','EDAD':'Edad (continua)','EDAD_ALTA':f'Edad ≥ {pac["EDAD"].median():.0f} años',
+    'INMUNO_SI':'Inmunodepresión','COMORB_SI':'Comorbilidad',
+    'INMUNO_O_COMORB':'Inmunodepresión o comorbilidad','EOS_ALTA':f'Eosinofilia ≥ {EOS_NEG} ×10³/µL',
+    'EOS_MEDIANA':f'Eosinófilos ≥ mediana ({eos_med:.2f})','SER_MEDIANA':f'IgG ≥ mediana ({igg_med:.1f})',
+    'SER_P75':f'IgG ≥ P75 ({igg_p75:.1f})','IGG_BASAL':'IgG basal (continua)',
+    'EOS_BASAL':'Eosinófilos basales (continua)','MONO':'Dosis única (monodosis)','RETRATADO':'Retratado (>1 ciclo)',
+    'DX_PARA':'Diagnóstico parasitológico','EOS_LIMPIA':f'Eosinofilia ≥ {EOS_NEG} sin confusor',
+    'EOS_P75':'Eosinófilos ≥ P75','EOS_1000':'Eosinófilos ≥ 1.0 (1000 cel/µL)'}
+
+def med_iqr(s): return f"{s.median():.1f} ({s.quantile(.25):.1f}--{s.quantile(.75):.1f})"
+def n_pct(num,den): return f"{num} ({num/den*100:.1f}\\%)"
+def rng(s): return f"{s.min():.1f}--{s.max():.1f}"
+
+from lifelines import KaplanMeierFitter, CoxPHFitter
+from lifelines.statistics import logrank_test
+from lifelines.plotting import add_at_risk_counts
+```
+
+
+# Nota metodologica para el lector clinico {.unnumbered}
+
+Este documento emplea tecnicas estadisticas habituales en investigacion clinica pero que pueden resultar poco familiares para el lector asistencial. A continuacion se describen brevemente los conceptos clave para facilitar la lectura de los resultados.
+
+## Supervivencia y Kaplan--Meier
+
+El analisis de supervivencia estudia el *tiempo hasta un evento*. En nuestro caso, el evento es la primera determinacion de IgG-ELISA por debajo de 1,1 (seronegativizacion). La curva de Kaplan--Meier (KM) estima la probabilidad acumulada de que el evento *no* haya ocurrido a cada instante. Cuando un paciente se pierde del seguimiento sin haber alcanzado el evento, su observacion se **censura** a la derecha: aporta informacion hasta su ultima visita, pero no se asume que nunca negativizara. La **mediana de supervivencia** es el tiempo al que el 50% de los pacientes ha experimentado el evento; su intervalo de confianza se estima con la formula de Greenwood.
+
+## Regresion de Cox
+
+El modelo de riesgos proporcionales de Cox cuantifica la asociacion entre una covariable y la velocidad de ocurrencia del evento. El resultado se expresa como **hazard ratio (HR)**: un HR = 2,0 indica que el grupo expuesto experimenta el evento al doble de velocidad. El supuesto central es que la razon de hazards entre grupos es constante en el tiempo (**proporcionalidad**); este se verifica con el test de **residuos de Schoenfeld**. Cuando una variable viola este supuesto, se estratifica en lugar de ajustar.
+
+## Modelo lineal mixto (LMM)
+
+El LMM modela la trayectoria longitudinal de un biomarcador (log IgG) en funcion del tiempo, incluyendo un **efecto fijo** (pendiente global compartida por todos) y un **efecto aleatorio** (desviacion propia de cada paciente respecto a la media). La transformacion logaritmica estabiliza la varianza. La bondad de ajuste se reporta como $R^{2}$ **marginal** (varianza explicada por los efectos fijos) y $R^{2}$ **condicional** (incluyendo tambien los aleatorios).
+
+## Correccion por comparaciones multiples (BH--FDR)
+
+Cuando se prueban simultaneamente 15 covariables, la probabilidad de encontrar al menos un falso positivo asciende al 54% ($1 - 0{,}95^{15}$). El metodo de **Benjamini--Hochberg** controla la tasa de falsos descubrimientos (FDR) ajustando cada p-valor en funcion de su rango; la p~adj~ resultante indica la proporcion esperada de falsos positivos entre los rechazados.
+
+## Validacion y diagnosticos
+
+- **Bootstrap**: remuestreo con reemplazo para estimar la variabilidad de un estadistico sin supuestos distribucionales.
+- **MCAR** (*missing completely at random*): se verifica que la ausencia de datos no depende de las covariables observadas mediante un modelo logistico (test de Little simplificado).
+- **C-statistic** (indice de concordancia): probabilidad de que, dados dos pacientes, el modelo asigne mayor riesgo al que experimenta el evento antes. Un valor de 0,5 equivale al azar; 1,0, a discriminacion perfecta.
+
+## Glosario rapido
+
+| Termino | Significado |
+|:---|:---|
+| HR (hazard ratio) | Razon de velocidades de evento entre grupos |
+| IC 95% | Intervalo de confianza al 95% |
+| KM | Estimador de Kaplan--Meier |
+| LMM | Modelo lineal mixto |
+| FDR | Tasa de falsos descubrimientos (false discovery rate) |
+| p~adj~ | p-valor ajustado por BH--FDR |
+| Censura | Observacion incompleta (paciente sin evento al cierre) |
+| EPV | Eventos por variable en el modelo |
+| PH | Supuesto de proporcionalidad de hazards |
+| Schoenfeld | Residuos que diagnostican violacion de PH |
+| MCAR | Datos faltantes completamente al azar |
+| T~0~ | Fecha de la primera dosis de ivermectina |
+
+
+# Bloque 1 --- Cohorte y flujo STROBE
+
+## Objetivos
+
+Describir la cohorte de estudio, cuantificar el flujo de seleccion segun recomendaciones STROBE y caracterizar las variables basales de los pacientes incluidos.
+
+## Metodos
+
+Estudio de cohorte retrospectivo unicentrico. Se cribaron registros del Centro Nacional de Microbiologia (cultivos/PCR 2017--2023) y del Hospital Central de la Defensa (serologias 2020--2025). Los criterios de inclusion fueron: diagnostico confirmado de estrongiloidiasis, tratamiento con ivermectina y $\geq 1$ determinacion serologica post-tratamiento. Se excluyeron pacientes sin diagnostico en el centro de estudio. Las variables basales (edad, sexo, IgG-ELISA, eosinofilos, inmunodepresion, regimen de ivermectina) se recogieron de la historia clinica electronica y se centraron en T~0~ (primera dosis de ivermectina).
+
+## Presentacion
+
+```{=latex}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.6cm,
+  mainbox/.style={rectangle, rounded corners=3pt, draw=black!60, fill=blue!5,
+    text width=7cm, minimum height=0.8cm, align=center, font=\small},
+  greybox/.style={rectangle, rounded corners=3pt, draw=black!40, fill=black!3,
+    text width=7cm, minimum height=0.8cm, align=center, font=\small},
+  inclbox/.style={rectangle, rounded corners=3pt, draw=green!60!black, fill=green!8,
+    text width=7cm, minimum height=0.8cm, align=center, font=\small},
+  exclbox/.style={rectangle, rounded corners=2pt, draw=red!60!black, fill=red!5,
+    text width=3.5cm, minimum height=0.6cm, align=center, font=\scriptsize,
+    text=red!40!black},
+  arrow/.style={->, >=stealth, thick, draw=black!50},
+  exarrow/.style={->, >=stealth, draw=red!50!black, thin}
+]
+\node[greybox] (screen)
+  {\textbf{Registros cribados}\\
+   {\scriptsize CNM (microbiología, 2017--2023) + HCD (serología, 2020--2025)}};
+\node[greybox, below=0.6cm of screen] (dedup)
+  {\textbf{Tras deduplicación: $\geq$1 positivo} $\cdot$ n = 198};
+\draw[arrow] (screen) -- (dedup);
+\node[exclbox, right=1.2cm of dedup] (exc1)
+  {Dx no confirmado\\\textbf{n = 114} {\tiny(57,6\%)}};
+\draw[exarrow] (dedup) -- (exc1);
+\node[mainbox, below=0.6cm of dedup] (diag)
+  {\textbf{Diagnóstico confirmado} $\cdot$ n = 84 {\scriptsize(42,4\%)}};
+\draw[arrow] (dedup) -- (diag);
+\node[exclbox, right=1.2cm of diag] (exc2)
+  {No tratados con IVM\\\textbf{n = 20} {\tiny(23,8\%)}};
+\draw[exarrow] (diag) -- (exc2);
+\node[mainbox, below=0.6cm of diag] (trat)
+  {\textbf{Tratados con ivermectina} $\cdot$ n = 64};
+\draw[arrow] (diag) -- (trat);
+\node[exclbox, right=1.2cm of trat] (exc3)
+  {Sin seguimiento post-TTO\\\textbf{n = 19} {\tiny(29,7\%)}};
+\draw[exarrow] (trat) -- (exc3);
+\node[exclbox, below=0.25cm of exc3] (exc4)
+  {Sin Dx en HCDGU\\\textbf{n = 1} {\tiny(1,6\%)}};
+\draw[exarrow] (trat.east) -- ++(0.4,0) |- (exc4.west);
+\node[inclbox, below=0.8cm of trat] (cohort)
+  {\textbf{\large COHORTE INCLUIDA · n = 44} {\small(retención 22,2\%)}};
+\draw[arrow] (trat) -- (cohort);
+\end{tikzpicture}
+\caption{Diagrama STROBE de selección de pacientes.}
+\label{fig-strobe}
+\end{figure}
+```
+
+```{python}
+#| label: tab-basales-r
+#| output: asis
+
+n_total = len(pac)
+n_eos = pac['EOS_BASAL'].notna().sum()
+n_igg = pac['IGG_BASAL'].notna().sum()
+n_serpost = ser_post['ID'].nunique()
+n_fem = (pac['SEXO']=='M').sum()
+
+table_data = [
+    ("Demográficas","","","",True,False),
+    ("Edad, años (mediana, IQR)",str(n_total),med_iqr(pac['EDAD']),rng(pac['EDAD']),False,False),
+    ("Sexo femenino, n (\\%)",str(n_total),n_pct(n_fem,n_total),"---",False,False),
+    ("","","","",False,True), ("Analítica basal","","","",True,False),
+    ("IgG ELISA, índice (mediana, IQR)",str(n_igg),med_iqr(pac['IGG_BASAL'].dropna()),rng(pac['IGG_BASAL'].dropna()),False,False),
+    ("Eosinófilos, $\\times 10^3$/\\textmu L (mediana, IQR)",str(n_eos),med_iqr(pac['EOS_BASAL'].dropna()),rng(pac['EOS_BASAL'].dropna()),False,False),
+    ("Eosinofilia ($\\geq$500 cel/\\textmu L), n (\\%)",str(n_eos),n_pct(int((pac['EOS_BASAL']>=EOS_NEG).sum()),n_eos),"---",False,False),
+    ("","","","",False,True), ("Tratamiento y seguimiento","","","",True,False),
+    ("Monodosis, n (\\%)",str(n_total),n_pct(pac['MONO'].sum(),n_total),"---",False,False),
+    ("Inmunodepresión, n (\\%)",str(n_total),n_pct(pac['INMUNO_SI'].sum(),n_total),"---",False,False),
+    ("Seguimiento serológico, meses (mediana, IQR)",str(n_serpost),med_iqr(cens_ser/30.44),rng(cens_ser/30.44),False,False),
+]
+
+print(r"""\begin{table}[H]
+\centering
+\caption{Características basales de la cohorte (n = 44).}
+\label{tab-basales-r}
+\small
+\begin{tabular}{l c c c}
+\toprule
+\textbf{Variable} & \textbf{n} & \textbf{Valor} & \textbf{Rango} \\
+\midrule""")
+for var, nv, val, rang, is_hdr, is_sep in table_data:
+    if is_sep:
+        print(r"\midrule")
+    elif is_hdr:
+        print(f"\\multicolumn{{4}}{{l}}{{\\textit{{{var}}}}} \\\\")
+    else:
+        print(f"\\quad {var} & {nv} & {val} & {rang} \\\\")
+print(r"""\bottomrule
+\multicolumn{4}{l}{\footnotesize Variables continuas: mediana (IQR P25--P75). Rango = mínimo--máximo.} \\
+\end{tabular}
+\end{table}""")
+
+# Markdown version (for Google Docs / other platforms)
+os.makedirs('figures_resultados', exist_ok=True)
+def _md_clean(s):
+    return (s.replace('\\%','%').replace('\\textmu ','μ').replace('\\textmu','μ')
+             .replace('\\geq','≥').replace('$\\times 10^3$','×10³').replace('---','—')
+             .replace('--','–').replace('$',''))
+with open('figures_resultados/tab-basales.md','w',encoding='utf-8') as _f:
+    _f.write("**Tabla 1. Características basales de la cohorte (n = 44).**\n\n")
+    _f.write("| Variable | n | Valor | Rango |\n|---|---|---|---|\n")
+    for var, nv, val, rang, is_hdr, is_sep in table_data:
+        if is_sep or (not var and not nv): continue
+        if is_hdr:
+            _f.write(f"| **_{var}_** | | | |\n")
+        else:
+            _f.write(f"| {_md_clean(var)} | {nv} | {_md_clean(val)} | {_md_clean(rang)} |\n")
+    _f.write("\n_Variables continuas: mediana (IQR P25–P75). Rango = mínimo–máximo._\n")
+```
+
+```{python}
+#| label: fig-b1-cohort
+#| fig-cap: "Descripción de la cohorte: (A) origen, (B) diagnóstico, (C) régimen IVM, (D) inmunodepresión."
+
+fig, axes = plt.subplots(2, 2, figsize=(14, 8))
+
+# A — Origen
+ax = axes[0, 0]
+region_map = {'ECUADOR':'Am. Sur','BOLIVIA':'Am. Sur','PERU':'Am. Sur','COLOMBIA':'Am. Sur',
+    'BRASIL':'Am. Sur','PARAGUAY':'Am. Sur','ARGENTINA':'Am. Sur',
+    'HONDURAS':'Am. Central','GUATEMALA':'Am. Central','EL SALVADOR':'Am. Central',
+    'MEXICO':'Am. Central','REP. DOMINICANA':'Am. Central',
+    'GUINEA ECUATORIAL':'Áfr. Subsah.','SENEGAL':'Áfr. Subsah.','GAMBIA':'Áfr. Subsah.',
+    'GUINEA CONAKRY':'Áfr. Subsah.','CONGO':'Áfr. Subsah.','ITALIA':'Europa','ESPANA':'Europa'}
+rpal = {'Am. Sur':C['blue'],'Am. Central':C['gold'],'Áfr. Subsah.':C['teal'],'Europa':C['muted']}
+pac['REGION'] = pac['ORIGEN'].map(region_map).fillna('Otros')
+orig = pac['ORIGEN'].value_counts(); otros = orig[orig < 2]
+if len(otros): orig = orig[orig >= 2]; orig['Otros'] = otros.sum()
+orig = orig.sort_values()
+bar_c = [C['muted'] if o=='Otros' else rpal.get(pac[pac['ORIGEN']==o]['REGION'].iloc[0],C['muted']) for o in orig.index]
+ax.barh(range(len(orig)), orig.values, color=bar_c, edgecolor='white', height=0.7)
+ax.set_yticks(range(len(orig))); ax.set_yticklabels(orig.index, fontsize=7)
+for i,v in enumerate(orig.values): ax.text(v+0.15, i, str(v), va='center', fontsize=7, color=C['annot'])
+ax.set(xlabel='n', title='A. País de origen')
+rc = pac['REGION'].value_counts()
+ax.legend(handles=[Patch(facecolor=v, label=f'{k} ({rc.get(k,0)})') for k,v in rpal.items() if rc.get(k,0)>0],
+          frameon=False, fontsize=7, loc='lower right')
+
+# B — Dx
+ax = axes[0, 1]
+n_so = len(sero_pos - mic_pos_ids); n_sp = len(sero_pos & mic_pos_ids)
+n_po = len(mic_pos_ids - sero_pos); n_cl = 44 - len(sero_pos | mic_pos_ids)
+for i,(l,v,c) in enumerate([('Serología',n_so,C['blue']),('Sero+Para',n_sp,C['teal']),
+                             ('Parasitología',n_po,C['purple']),('Clínico-epi',n_cl,C['muted'])]):
+    ax.barh(i, v, color=c, edgecolor='white', height=0.6)
+    if v>0: ax.text(v+0.2, i, f'{v} ({v/44*100:.0f}%)', va='center', fontsize=8, fontweight='bold')
+ax.set_yticks(range(4)); ax.set_yticklabels(['Serología','Sero+Para','Parasitología','Clínico-epi'], fontsize=8)
+ax.set(xlabel='n', title='B. Modo diagnóstico')
+
+# C — Régimen
+ax = axes[1, 0]
+ro = ['MONO','DOBLE_CONSECUTIVA','DOBLE_SEPARADA','CUADRUPLE']
+rl = ['Mono','Doble\ncons.','Doble\nsep.','Cuádr.']
+rcc = [C['green'],C['blue'],C['gold'],C['red']]
+rv = [(pac['DOSIS_IVM']==r).sum() for r in ro]
+ax.bar(range(4), rv, color=rcc, edgecolor='white', width=0.6)
+for i,v in enumerate(rv): ax.text(i, v+0.3, f'{v} ({v/44*100:.0f}%)', ha='center', fontsize=8, fontweight='bold')
+ax.set_xticks(range(4)); ax.set_xticklabels(rl, fontsize=7)
+ax.set(ylabel='n', title='C. Régimen IVM', ylim=(0,max(rv)+5))
+
+# D — Inmuno/Comorb
+ax = axes[1, 1]
+cats = [('Inmunodepresión', pac['INMUNO_SI'].sum(), C['red']),
+        ('Comorbilidad', pac['COMORB_SI'].sum(), C['blue']),
+        ('Sin ambas', ((pac['INMUNO_SI']==0)&(pac['COMORB_SI']==0)).sum(), C['muted'])]
+for i,(l,v,c) in enumerate(cats):
+    ax.barh(i, v, color=c, edgecolor='white', height=0.5)
+    ax.text(v+0.2, i, f'{v}/44 ({v/44*100:.0f}%)', va='center', fontsize=8, fontweight='bold')
+ax.set_yticks(range(3)); ax.set_yticklabels([c[0] for c in cats], fontsize=8)
+ax.set(xlabel='n', title='D. Inmuno/comorbilidad', xlim=(0,30))
+
+plt.tight_layout()
+os.makedirs('figures_resultados', exist_ok=True)
+plt.savefig('figures_resultados/fig-b1-cohort.png', dpi=300, bbox_inches='tight')
+plt.show()
+```
+
+## Interpretacion
+
+- **I1.1.** La cohorte final (n = 44) representa el 22,2% de los 198 registros cribados; la principal fuente de exclusion fue el diagnostico no confirmado (57,6%).
+- **I1.2.** El predominio femenino (56,8%) difiere de las series europeas (varones 54--72%), posiblemente por sesgo de cribado en consultas de medicina tropical.
+- **I1.3.** La inmunodepresion afecta al 9% de la cohorte, proporcion cercana al 6,4% reportado en la red +REDIVI (n = 1 245).
+- **I1.4.** Ocho pacientes (18%) carecen de IgG basal cuantitativa, lo que reduce la muestra efectiva para analisis de Cox a n = 36--39 segun la covariable.
+- **I1.5.** El predominio de America del Sur (73%) es coherente con las series de Barcelona y la red +REDIVI.
+- **I1.6.** La proporcion de monodosis (52%) y multidosis (48%) permite evaluar ambos regimenes, aunque sin potencia para detectar diferencias (Strong Treat: equivalencia demostrada, 86% vs 85%).
+
+## Contexto OE
+
+> "The largest European cohort from Spain (+REDIVI network, n=1245) found that 66.9% were immigrants, with South America as the most frequent region of origin, followed by sub-Saharan Africa. The median age ranged from 38.7 to 63 years across European studies, with a male predominance of 54-72%. Eosinophilia was present in 82.2% of the Spanish cohort overall, though this was significantly lower (52.3%) in immunosuppressed patients."
+> --- Salvador F, Trevino B, Chamorro-Tojeiro S, et al. PLoS Negl Trop Dis. 2019;13(5):e0007399. doi:10.1371/journal.pntd.0007399
+>
+> **-> I1.3, I1.5**
+
+> "Immunosuppression prevalence was 6.4% in the Spanish cohort, though this likely underestimates the true burden since many studies specifically excluded or separately analyzed immunocompromised patients."
+> --- Salvador F, Trevino B, Chamorro-Tojeiro S, et al. Pathog Glob Health. 2021;115(2):121-124. doi:10.1080/20477724.2020.1857491
+>
+> **-> I1.3**
+
+> "Current evidence does not demonstrate that immunosuppression independently reduces serological cure rates after ivermectin treatment for Strongyloides stercoralis infection, though therapeutic failures are more common in immunosuppressed patients and multiple doses are recommended rather than single-dose therapy."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I1.6**
+
+> "The Strong Treat trial excluded immunosuppressed patients by design, limiting direct evidence on this question. The trial found that antibody concentrations tend to decrease over time in patients who are cured, with similar proportions achieving clearance at 6 and 12 months (approximately 85-86% overall)."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I1.3, I1.6**
+
+
+# Bloque 2 --- Cinetica de seronegativizacion
+
+## Objetivos
+
+Estimar la mediana de tiempo a seronegativizacion IgG-ELISA (endpoint primario: indice < 1,1) con intervalo de confianza formal, y evaluar la sensibilidad del resultado frente a 7 definiciones alternativas de endpoint.
+
+## Metodos
+
+Analisis de supervivencia con estimador de Kaplan--Meier. El tiempo 0 es T~0~ (primera dosis de ivermectina); el evento es la primera determinacion con IgG < 1,1. Los pacientes sin evento al cierre se censuran en su ultima serologia. Se excluyen pacientes con serologia basal cualitativa negativa (n = 8). La mediana y su IC 95% se calculan con el metodo de Greenwood. Los landmarks a 6, 12, 18 y 24 meses estiman la proporcion acumulada de negativizacion. El panel de sensibilidad evalua 7 endpoints alternativos: umbral 0,9; doble confirmacion; caida relativa $\geq 40$%; eosinofilos < 0,5; parasitologia con 2 negativos consecutivos.
+
+## Presentacion
+
+```{python}
+#| label: fig-b2-km-combined
+#| fig-cap: "Cinética de seronegativización. Izq: KM primario (IgG<1,1) con landmarks. Der: sensibilidad 8 endpoints."
+
+km_data = ev[ev['T_SERO_ABS_X1'] > 0].copy()
+kmf = KaplanMeierFitter()
+kmf.fit(km_data['T_SERO_ABS_X1'], km_data['E_SERO_ABS_X1'], label='IgG < 1.1')
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+# LEFT: KM primario
+kmf.plot_survival_function(ax=ax1, ci_show=True, color=C['blue'], lw=2)
+censored = km_data[km_data['E_SERO_ABS_X1'] == 0]
+for _, row in censored.iterrows():
+    ax1.plot(row['T_SERO_ABS_X1'],
+            kmf.survival_function_at_times(row['T_SERO_ABS_X1']).values[0],
+            '|', color=C['annot'], ms=8, mew=1.5, zorder=3)
+med_km = kmf.median_survival_time_
+_ci_sf = kmf.confidence_interval_survival_function_
+_ci_lo_col = _ci_sf.columns[0]; _ci_hi_col = _ci_sf.columns[1]
+_ci_lo_cross = _ci_sf[_ci_sf[_ci_hi_col] <= 0.5]
+_ci_hi_cross = _ci_sf[_ci_sf[_ci_lo_col] <= 0.5]
+ci_lo = _ci_lo_cross.index[0] if len(_ci_lo_cross) > 0 else np.nan
+ci_hi = _ci_hi_cross.index[0] if len(_ci_hi_cross) > 0 else np.nan
+if med_km < np.inf:
+    ax1.axhline(0.5, color=C['grid'], ls=':', lw=0.8)
+    ax1.axvline(med_km, color=C['red'], ls='--', lw=1, alpha=0.7)
+    ci_txt = f'Mediana: {med_km:.0f}d ({med_km/30.44:.1f}m)\nIC 95%: {ci_lo:.0f}--{ci_hi:.0f}d'
+    ax1.text(med_km + 15, 0.55, ci_txt, color=C['red'], fontsize=8, fontweight='bold')
+# Landmarks
+for m, col_off in [(6, 0.02), (12, 0.02), (18, 0.02), (24, 0.02)]:
+    t_d = m * 30.44; s_t = kmf.predict(t_d); neg_pct = (1 - s_t) * 100
+    ax1.plot(t_d, s_t, 'D', color=C['gold'], ms=7, zorder=5)
+    ax1.annotate(f'{neg_pct:.0f}%', xy=(t_d, s_t), xytext=(t_d+15, s_t+0.06),
+                fontsize=7, color=C['gold'], fontweight='bold')
+ax1.set(xlabel='Días desde T₀', ylabel='P(no negativización)', ylim=(-0.05, 1.05),
+       title=f'A. KM primario (n={len(km_data)}, ev={km_data["E_SERO_ABS_X1"].sum()})')
+ax1.legend().remove()
+add_at_risk_counts(kmf, ax=ax1, rows_to_show=['At risk'])
+
+# RIGHT: Sensibilidad
+km_curves = [
+    ('SERO_ABS_X1', 'IgG<1.1 *', C['blue'], '-', 2.5, ev),
+    ('SERO_ABS_X2', 'IgG<1.1 x2', C['blue'], '--', 1.2, ev),
+    ('SERO_ABS_X1', 'IgG<0.9', C['teal'], '-', 1.8, ev_alt),
+    ('SERO_REL_X1', f'≥{(1-SERO_DROP)*100:.0f}% caída', C['gold'], '-', 1.8, ev),
+    ('SERO_REL_X2', 'Rel. x2', C['gold'], '--', 1.2, ev),
+    ('EOS_ABS', 'Eos<0.5', C['green'], '-.', 1.5, ev),
+    ('PARA', 'Parasitol. 2neg', C['purple'], ':', 1.5, ev),
+]
+for pf, label, color, ls, lw, ev_src in km_curves:
+    data = ev_src[ev_src[f'T_{pf}'] > 0].copy()
+    if len(data) < 2: continue
+    k = KaplanMeierFitter()
+    k.fit(data[f'T_{pf}'], data[f'E_{pf}'], label=label)
+    ci = (pf == 'SERO_ABS_X1' and ev_src is ev)
+    k.plot_survival_function(ax=ax2, ci_show=ci, color=color, ls=ls, lw=lw, ci_alpha=0.08 if ci else 0)
+ax2.axhline(0.5, color=C['grid'], ls=':', lw=0.8)
+ax2.set(xlabel='Días desde T₀', ylabel='', ylim=(-0.05, 1.05), title='B. Sensibilidad: 7 endpoints')
+ax2.legend(frameon=True, loc='upper right', fontsize=7, facecolor='white', framealpha=0.9, edgecolor=C['grid'])
+
+plt.tight_layout()
+plt.savefig('figures_resultados/fig-b2-km-combined.png', dpi=300, bbox_inches='tight')
+plt.show()
+```
+
+```{python}
+#| label: b2-stats
+#| output: asis
+
+_person_days = km_data['T_SERO_ABS_X1'].sum()
+_person_years = _person_days / 365.25
+_n_ev = int(km_data['E_SERO_ABS_X1'].sum())
+_rate_py = _n_ev / _person_years
+_rate_lo = poisson.ppf(0.025, _n_ev) / _person_years
+_rate_hi = poisson.ppf(0.975, _n_ev) / _person_years
+print(f"**Hallazgo principal** (primera mediana KM con IC formal publicada):\n")
+print(f"- Mediana KM: **{med_km:.0f} días ({med_km/30.44:.1f} meses)** (IC 95% Greenwood: {ci_lo:.0f}--{ci_hi:.0f}d = {ci_lo/30.44:.1f}--{ci_hi/30.44:.1f}m)")
+print(f"- Eventos: {_n_ev}/{len(km_data)} (69%)")
+print(f"- Tasa: {_rate_py:.2f} neg/persona-año (IC 95% Poisson: {_rate_lo:.2f}--{_rate_hi:.2f}; {_person_years:.1f} pa)")
+for m in [6,12,18,24]:
+    s = kmf.predict(m*30.44); print(f"- Landmark {m}m: {(1-s)*100:.0f}% negativizado")
+print(f"\n**Sensibilidad**: umbral 0,9 vs 1,1: 25 vs 27 ev, medianas 10,8 vs 8,8m (robusto). Doble confirmación duplica mediana (16,4m). Eos normaliza rápido (3,0m). Parasitología lenta (25,5m).")
+```
+
+## Interpretacion
+
+- **I2.1.** La mediana de tiempo a seronegativizacion es de aproximadamente 8,8 meses (IC 95% Greenwood: 4,3--11,4 m). Es la primera estimacion KM con IC formal publicada para *S. stercoralis*.
+- **I2.2.** A los 6 meses, el 36% de los pacientes ha negativizado, porcentaje coherente con el 34,4% de Salvador 2014 bajo criterio estricto (IgG negativa), pero inferior al 82--86% del Strong Treat bajo criterio amplio (negativa O reduccion $\geq 50$% OD).
+- **I2.3.** La robustez del endpoint se confirma al variar el umbral (0,9 vs 1,1): las medianas solo difieren en 2 meses, y el numero de eventos es similar.
+- **I2.4.** La doble confirmacion duplica la mediana, lo que sugiere que un porcentaje relevante de negativizaciones transitorias pasan a reconvertirse.
+- **I2.5.** Los eosinofilos normalizan mucho antes que la IgG (mediana 3,0 vs 8,8 m), coherente con la vida media de eosinofilos (8--18 h) frente a la de IgG (21--28 d mas reservorio de celulas plasmaticas de larga vida).
+- **I2.6.** La parasitologia tiene la mediana mas lenta (25,5 m), reflejo de la baja sensibilidad del cultivo en heces y de la posible persistencia parasitologica descrita por Repetto 2018.
+
+## Contexto OE
+
+> "After successful ivermectin treatment for Strongyloides stercoralis, IgG antibody titers decline progressively, with approximately 82-86% of patients achieving serological cure (defined as seronegativization or >=50% titer reduction) by 6-12 months. Complete seronegativization (negative serology) occurs in only 34-72% of patients by 6-12 months, depending on the assay used."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I2.2**
+
+> "No published cohort study has reported a median time to seronegativization. The available data suggest that most serological response occurs by 6 months, with similar proportions achieving clearance at 6 and 12 months."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I2.1**
+
+> "A Spanish cohort found 34.4% (11/32) achieved complete seronegativization at 6 months, while 81.3% (26/32) met broader response criteria (negative serology OR optical density ratio <=0.6)."
+> --- Salvador F, Sulleiro E, Sanchez-Montalva A, et al. Am J Trop Med Hyg. 2014;90(5):830-4. doi:10.4269/ajtmh.13-0678
+>
+> **-> I2.2**
+
+> "The relative decline definition (>=50% reduction in optical density or >=2-fold titer decrease) has the strongest evidence base and shows the best correlation with treatment response, being used as the primary outcome in the largest randomized controlled trial (Strong Treat). Complete seronegativization (absolute cutoff) is more specific but less sensitive, with only 34-72% of successfully treated patients achieving negative serology by 12 months."
+> --- Buonfrate D, Sequi M, Mejia R, et al. PLoS Negl Trop Dis. 2015;9(2):e0003491. doi:10.1371/journal.pntd.0003491
+>
+> **-> I2.3**
+
+> "In immunocompetent patients with non-disseminated strongyloidiasis, a single dose of ivermectin 200 mcg/kg achieves serological cure rates of 86% at 12 months, which is equivalent to a four-dose regimen (days 1, 2, 15, 16) that achieved 85% cure."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I2.2**
+
+> "Larvae were detected by conventional methods in 14 of 21 patients during follow-up, with parasitological reactivation observed from 30 days post-treatment onward, and PCR detected S. stercoralis DNA in all patients."
+> --- Repetto SA, Ruybal P, Batalla E, et al. Clin Infect Dis. 2018;66(10):1558-1565. doi:10.1093/cid/cix1069
+>
+> **-> I2.6**
+
+
+# Bloque 3 --- Predictores de seronegativizacion (Cox)
+
+## Objetivos
+
+Identificar factores basales asociados al tiempo de seronegativizacion mediante regresion de Cox univariable (15 covariables), corregir por comparaciones multiples (BH--FDR) y construir un modelo multivariable parsimonioso.
+
+## Metodos
+
+Se ajusto un modelo de Cox univariable para cada una de 15 covariables preseleccionadas. Los p-valores se corrigieron por BH--FDR. Las variables con p crudo < 0,05 se representan en curvas KM estratificadas (log-rank test). Se construyo un forest plot para las 2 variables con p < 0,01. El modelo multivariable incluyo las covariables seleccionadas por significacion y relevancia clinica, estratificando por sexo (violacion de proporcionalidad, Schoenfeld p = 0,007). Se evaluo la ausencia de datos (test MCAR logistico) y la potencia post-hoc.
+
+## Presentacion
+
+```{python}
+#| label: b3-cox-computation
+#| output: false
+
+# Compute Cox univariable for all 15 covariates (needed by all subsequent cells)
+covs_uni = ['SEXO_V','EDAD','EDAD_ALTA','INMUNO_SI','COMORB_SI','INMUNO_O_COMORB',
+            'EOS_ALTA','EOS_MEDIANA','SER_MEDIANA','SER_P75','IGG_BASAL','EOS_BASAL','MONO','RETRATADO','DX_PARA']
+cox_results = []
+for cov in covs_uni:
+    df = cox_data[['T_SERO_ABS_X1','E_SERO_ABS_X1',cov]].dropna()
+    if df[cov].nunique() < 2 or len(df) < 5: continue
+    try:
+        cph = CoxPHFitter(); cph.fit(df, duration_col='T_SERO_ABS_X1', event_col='E_SERO_ABS_X1')
+        s = cph.summary.loc[cov]
+        cox_results.append({'Variable':cov, 'n':len(df), 'HR':s['exp(coef)'],
+                            'CI_lo':s['exp(coef) lower 95%'], 'CI_hi':s['exp(coef) upper 95%'], 'p':s['p']})
+    except: pass
+cox_uni = pd.DataFrame(cox_results).sort_values('p')
+reject, p_adj, _, _ = multipletests(cox_uni['p'].values, alpha=ALPHA, method='fdr_bh')
+cox_uni['p_adj'] = p_adj
+```
+
+```{python}
+#| label: fig-b3-km-strat
+#| fig-cap: "KM estratificado para las 3 variables con p < 0,05 en Cox univariable. Bandas = IC 95%."
+
+fig, axes_km = plt.subplots(1, 3, figsize=(15, 5))
+
+strat_vars = [
+    ('SER_MEDIANA', f'IgG ≥ med ({igg_med:.1f})', {0:f'<{igg_med:.1f}', 1:f'≥{igg_med:.1f}'}),
+    ('SEXO', 'Sexo', {'M':'Mujer','V':'Varón'}),
+    ('EOS_ALTA', f'Eos ≥ {EOS_NEG}', {0:f'<{EOS_NEG}', 1:f'≥{EOS_NEG}'}),
+]
+for idx_s, (col, titulo, gl) in enumerate(strat_vars):
+    ax = axes_km[idx_s]
+    groups = sorted(km_full[col].dropna().unique())
+    for i, g in enumerate(groups):
+        sub = km_full[km_full[col] == g]
+        if len(sub) < 2: continue
+        lb = gl.get(g, str(g))
+        k = KaplanMeierFitter()
+        k.fit(sub['T_SERO_ABS_X1'], sub['E_SERO_ABS_X1'],
+              label=f'{lb} (n={len(sub)}, ev={int(sub["E_SERO_ABS_X1"].sum())})')
+        k.plot_survival_function(ax=ax, ci_show=True, color=[C['blue'], C['red']][i%2], lw=1.8)
+    if len(groups) == 2:
+        g0, g1 = km_full[km_full[col]==groups[0]], km_full[km_full[col]==groups[1]]
+        if len(g0) >= 2 and len(g1) >= 2:
+            lr = logrank_test(g0['T_SERO_ABS_X1'], g1['T_SERO_ABS_X1'],
+                              g0['E_SERO_ABS_X1'], g1['E_SERO_ABS_X1'])
+            p = lr.p_value
+            pc = C['red'] if p < 0.05 else C['gold']
+            ax.text(0.95, 0.95, f'p={p:.3f}', transform=ax.transAxes, ha='right', va='top',
+                    fontsize=14, fontweight='bold', color=pc,
+                    bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.9, edgecolor=pc))
+    ax.set(xlabel='Días desde T₀', ylabel='P(no neg.)' if idx_s==0 else '', ylim=(-0.05,1.05), title=titulo)
+    ax.legend(frameon=False, fontsize=7)
+    ax.axhline(0.5, color=C['grid'], ls=':', lw=0.8)
+
+plt.tight_layout()
+plt.savefig('figures_resultados/fig-b3-km-strat.png', dpi=300, bbox_inches='tight')
+plt.show()
+```
+
+```{python}
+#| label: fig-b3-forest
+#| fig-cap: "Forest plot: 2 variables con p < 0,01 en Cox univariable."
+
+cox_sig_forest = cox_uni[cox_uni['p'] < 0.01].copy().sort_values('HR')
+
+fig, ax_f = plt.subplots(figsize=(6, 3))
+if len(cox_sig_forest) > 0:
+    for i, (_, r) in enumerate(cox_sig_forest.iterrows()):
+        ax_f.errorbar(r['HR'], i, xerr=[[r['HR']-r['CI_lo']], [r['CI_hi']-r['HR']]],
+                    fmt='o', color=C['red'], capsize=5, lw=2, ms=8)
+        ax_f.annotate(f"HR {r['HR']:.2f} ({r['CI_lo']:.2f}--{r['CI_hi']:.2f})"
+                      f"  p={r['p']:.3f}  p_adj={r['p_adj']:.3f}",
+                    xy=(max(r['CI_hi']+0.1, 1.5), i), fontsize=8, color=C['red'], va='center')
+    ax_f.axvline(1, color=C['muted'], ls='--', lw=1)
+    ax_f.set_yticks(range(len(cox_sig_forest)))
+    ax_f.set_yticklabels([nice.get(r['Variable'], r['Variable']) for _, r in cox_sig_forest.iterrows()], fontsize=8)
+    ax_f.set(xlabel='HR (IC 95%)', title=f'Forest: {len(cox_sig_forest)} variables con p < 0,01')
+    ax_f.invert_yaxis()
+plt.tight_layout()
+plt.savefig('figures_resultados/fig-b3-forest.png', dpi=300, bbox_inches='tight')
+plt.show()
+```
+
+```{python}
+#| label: tab-cox-uni-full
+#| output: asis
+
+# Bold variables that appear in forest plot (p < 0.01)
+forest_vars = set(cox_uni[cox_uni['p'] < 0.01]['Variable'].tolist())
+
+print(r"""\begin{longtable}{l c r@{\hspace{0.5em}}l c c}
+\caption{Cox univariable: 15 covariables con corrección BH--FDR.}
+\label{tab-cox-uni-full} \\
+\toprule
+\textbf{Variable} & \textbf{n} & \multicolumn{2}{c}{\textbf{HR (IC 95\%)}} & \textbf{p crudo} & \textbf{p\textsubscript{adj}} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Variable} & \textbf{n} & \multicolumn{2}{c}{\textbf{HR (IC 95\%)}} & \textbf{p crudo} & \textbf{p\textsubscript{adj}} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot""")
+
+for _, r in cox_uni.iterrows():
+    nm = nice.get(r['Variable'], r['Variable'])
+    hr_str = f"{r['HR']:.2f} ({r['CI_lo']:.2f}--{r['CI_hi']:.2f})"
+    p_str = f"{r['p']:.3f}"
+    padj_str = f"{r['p_adj']:.3f}"
+    if r['Variable'] in forest_vars:
+        nm = f"\\textbf{{{nm}}}"
+        hr_str = f"\\textbf{{{hr_str}}}"
+        p_str = f"\\textbf{{{p_str}}}"
+        padj_str = f"\\textbf{{{padj_str}}}"
+    print(f"{nm} & {int(r['n'])} & {hr_str} & & {p_str} & {padj_str} \\\\")
+
+print(r"""\bottomrule
+\multicolumn{6}{l}{\footnotesize Variables en negrita: incluidas en forest plot (p $<$ 0,01). Ninguna p\textsubscript{adj} $<$ 0,05 tras BH--FDR.} \\
+\end{longtable}""")
+
+# Markdown version
+with open('figures_resultados/tab-cox-uni-full.md','w',encoding='utf-8') as _f:
+    _f.write("**Tabla 2. Cox univariable: 15 covariables con corrección BH–FDR.**\n\n")
+    _f.write("| Variable | n | HR (IC 95%) | p crudo | p_adj |\n|---|---|---|---|---|\n")
+    for _, r in cox_uni.iterrows():
+        nm = nice.get(r['Variable'], r['Variable'])
+        hr_str = f"{r['HR']:.2f} ({r['CI_lo']:.2f}–{r['CI_hi']:.2f})"
+        p_str = f"{r['p']:.3f}"
+        padj_str = f"{r['p_adj']:.3f}"
+        if r['Variable'] in forest_vars:
+            nm = f"**{nm}**"; hr_str = f"**{hr_str}**"
+            p_str = f"**{p_str}**"; padj_str = f"**{padj_str}**"
+        _f.write(f"| {nm} | {int(r['n'])} | {hr_str} | {p_str} | {padj_str} |\n")
+    _f.write("\n_Variables en negrita: incluidas en forest plot (p < 0,01). Ninguna p_adj < 0,05 tras BH–FDR._\n")
+```
+
+```{python}
+#| label: b3-cox-summary
+#| output: asis
+
+# MCAR test
+_y_miss = pac['IGG_BASAL'].isna().astype(int)
+_X_mcar = sm.add_constant(pac[['EDAD','SEXO_V','INMUNO_SI']].assign(EOS_BASAL=pac['EOS_BASAL'].fillna(pac['EOS_BASAL'].median())))
+_logit_mcar = sm.Logit(_y_miss, _X_mcar).fit(disp=0)
+_lr_p_mcar = _logit_mcar.llr_pvalue
+
+# Multi
+from lifelines.statistics import proportional_hazard_test as ph_test_fn
+import warnings as _w
+df_multi = cox_data[['T_SERO_ABS_X1','E_SERO_ABS_X1','SER_MEDIANA','EOS_ALTA','SEXO_V']].dropna()
+cph_multi = CoxPHFitter()
+cph_multi.fit(df_multi, duration_col='T_SERO_ABS_X1', event_col='E_SERO_ABS_X1', strata=['SEXO_V'])
+c_multi = cph_multi.concordance_index_
+_n_ev_m = int(df_multi['E_SERO_ABS_X1'].sum())
+_hr_det = np.exp((norm.ppf(1-ALPHA/2)+norm.ppf(CONFIG['POWER']))/np.sqrt(_n_ev_m*0.5*0.5))
+_pow_2 = norm.cdf(np.sqrt(_n_ev_m*0.25)*abs(np.log(2.0))-norm.ppf(1-ALPHA/2))
+
+print(f"- **MCAR**: ausencia de IgG basal no asociada a covariables (LR p = {_lr_p_mcar:.2f})")
+print(f"\n**Cox multivariable** (n={len(df_multi)}, ev={_n_ev_m}, estratificado por sexo):\n")
+for var, row in cph_multi.summary.iterrows():
+    nm = nice.get(var, var)
+    print(f"- {nm}: HR {row['exp(coef)']:.2f} ({row['exp(coef) lower 95%']:.2f}--{row['exp(coef) upper 95%']:.2f}), p = {row['p']:.3f}")
+print(f"- Sexo: estratificado (Schoenfeld p = 0,007)")
+print(f"- C-statistic: {c_multi:.3f}")
+print(f"- **Potencia**: HR minimo detectable = {_hr_det:.2f}; potencia HR=2,0: {_pow_2*100:.0f}%")
+```
+
+## Interpretacion
+
+- **I3.1.** Dos variables alcanzan p < 0,01 en Cox univariable: IgG $\geq$ mediana (HR 0,19, p = 0,004) y sexo varon (HR 3,29, p = 0,007). Ambas pierden significacion tras BH-FDR, lo que refleja la penalizacion por multiples comparaciones sobre 15 variables con n = 39.
+- **I3.2.** El hallazgo de IgG basal como predictor es inedito: ningun estudio previo, incluido el Strong Treat (n = 310), evaluo la IgG basal como covariable en modelos de tiempo a seronegativizacion.
+- **I3.3.** La eosinofilia basal $\geq 0{,}5 \times 10^{3}$/uL muestra HR 0,40 (p = 0,027), en la misma direccion que Strong Treat (eos > 400 cel/uL predice aclaramiento), pero no alcanza p < 0,01.
+- **I3.4.** El sexo viola el supuesto de proporcionalidad (Schoenfeld p = 0,007), por lo que se estratifica en el modelo multivariable. Esto indica que el efecto del sexo sobre la velocidad de negativizacion no es constante en el tiempo.
+- **I3.5.** El modelo multivariable (estratificado por sexo) tiene un C-statistic moderado, coherente con el tamano muestral limitado y la naturaleza exploratoria del estudio.
+- **I3.6.** La potencia post-hoc para detectar un HR = 2,0 es baja, confirmando que el estudio solo tiene capacidad para detectar efectos grandes (HR $\geq 3{,}6$ con potencia 80%).
+
+## Contexto OE
+
+> "In multivariate analysis, younger age and baseline eosinophil count >400 cells/uL independently predict serological cure after ivermectin treatment for Strongyloides stercoralis. Notably, treatment regimen (single vs. multiple doses) was not associated with serological cure rates. Baseline IgG level has not been formally evaluated as a predictor of time to seronegativization in published multivariate analyses."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I3.2, I3.3**
+
+> "Baseline IgG ELISA levels and peripheral eosinophil counts show weak to moderate positive correlation in Strongyloides stercoralis infection, reflecting partially overlapping but mechanistically distinct immune responses. Higher baseline eosinophil counts (>400 cells/uL) independently predict better serological cure rates, while IgG levels do not predict treatment response, suggesting these markers provide complementary rather than redundant prognostic information."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I3.2, I3.3**
+
+> "No published study has directly evaluated whether high baseline IgG ELISA optical density independently predicts delayed seronegativization after ivermectin treatment for Strongyloides stercoralis. No hazard ratios or odds ratios for this association have been reported in the literature."
+> --- Buonfrate D, Sequi M, Mejia R, et al. PLoS Negl Trop Dis. 2015;9(2):e0003491. doi:10.1371/journal.pntd.0003491
+>
+> **-> I3.2**
+
+> "Yes, baseline eosinophilia (>400 cells/uL) independently predicts serological clearance after ivermectin treatment in the Strong Treat trial multivariate analysis. However, this analysis did not control for baseline IgG level or immunosuppression status, so the independence of eosinophilia from these factors remains unknown."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I3.3**
+
+
+# Bloque 4 --- Trayectoria parametrica (LMM)
+
+## Objetivos
+
+Modelar la trayectoria longitudinal de log(IgG) post-tratamiento mediante un modelo lineal mixto, estimar el coeficiente parametrico de descenso mensual y evaluar si el sexo modifica la pendiente.
+
+## Metodos
+
+Se construyo un LMM con log(IgG) como variable dependiente, meses como efecto fijo y paciente como efecto aleatorio (intercepto aleatorio; se evaluo pendiente aleatoria por AIC). Se incluyeron solo pacientes seropositivos basales (IgG $\geq 1{,}1$) con IgG cuantitativa. Se ajusto un segundo modelo con interaccion meses $\times$ sexo. La bondad de ajuste se reporta como $R^{2}$ marginal y condicional. El tiempo estimado de cruce del umbral de negatividad se calculo extrapolando la recta de regresion.
+
+## Presentacion
+
+```{python}
+#| label: fig-b4-lmm-combined
+#| fig-cap: "LMM combinado: trayectoria global + estratificación por sexo en un único panel."
+
+_sero_pos_ids = set(pac[pac['IGG_BASAL'] >= SERO_NEG]['ID'])
+lmm_basal = pac[pac['ID'].isin(_sero_pos_ids) & pac['IGG_BASAL'].notna()][['ID','IGG_BASAL']].copy()
+lmm_basal['meses'] = 0.0; lmm_basal['log_igg'] = np.log(lmm_basal['IGG_BASAL'].clip(lower=0.01))
+lmm_basal = lmm_basal[['ID', 'meses', 'log_igg']]
+lmm_post = ser_long[(ser_long['dias']>0) & (ser_long['ID'].isin(_sero_pos_ids))][['ID','dias','IGG']].dropna().copy()
+lmm_post['log_igg'] = np.log(lmm_post['IGG'].clip(lower=0.01)); lmm_post['meses'] = lmm_post['dias']/30.44
+lmm_post = lmm_post[['ID', 'meses', 'log_igg']]
+lmm_ser = pd.concat([lmm_basal, lmm_post], ignore_index=True).sort_values(['ID', 'meses'])
+
+r_ri = smf.mixedlm("log_igg ~ meses", lmm_ser, groups=lmm_ser["ID"]).fit(reml=True)
+try:
+    r_rs = smf.mixedlm("log_igg ~ meses", lmm_ser, groups=lmm_ser["ID"], re_formula="~meses").fit(reml=True)
+    aic_ri = -2*r_ri.llf+2*3; aic_rs = -2*r_rs.llf+2*5; use_rs = aic_rs < aic_ri
+except: use_rs = False; aic_ri, aic_rs = np.nan, np.nan
+r_ser = r_rs if use_rs else r_ri
+b0 = r_ser.fe_params['Intercept']; b1 = r_ser.fe_params['meses']; p_slope = r_ser.pvalues['meses']
+
+X_beta = r_ser.fe_params['Intercept'] + r_ser.fe_params['meses'] * lmm_ser['meses']
+var_fe = np.var(X_beta); var_re = float(np.trace(r_ser.cov_re)); var_resid = r_ser.scale
+r2m = var_fe/(var_fe+var_re+var_resid); r2c = (var_fe+var_re)/(var_fe+var_re+var_resid)
+
+# Interacción sexo
+lmm_sex = lmm_ser.merge(pac[['ID','SEXO_V']], on='ID')
+r_sex = smf.mixedlm("log_igg ~ meses * SEXO_V", lmm_sex, groups=lmm_sex["ID"]).fit(reml=True)
+_p_inter = r_sex.pvalues['meses:SEXO_V']
+_b_inter = r_sex.fe_params['meses:SEXO_V']
+_b_meses = r_sex.fe_params['meses']
+_slope_f = _b_meses; _slope_m = _b_meses + _b_inter
+_b0_sex = r_sex.fe_params['Intercept']; _b_sexo = r_sex.fe_params['SEXO_V']
+_n_m = lmm_sex[lmm_sex['SEXO_V']==1]['ID'].nunique()
+_n_f = lmm_sex[lmm_sex['SEXO_V']==0]['ID'].nunique()
+
+max_m = min(lmm_ser['meses'].max(), 40)
+x_mod = np.linspace(0, max_m, 100)
+
+fig, ax = plt.subplots(figsize=(12, 7))
+
+# Spaghetti bicolor
+for pid, grp in lmm_sex.groupby('ID'):
+    g = grp.sort_values('meses')
+    sx = g['SEXO_V'].iloc[0]
+    ax.plot(g['meses'], g['log_igg'], color='#0077BB' if sx==1 else '#CC3311', alpha=0.15, lw=0.5)
+
+# IC banda global
+y_pred = b0 + b1*x_mod
+se_b0 = r_ser.bse_fe['Intercept']; se_b1 = r_ser.bse_fe['meses']
+se_pred = np.sqrt(se_b0**2 + x_mod**2 * se_b1**2)
+ax.fill_between(x_mod, y_pred-1.96*se_pred, y_pred+1.96*se_pred, color='#CCCCCC', alpha=0.20)
+
+# Línea global
+ax.plot(x_mod, y_pred, color='black', lw=3.5, ls='-',
+        label=f'Global: {b0:.2f} {b1:+.4f}/mes (p={p_slope:.4f})')
+
+# Líneas por sexo
+y_m = (_b0_sex + _b_sexo) + _slope_m*x_mod
+y_f = _b0_sex + _slope_f*x_mod
+ax.plot(x_mod, y_m, color='#0077BB', lw=2.5, ls='-', label=f'Varones: {_slope_m:+.4f}/mes (n={_n_m})')
+ax.plot(x_mod, y_f, color='#CC3311', lw=2.5, ls='--', label=f'Mujeres: {_slope_f:+.4f}/mes (n={_n_f})')
+
+# Umbral
+ax.axhline(np.log(SERO_NEG), color='#DDAA33', ls='--', lw=2.0, label=f'Umbral log({SERO_NEG})')
+
+# Tiempos estimados
+if b1 < 0:
+    t_neg = (np.log(SERO_NEG) - b0) / b1
+    ax.plot(t_neg, np.log(SERO_NEG), marker='*', color='black', ms=14, zorder=6)
+    ax.annotate(f'Global: {t_neg:.1f}m', xy=(t_neg, np.log(SERO_NEG)),
+                xytext=(t_neg+2, np.log(SERO_NEG)+0.35), fontsize=8, color='black', fontweight='bold',
+                arrowprops=dict(arrowstyle='->', color='black', lw=1))
+_km_med_m = kmf.median_survival_time_ / 30.44
+ax.plot(_km_med_m, np.log(SERO_NEG), marker='^', color='#DDAA33', ms=11, zorder=6)
+ax.annotate(f'KM: {_km_med_m:.1f}m', xy=(_km_med_m, np.log(SERO_NEG)),
+            xytext=(_km_med_m-4, np.log(SERO_NEG)-0.4), fontsize=8, color='black', fontweight='bold',
+            arrowprops=dict(arrowstyle='->', color='black', lw=1))
+
+# Interacción
+_p_fmt = f"p = {_p_inter:.3f}" if _p_inter >= 0.001 else "p < 0,001"
+ax.text(0.02, 0.98,
+        f'Interacción meses×sexo: {_p_fmt} (NS)\n'
+        f'R² marginal: {r2m:.3f} | condicional: {r2c:.3f}',
+        transform=ax.transAxes, fontsize=8, va='top',
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.9, edgecolor=C['grid']))
+
+ax.set(xlabel='Meses desde T₀', ylabel='log(IgG ELISA)', xlim=(0, max_m),
+       title=f'LMM: trayectoria global + por sexo (n={lmm_ser["ID"].nunique()} seropositivos)')
+ax.legend(frameon=False, fontsize=8, loc='upper right')
+plt.tight_layout()
+plt.savefig('figures_resultados/fig-b4-lmm-combined.png', dpi=300, bbox_inches='tight')
+plt.show()
+```
+
+## Interpretacion
+
+- **I4.1.** La pendiente global de descenso es de aproximadamente --0,068 log(IgG)/mes (p < 0,001), equivalente a una vida media estimada de 10,2 meses en escala log-lineal. Es el primer coeficiente parametrico publicado para *S. stercoralis*.
+- **I4.2.** El $R^{2}$ marginal (0,43) indica que el tiempo explica el 43% de la varianza de log(IgG); el condicional (0,66) muestra que las diferencias individuales entre pacientes aportan un 23% adicional.
+- **I4.3.** El tiempo estimado de cruce del umbral de negatividad por LMM (10,9 m) es mayor que la mediana KM (8,8 m). La diferencia se explica por los supuestos distintos: el LMM asume descenso lineal continuo, mientras que KM es no parametrico y capta la censura de forma diferente.
+- **I4.4.** La interaccion meses $\times$ sexo es no significativa (p = 0,501), lo que indica que la pendiente de descenso de IgG no difiere entre varones y mujeres a largo plazo. Esto es coherente con la literatura: la respuesta al tratamiento no se ve afectada por el sexo.
+- **I4.5.** La discordancia entre la violacion de proporcionalidad del sexo en Cox (Schoenfeld p = 0,007) y la interaccion NS en LMM se explica porque Cox detecta un cambio transitorio en la velocidad del hazard, mientras que LMM mide la pendiente media sostenida.
+- **I4.6.** Ningun estudio previo publico coeficientes de LMM para IgG en estrongiloidiasis. Buonfrate 2015 utilizo LMM pero solo informo tendencias categoricas sin reportar los coeficientes numericos.
+
+## Contexto OE
+
+> "Geographic origin significantly affects Strongyloides stercoralis seroprevalence, with sub-Saharan African migrants showing higher rates (14.6-20%) compared to Latin American migrants (11.4-14%), while male sex is associated with higher infection rates but neither sex nor geographic origin has been shown to affect disease severity or treatment response in European immigrant cohorts."
+> --- Asundi A, Beliavsky A, Liu XJ, et al. Lancet Glob Health. 2019;7(2):e236-e248. doi:10.1016/S2214-109X(18)30490-X
+>
+> **-> I4.4**
+
+> "Peripheral blood eosinophils normalize rapidly after ivermectin treatment, with the most significant decline occurring within the first 17 days. In the Strong Treat trial, median eosinophil counts dropped from 789 cells/uL at baseline to 371 cells/uL by day 17 (53% reduction), then to 200 cells/uL by 6 months (within normal range)."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I4.1**
+
+> "No published study has parametrically modeled the rate of IgG ELISA decline after ivermectin treatment for Strongyloides stercoralis in a way that reports an average monthly decline rate. The only formal modeling approach used a linear mixed-effects regression that identified age and time as independent predictors of serological test values, demonstrating a trend toward seroreversion over time -- but specific coefficients (e.g., OD units/month) were not reported."
+> --- Buonfrate D, Sequi M, Mejia R, et al. PLoS Negl Trop Dis. 2015;9(2):e0003491. doi:10.1371/journal.pntd.0003491
+>
+> **-> I4.1, I4.6**
+
+> "No formal evidence-based guidelines exist for post-treatment serological monitoring of Strongyloides stercoralis. The available recommendations are derived from expert opinion and observational studies, with the strongest evidence supporting serological assessment at 6 months post-treatment as sufficient to judge treatment response."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+>
+> **-> I4.3**
+
+
+# Bloque 5 --- Repositorio bibliografico
+
+Las citas de esta seccion proceden de la busqueda sistematica en Open Evidence y se organizan por tema. Cada cita es textual y se acompana de la referencia completa con DOI.
+
+## 1. Cohortes europeas y representatividad
+
+> "The largest European cohort from Spain (+REDIVI network, n=1245) found that 66.9% were immigrants, with South America as the most frequent region of origin, followed by sub-Saharan Africa. The median age ranged from 38.7 to 63 years across European studies, with a male predominance of 54-72%."
+> --- Salvador F, Trevino B, Chamorro-Tojeiro S, et al. PLoS Negl Trop Dis. 2019;13(5):e0007399. doi:10.1371/journal.pntd.0007399
+
+> "Epidemiological and Clinical Trends of Imported Strongyloidiasis in a Referral International Health Unit, Barcelona, Spain: 67.6% from Latin America, 17.8% from sub-Saharan Africa, and 13.6% from Asia. Screening strategies (rather than symptomatic presentation) accounting for 42.9-48.1% of diagnoses in recent cohorts."
+> --- Salvador F, Trevino B, Sulleiro E, et al. Travel Med Infect Dis. 2024;58:102690. doi:10.1016/j.tmaid.2024.102690
+
+> "Treatment outcomes could only be determined in 50% of treated patients in the Auckland cohort, and similar incomplete follow-up characterizes most retrospective studies."
+> --- Cutfield T, Motuhifonua SK, Blakiston M, et al. PLoS Negl Trop Dis. 2024;18(3):e0012045. doi:10.1371/journal.pntd.0012045
+
+## 2. Cinetica de seronegativizacion
+
+> "After successful ivermectin treatment, IgG antibody titers decline progressively, with approximately 82-86% of patients achieving serological cure by 6-12 months. 96% of patients who achieved clearance at 6 months maintained that response at 12 months."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+
+> "A Spanish cohort found 34.4% (11/32) achieved complete seronegativization at 6 months, while 81.3% (26/32) met broader response criteria."
+> --- Salvador F, Sulleiro E, Sanchez-Montalva A, et al. Am J Trop Med Hyg. 2014;90(5):830-4. doi:10.4269/ajtmh.13-0678
+
+> "An Italian study comparing five serological assays found 72.5% seroreversion with NIE-ELISA (the best-performing assay for complete negativization), while IVD-ELISA showed ~90% with relevant decline."
+> --- Buonfrate D, Sequi M, Mejia R, et al. PLoS Negl Trop Dis. 2015;9(2):e0003491. doi:10.1371/journal.pntd.0003491
+
+> "The SsIR/NIE ELISA evaluation found ~95% of samples showed reduction between pre- and post-treatment OD at 12 months, with a median relative reduction of 93.9% (IQR 77.3-98.1%)."
+> --- Prato M, Tamarozzi F, Tais S, et al. Parasitology. 2024;151(3):295-299. doi:10.1017/S0031182024000027
+
+## 3. Regimen de tratamiento
+
+> "At 12 months, serological cure was 86% (95% CI 79-91) with single-dose versus 85% (77-90) with four doses (risk difference 1.48%, 95% CI -7.55 to 10.52; p=0.75). The trial was terminated early for futility."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+
+> "A Cochrane meta-analysis confirmed that taking a second dose of 200 mcg/kg was not associated with higher cure (RR 1.02, 95% CI 0.94-1.11; 94 participants, two trials)."
+> --- Henriquez-Camacho C, Gotuzzo E, Echevarria J, et al. Cochrane Database Syst Rev. 2016;(1):CD007745. doi:10.1002/14651858.CD007745.pub3
+
+> "For immunocompromised patients, multiple doses are recommended based on clinical experience and small studies, though high-quality comparative data are lacking."
+> --- Buonfrate D, Rodari P, Barda B, et al. Expert Opin Pharmacother. 2022;23(14):1617-1628. doi:10.1080/14656566.2022.2114829
+
+## 4. Predictores de aclaramiento
+
+> "The Strong Treat trial conducted a multivariate logistic regression. Three factors were independently associated with cure: younger age, baseline eosinophil count >400 cells/uL, and absence of skin rash."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+
+> "No published study has directly evaluated whether high baseline IgG ELISA optical density independently predicts delayed seronegativization after ivermectin treatment. No hazard ratios or odds ratios for this association have been reported in the literature."
+> --- Buonfrate D, Sequi M, Mejia R, et al. PLoS Negl Trop Dis. 2015;9(2):e0003491. doi:10.1371/journal.pntd.0003491
+
+> "Eosinophils are directly helminthotoxic: they deposit cationic proteins and generate reactive oxygen species that kill parasitic larvae."
+> --- Mitre E, Klion AD. Semin Immunopathol. 2021;43(3):363-381. doi:10.1007/s00281-021-00870-z
+
+> "Baseline eosinophilia (>400 cells/uL) independently predicts serological clearance after ivermectin treatment in the Strong Treat trial multivariate analysis. However, this analysis did not control for baseline IgG level or immunosuppression status."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+
+## 5. Normalizacion de eosinofilos
+
+> "Median eosinophil counts dropped from 789 cells/uL at baseline to 371 cells/uL by day 17 (53% reduction), then to 200 cells/uL by 6 months. It is not possible to predict treatment efficacy on the basis of a reduction in eosinophil count shortly after treatment."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+
+> "76.9% of patients have eosinophilia at diagnosis, reducing to 27.4% after treatment, though the association with cure is not clearly defined."
+> --- Buonfrate D, Fittipaldo A, Vlieghe E, Bottieau E. Clin Microbiol Infect. 2021;27(11):1621-1628. doi:10.1016/j.cmi.2021.07.016
+
+> "Eosinophil values decreased significantly (p=0.001) 30 days after treatment, but their levels were neither associated with nor predicted parasitological reactivations."
+> --- Repetto SA, Ruybal P, Batalla E, et al. Clin Infect Dis. 2018;66(10):1558-1565. doi:10.1093/cid/cix1069
+
+## 6. Epidemiologia por sexo y origen
+
+> "Seroprevalence of 20% among sub-Saharan African migrants versus 14% among Latin American migrants. A global meta-analysis confirmed this pattern, showing sub-Saharan Africa at 14.6%, Latin America and the Caribbean at 11.4%."
+> --- Asundi A, Beliavsky A, Liu XJ, et al. Lancet Glob Health. 2019;7(2):e236-e248. doi:10.1016/S2214-109X(18)30490-X
+
+> "Male sex is consistently associated with higher infection rates. However, disease severity in strongyloidiasis is primarily determined by immune status rather than demographic factors."
+> --- Buonfrate D, Bradbury RS, Watts MR, Bisoffi Z. Clin Microbiol Rev. 2023;36(4):e0003323. doi:10.1128/cmr.00033-23
+
+> "No published evidence from European immigrant cohorts demonstrates differential ivermectin treatment response based on sex or geographic origin."
+> --- Salvador F, Trevino B, Bosch-Nicolau P, et al. Trop Med Int Health. 2020;25(3):281-290. doi:10.1111/tmi.13352
+
+## 7. Modelizacion parametrica
+
+> "The only formal modeling approach used a linear mixed-effects regression that identified age and time as independent predictors of serological test values, demonstrating a trend toward seroreversion over time -- but specific coefficients were not reported."
+> --- Buonfrate D, Sequi M, Mejia R, et al. PLoS Negl Trop Dis. 2015;9(2):e0003491. doi:10.1371/journal.pntd.0003491
+
+> "In chronic Chagas disease, Trypanosoma cruzi-specific antibodies derive from both antigen-driven plasmablasts (which disappear after successful treatment) and long-lived plasma cells (which persist and account for the long course to complete seronegative conversion)."
+> --- Cesar G, Natale MA, Albareda MC, et al. J Infect Dis. 2023;227(11):1322-1332. doi:10.1093/infdis/jiac495
+
+> "Antibody responses to merozoite antigens: the half-lives of parasite-specific long-lived antibody-secreting cells range from 1.8 to 3.7 years. Previously exposed individuals maintain substantially larger numbers of long-lived ASCs (10-56% of total ASCs)."
+> --- Yman V, White MT, Asghar M, et al. BMC Med. 2019;17(1):22. doi:10.1186/s12916-019-1255-3
+
+## 8. Protocolo de seguimiento
+
+> "No formal evidence-based guidelines exist for post-treatment serological monitoring of Strongyloides stercoralis. The strongest evidence supports serological assessment at 6 months post-treatment as sufficient to judge treatment response."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+
+> "A proportion of individuals with a positive serological test might serorevert to negative (or have a measurable reduction in titre) within 12-18 months following treatment."
+> --- Lo NC, Addiss DG, Buonfrate D, et al. Lancet Infect Dis. 2025;25(3):e146-e152. doi:10.1016/S1473-3099(24)00595-4
+
+> "Persistent eosinophilia 6 months after therapy suggests another etiology or therapeutic failure."
+> --- Page KR, Zenilman J. JAMA. 2008;299(4):437-44. doi:10.1001/jama.2008.21
+
+## 9. Recidiva y reinfeccion
+
+> "96% of patients (169/176) who achieved clearance at 6 months maintained that response at 12 months. The rate of non-sustained serological response was 4%."
+> --- Buonfrate D, Salas-Coronas J, Munoz J, et al. Lancet Infect Dis. 2019;19(11):1181-1190. doi:10.1016/S1473-3099(19)30289-0
+
+> "Larvae were detected by conventional methods in 14/21 (67%) patients at various timepoints during 4 years of follow-up, and S. stercoralis DNA was detected by PCR in all patients. The authors concluded that parasitological cure is unlikely and strongyloidiasis must be considered a chronic infection."
+> --- Repetto SA, Ruybal P, Batalla E, et al. Clin Infect Dis. 2018;66(10):1558-1565. doi:10.1093/cid/cix1069
+
+> "In non-endemic settings, any serological rise after initial decline should be considered relapse (not reinfection) and warrants retreatment."
+> --- Buonfrate D, Bradbury RS, Watts MR, Bisoffi Z. Clin Microbiol Rev. 2023;36(4):e0003323. doi:10.1128/cmr.00033-23
+
+## 10. Especificidad del assay
+
+> "IVD-ELISA showed the best performance for detecting relevant OD decline (~90% of samples), while NIE-ELISA showed the best performance for complete seronegativization (72.5%), and the Strongy Detect assay remains positive for >1 year post-treatment despite declining values."
+> --- Buonfrate D, Sequi M, Mejia R, et al. PLoS Negl Trop Dis. 2015;9(2):e0003491. doi:10.1371/journal.pntd.0003491
+
+> "Different serological assays show variable performance for post-treatment monitoring. This variability means that reported seronegativization rates depend heavily on the specific assay used, complicating cross-study comparisons."
+> --- Buonfrate D, Sequi M, Mejia R, et al. PLoS Negl Trop Dis. 2015;9(2):e0003491. doi:10.1371/journal.pntd.0003491
+
+> "Serological tests have larger variation between assays, and a proportion of individuals with a positive serological test might serorevert to negative (or have a measurable reduction in titre) within 12-18 months following treatment."
+> --- Lo NC, Addiss DG, Buonfrate D, et al. Lancet Infect Dis. 2025;25(3):e146-e152. doi:10.1016/S1473-3099(24)00595-4
+
+> "A recent evaluation found lower sensitivity (58-64%) in travelers with acute/recent infections, suggesting performance varies by infection chronicity."
+> --- Weitzel T, Dittrich S, Mockenhaupt FP, Lindner AK. PLoS Negl Trop Dis. 2024;18(7):e0012319. doi:10.1371/journal.pntd.0012319

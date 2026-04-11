@@ -3,8 +3,8 @@ Item,Section,Recommendation,Page/Section,Notes
 1b,Title and abstract,Provide in the abstract an informative and balanced summary of what was done and what was found,Abstract,Structured abstract (250 words)
 2,Introduction - Background/rationale,Explain the scientific background and rationale for the investigation being reported,Introducción §1,S. stercoralis serology monitoring gap
 3,Introduction - Objectives,State specific objectives including any prespecified hypotheses,Introducción §1,"Primary: time to seronegativization; Secondary: predictors"
-4,Methods - Study design,Present key elements of study design early in the paper,Métodos §2.1,Retrospective cohort 2004-2024
-5,Methods - Setting,"Describe the setting, locations, and relevant dates including periods of recruitment, exposure, follow-up, and data collection",Métodos §2.1,"Hospital Clínic Barcelona, 2004-2024"
+4,Methods - Study design,Present key elements of study design early in the paper,Métodos §2.1,Retrospective cohort 2017-2025
+5,Methods - Setting,"Describe the setting, locations, and relevant dates including periods of recruitment, exposure, follow-up, and data collection",Métodos §2.1,"Hospital Universitario de Guadalajara (HCDGU), CNM 2017-2023 + HCDGU 2020-2025"
 6a,Methods - Participants,"(Cohort) Give the eligibility criteria, and the sources and methods of selection of participants",Métodos §2.1 + STROBE flowchart,Inclusion/exclusion criteria + Fig 1
 6b,Methods - Participants,(Cohort) For matched studies give matching criteria and number of exposed and unexposed,N/A,Not a matched study
 7,Methods - Variables,"Clearly define all outcomes, exposures, predictors, potential confounders, and effect modifiers",Métodos §2.2-2.3,"Seronegativization (4 definitions), 16 covariates"
@@ -14,7 +14,7 @@ Item,Section,Recommendation,Page/Section,Notes
 11,Methods - Quantitative variables,"Explain how quantitative variables were handled in the analyses. If applicable, describe which groupings were chosen, and why",Métodos §2.3,"Median split for IgG/Eos, clinical cutpoints justified"
 12a,Methods - Statistical methods,"Describe all statistical methods, including those used to control for confounding",Métodos §2.3,"KM, Cox PH, LMM-REML, MICE, FDR"
 12b,Methods - Statistical methods,Describe any methods used to examine subgroups and interactions,Métodos §2.3,"Stratified KM, interaction terms in LMM"
-12c,Methods - Statistical methods,Explain how missing data were addressed,Métodos §2.3,"MICE (miceforest m=20), Little's MCAR, complete-case SA"
+12c,Methods - Statistical methods,Explain how missing data were addressed,Métodos §2.3,"Análisis de caso completo; datos faltantes reportados por variable"
 12d,Methods - Statistical methods,(Cohort) If applicable explain how loss to follow-up was addressed,Métodos §2.3,"Censoring at last visit, KM handles right-censoring"
 12e,Methods - Statistical methods,Describe any sensitivity analyses,Métodos §2.3,"4 seroneg definitions, SA-3 (excl. immunosuppressed)"
 13a,Results - Participants,"Report the numbers of individuals at each stage of the study—eg numbers potentially eligible, examined for eligibility, confirmed eligible, included in the study, completing follow-up, and analysed",Resultados §3.1 + Fig 1,STROBE flowchart

@@ -1,0 +1,1113 @@
+---
+title: "Cinética de seronegativización por IgG-ELISA tras ivermectina en estrongiloidiasis: análisis de supervivencia en una cohorte retrospectiva"
+author:
+  - name: "Yan Rodríguez García"
+    affiliation: "Hospital Universitario de Guadalajara, España"
+date: today
+format:
+  pdf:
+    documentclass: article
+    papersize: a4
+    toc: false
+    number-sections: true
+    colorlinks: true
+    keep-tex: false
+    fig-pos: 'H'
+    include-in-header:
+      text: |
+        \usepackage{booktabs}
+        \usepackage{tikz}
+        \usetikzlibrary{positioning, arrows.meta, shapes.geometric}
+        \usepackage{float}
+        \usepackage{setspace}
+        \onehalfspacing
+        \usepackage{lineno}
+        \linenumbers
+bibliography: references.bib
+execute:
+  echo: false
+  warning: false
+---
+
+```{python}
+#| label: setup
+#| output: false
+
+# ═══════════════════════════════════════════════════════════════
+#  SETUP — Pipeline completo (sin output visible)
+# ═══════════════════════════════════════════════════════════════
+
+import os, hashlib, sys, warnings, logging
+os.makedirs('figures', exist_ok=True)
+logging.basicConfig(level=logging.WARNING)
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib.patches import FancyBboxPatch, Rectangle, Patch
+from matplotlib.lines import Line2D
+from matplotlib.gridspec import GridSpec
+from collections import OrderedDict
+from scipy.stats import (spearmanr, mannwhitneyu, probplot, shapiro,
+                          chi2_contingency, fisher_exact, norm, binom)
+from scipy.stats import chi2 as chi2_dist
+from scipy.stats import t as t_dist
+from scipy.stats import poisson
+from statsmodels.stats.multitest import multipletests
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
+# ── Paleta y estilo ──────────────────────────────────────────
+SAT = ['#CC3311','#0077BB','#EE7733','#009988','#AA3377','#33BBEE','#EE3377']
+GRI = ['#F2F2F2','#DDDDDD','#999999','#555555','#222222']
+C = {'red':SAT[0],'blue':SAT[1],'gold':SAT[2],'green':SAT[3],
+     'purple':SAT[4],'teal':SAT[5],'orange':SAT[6],
+     'bg':GRI[0],'grid':GRI[1],'muted':GRI[2],'annot':GRI[3],'text':GRI[4]}
+
+plt.rcParams.update({'font.family':'sans-serif','font.size':10,
+    'axes.spines.top':False,'axes.spines.right':False,
+    'axes.grid':True,'grid.alpha':0.3,'grid.linestyle':':',
+    'figure.dpi':300,'savefig.dpi':300,'savefig.bbox':'tight',
+    'text.color':C['text'],'axes.labelcolor':C['text']})
+
+# ── CONFIG ───────────────────────────────────────────────────
+CONFIG = {
+    'SERO_NEG': 1.1, 'SERO_NEG_ALT': 0.9,
+    'SERO_DROP_SALVADOR': 0.60,
+    'EOS_NEG': 0.5, 'MICRO_MIN': 7, 'RECIDIVA_GAP': 21,
+    'ALPHA': 0.05, 'POWER': 0.80,
+    'SEED': 42,
+}
+SERO_NEG = CONFIG['SERO_NEG']; SERO_DROP = CONFIG['SERO_DROP_SALVADOR']
+EOS_NEG = CONFIG['EOS_NEG']; MICRO_MIN = CONFIG['MICRO_MIN']
+ALPHA = CONFIG['ALPHA']
+
+# ── Carga + limpieza ────────────────────────────────────────
+RUTA = 'BASE_EXCEL.xlsx'
+bas_raw=pd.read_excel(RUTA,'bas'); ser_raw=pd.read_excel(RUTA,'ser')
+eos_raw=pd.read_excel(RUTA,'eos'); mic_raw=pd.read_excel(RUTA,'mic')
+seg_raw=pd.read_excel(RUTA,'seg')
+
+bas=bas_raw.copy(); bas['ID']=bas['ID'].astype(int); bas['F_NAC']=pd.to_datetime(bas['F_NAC'])
+ser=ser_raw.copy(); ser['ID']=ser['ID'].astype(int); ser['F_SER']=pd.to_datetime(ser['F_SER'])
+ser['IGG_QUAL']=ser['IGG'].where(ser['IGG'].apply(lambda x: isinstance(x,str)))
+ser['IGG']=pd.to_numeric(ser['IGG'],errors='coerce')
+eos=eos_raw.copy(); eos['ID']=eos['ID'].astype(int); eos['F_EOS']=pd.to_datetime(eos['F_EOS']); eos['EOS']=pd.to_numeric(eos['EOS'],errors='coerce')
+mic=mic_raw[mic_raw['F_MIC'].notna()].copy(); mic['ID']=mic['ID'].astype(int); mic['F_MIC']=pd.to_datetime(mic['F_MIC'])
+mic['RESULTADO']=pd.to_numeric(mic['RESULTADO'],errors='coerce'); mic.loc[mic['RESULTADO'].isna()&mic_raw.loc[mic.index,'RESULTADO'].notna(),'RESULTADO']=1; mic['RESULTADO']=mic['RESULTADO'].astype(int)
+seg=seg_raw.copy(); seg['ID']=seg['ID'].astype(int); seg['F_CONSULTA']=pd.to_datetime(seg['F_CONSULTA'])
+
+# ── T0, basales, pac ────────────────────────────────────────
+t0=seg[seg['DOSIS_IVM'].notna()].groupby('ID')['F_CONSULTA'].min().rename('T0')
+ser_t=ser[['ID','F_SER','IGG','IGG_QUAL']].merge(t0.reset_index(),on='ID'); ser_t['dias']=(ser_t['F_SER']-ser_t['T0']).dt.days
+ser_pre=ser_t[ser_t['dias']<=0]; idx=ser_pre.groupby('ID')['dias'].idxmax()
+ser_basal=ser_pre.loc[idx,['ID','IGG','IGG_QUAL']].rename(columns={'IGG':'IGG_BASAL','IGG_QUAL':'IGG_QUAL_BASAL'})
+eos_t=eos[['ID','F_EOS','EOS']].merge(t0.reset_index(),on='ID'); eos_t['dias']=(eos_t['F_EOS']-eos_t['T0']).dt.days
+eos_pre=eos_t[eos_t['dias']<=0]; idx2=eos_pre.groupby('ID')['dias'].idxmax(); eos_basal=eos_pre.loc[idx2,['ID','EOS']].rename(columns={'EOS':'EOS_BASAL'})
+mic_t=mic.merge(t0.reset_index(),on='ID'); mic_t['dias']=(mic_t['F_MIC']-mic_t['T0']).dt.days
+mic_pre=mic_t[mic_t['dias']<=0]
+mic_basal=mic_pre.groupby(['ID','TIPO'])['RESULTADO'].max().unstack().reset_index().rename(columns={'COPRO':'COPRO_BASAL','MICRO':'MICRO_BASAL'})
+mic_basal['MIC_BASAL']=mic_basal[['COPRO_BASAL','MICRO_BASAL']].max(axis=1)
+
+pac=bas.merge(t0.reset_index(),on='ID').merge(ser_basal[['ID','IGG_BASAL','IGG_QUAL_BASAL']],on='ID',how='left').merge(eos_basal[['ID','EOS_BASAL']],on='ID',how='left').merge(mic_basal[['ID','MIC_BASAL']],on='ID',how='left')
+pac['EDAD']=((pac['T0']-pac['F_NAC']).dt.days/365.25).round(1); pac['AN_ESP']=pac['T0'].dt.year-pac['T_ESP']+pac['T0'].dt.month/12
+pac['INMUNO_SI']=(pac['INMUNO']!='NO').astype(int); pac['COMORB_SI']=(pac['COMORB']!='NO').astype(int)
+pac['CONFEOS_SI']=(pac['CONFEOS']!='NO').astype(int); pac['SEXO_V']=(pac['SEXO']=='V').astype(int)
+pac['EOS_ALTA']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=EOS_NEG).astype(int))
+pac['SER_ALTA']=np.where(pac['IGG_BASAL'].isna(),np.nan,(pac['IGG_BASAL']>=SERO_NEG).astype(int))
+igg_med=pac['IGG_BASAL'].median(); igg_p75=pac['IGG_BASAL'].quantile(0.75)
+eos_med=pac['EOS_BASAL'].median(); eos_p75=pac['EOS_BASAL'].quantile(0.75)
+pac['SER_MEDIANA']=np.where(pac['IGG_BASAL'].isna(),np.nan,(pac['IGG_BASAL']>=igg_med).astype(int))
+pac['SER_P75']=np.where(pac['IGG_BASAL'].isna(),np.nan,(pac['IGG_BASAL']>=igg_p75).astype(int))
+pac['SER_TERCIL']=pd.qcut(pac['IGG_BASAL'],q=3,labels=['Bajo','Medio','Alto'])
+pac['EOS_MEDIANA']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=eos_med).astype(int))
+pac['EOS_P75']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=eos_p75).astype(int))
+pac['EOS_1000']=np.where(pac['EOS_BASAL'].isna(),np.nan,(pac['EOS_BASAL']>=1.0).astype(int))
+pac['EOS_TERCIL']=pd.qcut(pac['EOS_BASAL'],q=3,labels=['Bajo','Medio','Alto'])
+pac['EOS_LIMPIA']=np.where(pac['EOS_BASAL'].isna(),np.nan,((pac['EOS_BASAL']>=EOS_NEG)&(pac['CONFEOS_SI']==0)).astype(int))
+pac['EDAD_ALTA']=(pac['EDAD']>=pac['EDAD'].median()).astype(int)
+primer_tto=seg[seg['DOSIS_IVM'].notna()].sort_values('F_CONSULTA').groupby('ID').first()[['DOSIS_IVM']]
+pac=pac.merge(primer_tto.reset_index(),on='ID',how='left'); pac['MONO']=(pac['DOSIS_IVM']=='MONO').astype(int)
+n_ttos=seg[seg['DOSIS_IVM'].notna()].groupby('ID').size().rename('N_TTO')
+pac=pac.merge(n_ttos.reset_index(),on='ID',how='left'); pac['RETRATADO']=(pac['N_TTO']>1).astype(int)
+pac['INMUNO_O_COMORB']=((pac['INMUNO_SI']==1)|(pac['COMORB_SI']==1)).astype(int)
+pac['DX_PARA']=pac['MIC_BASAL'].fillna(0).astype(int)
+
+# Exclusiones documentadas
+neg_basal_ids = pac[pac['IGG_QUAL_BASAL'] == 'NEG']['ID'].tolist()
+EXCL_SERO_IDS = set(neg_basal_ids)
+
+# Ventana serología basal → T0
+_ser_basal_t0 = ser_pre.loc[idx, ['ID','dias']].copy()
+_ser_basal_t0['dias_abs'] = _ser_basal_t0['dias'].abs()
+
+# Longitudinales
+ser_long=ser_t[ser_t['IGG'].notna()].copy(); ser_long['meses']=ser_long['dias']/30.44
+eos_long=eos_t.copy(); eos_long['meses']=eos_long['dias']/30.44
+ser_post=ser_long[ser_long['dias']>0].copy(); eos_post=eos_long[eos_long['dias']>0].copy()
+mic_post=mic_t[mic_t['dias']>MICRO_MIN].sort_values(['ID','dias']).copy()
+
+# ── build_events ─────────────────────────────────────────────
+def build_events(ser_post_df, pac_df, eos_post_df, mic_post_df,
+                 ser_long_df, eos_long_df, sero_neg, sero_drop, excl_sero_ids=set()):
+    sp = ser_post_df[~ser_post_df['ID'].isin(excl_sero_ids)].copy()
+    sp['neg_abs'] = sp['IGG'] < sero_neg
+    neg_sero_abs = sp[sp['neg_abs']].sort_values('dias').groupby('ID').first()[['dias','IGG']].rename(columns={'dias':'T_NEG_SERO_ABS','IGG':'IGG_NEG'})
+    sp_b = sp.merge(pac_df[['ID','IGG_BASAL']], on='ID')
+    sp_b['neg_rel'] = sp_b['IGG'] < sp_b['IGG_BASAL'] * sero_drop
+    neg_sero_rel = sp_b[sp_b['neg_rel']].sort_values('dias').groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_REL'})
+    sps = sp.sort_values(['ID','dias']).copy(); sps['neg'] = sps['IGG'] < sero_neg
+    sps['neg_prev'] = sps.groupby('ID')['neg'].shift(1); sps['doble_neg'] = sps['neg'] & sps['neg_prev']
+    neg_sero_abs_x2 = sps[sps['doble_neg']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_ABS_X2'})
+    spr = sp_b.sort_values(['ID','dias']).copy(); spr['neg_prev'] = spr.groupby('ID')['neg_rel'].shift(1)
+    spr['doble'] = spr['neg_rel'] & spr['neg_prev']
+    neg_sero_rel_x2 = spr[spr['doble']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_SERO_REL_X2'})
+    ep = eos_post_df.copy(); ep['neg_abs'] = ep['EOS'] < EOS_NEG
+    neg_eos = ep[ep['neg_abs']].sort_values('dias').groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_EOS_ABS'})
+    mp = mic_post_df.copy(); mp['neg'] = mp['RESULTADO'] == 0
+    mp['neg_prev'] = mp.groupby('ID')['neg'].shift(1); mp['doble'] = mp['neg'] & mp['neg_prev']
+    neg_para = mp[mp['doble']].groupby('ID').first()[['dias']].rename(columns={'dias':'T_NEG_PARA'})
+    n_evaluables = mp['ID'].nunique()
+    cens_ser = ser_long_df[ser_long_df['dias']>0].groupby('ID')['dias'].max().rename('cens_ser')
+    cens_eos = eos_long_df[eos_long_df['dias']>0].groupby('ID')['dias'].max().rename('cens_eos')
+    cens_mic = mp.groupby('ID')['dias'].max().rename('cens_mic') if len(mp)>0 else pd.Series(dtype=float, name='cens_mic')
+    ev = pac_df[['ID']].copy()
+    ev = ev.merge(cens_ser.reset_index(), on='ID', how='left')
+    ev = ev.merge(cens_eos.reset_index(), on='ID', how='left')
+    ev = ev.merge(cens_mic.reset_index(), on='ID', how='left')
+    def add_event(ev, neg_df, time_col, cens_col, prefix):
+        if len(neg_df)>0: ev = ev.merge(neg_df[[time_col]].reset_index().rename(columns={time_col:'_t'}), on='ID', how='left')
+        else: ev['_t'] = np.nan
+        ev[f'E_{prefix}'] = ev['_t'].notna().astype(int); ev[f'T_{prefix}'] = ev['_t'].fillna(ev[cens_col]); ev = ev.drop(columns='_t')
+        return ev
+    ev = add_event(ev, neg_sero_abs, 'T_NEG_SERO_ABS', 'cens_ser', 'SERO_ABS_X1')
+    ev = add_event(ev, neg_sero_abs_x2, 'T_NEG_SERO_ABS_X2', 'cens_ser', 'SERO_ABS_X2')
+    ev = add_event(ev, neg_sero_rel, 'T_NEG_SERO_REL', 'cens_ser', 'SERO_REL_X1')
+    ev = add_event(ev, neg_sero_rel_x2, 'T_NEG_SERO_REL_X2', 'cens_ser', 'SERO_REL_X2')
+    ev = add_event(ev, neg_eos, 'T_NEG_EOS_ABS', 'cens_eos', 'EOS_ABS')
+    ev = add_event(ev, neg_para, 'T_NEG_PARA', 'cens_mic', 'PARA')
+    stats = {'sero_neg': sero_neg, 'sero_drop': sero_drop, 'n_excl_sero': len(excl_sero_ids),
+             'n_sero_abs_x1': ev['E_SERO_ABS_X1'].sum(), 'n_sero_abs_x2': ev['E_SERO_ABS_X2'].sum(),
+             'n_sero_rel_x1': ev['E_SERO_REL_X1'].sum(), 'n_sero_rel_x2': ev['E_SERO_REL_X2'].sum(),
+             'n_eos': ev['E_EOS_ABS'].sum(), 'n_para': ev['E_PARA'].sum(), 'n_evaluables_para': n_evaluables}
+    neg = {'neg_sero_abs': neg_sero_abs, 'neg_sero_abs_x2': neg_sero_abs_x2,
+           'neg_sero_rel': neg_sero_rel, 'neg_sero_rel_x2': neg_sero_rel_x2,
+           'neg_eos': neg_eos, 'neg_para': neg_para, 'ser_post_b': sp_b,
+           'cens_ser': cens_ser, 'cens_eos': cens_eos, 'cens_mic': cens_mic}
+    return ev, stats, neg
+
+ev, ev_stats, ev_neg = build_events(ser_post, pac, eos_post, mic_post, ser_long, eos_long,
+                                     sero_neg=SERO_NEG, sero_drop=SERO_DROP, excl_sero_ids=EXCL_SERO_IDS)
+neg_sero_abs = ev_neg['neg_sero_abs']; neg_sero_abs_x2 = ev_neg['neg_sero_abs_x2']
+neg_sero_rel = ev_neg['neg_sero_rel']; neg_sero_rel_x2 = ev_neg['neg_sero_rel_x2']
+neg_eos = ev_neg['neg_eos']; neg_para = ev_neg['neg_para']
+ser_post_b = ev_neg['ser_post_b']; cens_ser = ev_neg['cens_ser']
+cens_eos = ev_neg['cens_eos']; n_evaluables = ev_stats['n_evaluables_para']
+
+ev_alt, ev_alt_stats, ev_alt_neg = build_events(ser_post, pac, eos_post, mic_post, ser_long, eos_long,
+                                                 sero_neg=CONFIG['SERO_NEG_ALT'], sero_drop=SERO_DROP, excl_sero_ids=EXCL_SERO_IDS)
+neg_sero_abs_alt = ev_alt_neg['neg_sero_abs']
+neg_sero_abs_x2_alt = ev_alt_neg['neg_sero_abs_x2']
+
+sero_pos=set(pac[(pac['IGG_BASAL']>=SERO_NEG) | ((pac['IGG_QUAL_BASAL'].notna()) & (pac['IGG_QUAL_BASAL']!='NEG'))]['ID'])
+mic_pos_ids=set(mic_pre[mic_pre['RESULTADO']==1]['ID'])
+PAC_COLS=['ID','SEXO','SEXO_V','EDAD','INMUNO_SI','COMORB_SI',
+    'EOS_ALTA','EOS_MEDIANA','EOS_P75','EOS_1000','EOS_TERCIL','EOS_LIMPIA','EOS_BASAL',
+    'SER_ALTA','SER_MEDIANA','SER_P75','SER_TERCIL','IGG_BASAL',
+    'EDAD_ALTA','MONO','RETRATADO','INMUNO_O_COMORB','DX_PARA']
+km_full=ev[['ID','T_SERO_ABS_X1','E_SERO_ABS_X1']].merge(pac[PAC_COLS],on='ID')
+km_full=km_full[km_full['T_SERO_ABS_X1']>0]; cox_data=km_full.copy()
+
+nice={'SEXO_V':'Sexo (varón)','EDAD':'Edad (continua)','EDAD_ALTA':f'Edad ≥ {pac["EDAD"].median():.0f} años',
+    'INMUNO_SI':'Inmunodepresión','COMORB_SI':'Comorbilidad',
+    'INMUNO_O_COMORB':'Inmunodepresión o comorbilidad','EOS_ALTA':f'Eosinofilia ≥ {EOS_NEG} ×10³/µL',
+    'EOS_MEDIANA':f'Eosinófilos ≥ mediana ({eos_med:.2f})','SER_MEDIANA':f'IgG ≥ mediana ({igg_med:.1f})',
+    'SER_P75':f'IgG ≥ P75 ({igg_p75:.1f})','IGG_BASAL':'IgG basal (continua)',
+    'EOS_BASAL':'Eosinófilos basales (continua)','MONO':'Dosis única (monodosis)','RETRATADO':'Retratado (>1 ciclo)',
+    'DX_PARA':'Diagnóstico parasitológico','EOS_LIMPIA':f'Eosinofilia ≥ {EOS_NEG} sin confusor',
+    'EOS_P75':'Eosinófilos ≥ P75','EOS_1000':'Eosinófilos ≥ 1.0 (1000 cel/µL)'}
+
+def med_iqr(s): return f"{s.median():.1f} ({s.quantile(.25):.1f}--{s.quantile(.75):.1f})"
+def n_pct(num,den): return f"{num} ({num/den*100:.1f}\\%)"
+def mean_sd(s): return f"{s.mean():.1f} $\\pm$ {s.std():.1f}"
+def med_range(s): return f"{s.median():.0f} ({s.min():.0f}--{s.max():.0f})"
+def rng(s): return f"{s.min():.1f}--{s.max():.1f}"
+
+from lifelines import KaplanMeierFitter, CoxPHFitter
+from lifelines.statistics import logrank_test
+from lifelines.plotting import add_at_risk_counts
+```
+
+\newpage
+
+# Abstract {.unnumbered}
+
+**Objetivo**: Estimar la cinética de seronegativización por IgG-ELISA tras tratamiento con ivermectina en pacientes con estrongiloidiasis e identificar predictores basales, en un contexto exploratorio.
+
+**Métodos**: Cohorte retrospectiva unicéntrica (Hospital Universitario de Guadalajara, 2017--2025, n = 44). Endpoint primario: primera IgG-ELISA < 1,1 post-ivermectina. Se estimaron la mediana y *landmarks* mediante Kaplan-Meier, predictores mediante Cox univariable y multivariable (con corrección BH-FDR), y la trayectoria de descenso mediante modelo lineal mixto (LMM). Se evaluaron 8 definiciones alternativas de endpoint como análisis de sensibilidad.
+
+**Resultados**: La mediana de seronegativización fue 267 días (8,8 meses; IC 95% Greenwood: 4,3--11,4 meses). Los *landmarks* mostraron seronegativización acumulada del 36% a 6 meses, 68% a 12 meses, 76% a 18 meses y 88% a 24 meses. Ninguna variable basal alcanzó significación tras BH-FDR (p~adj~ mínimo 0,053); la potencia post-hoc solo permite detectar HR $\geq$ 3,62. El LMM estimó una pendiente de --0,068 log(IgG)/mes (p < 0,001; R² condicional 0,663), con tiempo paramétrico hasta negativización de 10,9 meses. La interacción LMM por sexo no fue significativa (p = 0,501).
+
+**Conclusión**: Se reporta la primera mediana KM con IC formal y los primeros coeficientes paramétricos de descenso de IgG post-ivermectina. Los *landmarks* fundamentan un calendario de seguimiento a 6, 12 y 18--24 meses. Se necesitan cohortes multicéntricas ($\geq$ 150 pacientes) para confirmar predictores.
+
+**Palabras clave**: estrongiloidiasis, ivermectina, serorreversión, IgG-ELISA, Kaplan-Meier, análisis de supervivencia, estudio de cohorte
+
+---
+
+# Introducción
+
+*Strongyloides stercoralis* infecta entre 30 y 100 millones de personas en regiones tropicales y subtropicales [@buonfrate2023; @bisoffi2013]. La prevalencia está infraestimada por la baja sensibilidad de las técnicas coprológicas convencionales. En Europa, la estrongiloidiasis es una infección importada creciente: la seroprevalencia en cribados de migrantes oscila entre 11--14% (latinoamericanos) y 15--20% (subsaharianos) [@asundi2019].
+
+La ivermectina (200 µg/kg) es el tratamiento de elección, con tasas de curación parasitológica cercanas al 100% [@henriquez2016]. El ensayo Strong Treat (n = 310) demostró equivalencia entre dosis única y cuádruple en curación serológica a 12 meses (86% *vs* 85%), terminando por futilidad [@buonfrate2019]. Sin embargo, no existe consenso sobre el criterio óptimo de curación serológica post-tratamiento: la reducción relativa $\geq$ 50% OD (*primary outcome* de Strong Treat) es el más validado, mientras que la seronegativización completa oscila entre 34--72% según el assay [@buonfrate2015; @salvador2014]. No existen guías formales basadas en evidencia para la duración del seguimiento serológico [@lo2025].
+
+La serología IgG-ELISA es el marcador más utilizado para seguimiento, pero su cinética de descenso es lenta e impredecible, y la persistencia no distingue entre memoria inmunológica e infección activa [@repetto2018]. El único modelo multivariable publicado de predictores de aclaramiento serológico (Strong Treat) identificó edad, eosinófilos > 400/µL y ausencia de *rash* como predictores; sin embargo, la IgG basal no fue evaluada y la inmunodepresión fue un criterio de exclusión [@buonfrate2019]. Hasta donde sabemos, ningún estudio ha evaluado si el nivel basal de IgG-ELISA predice la velocidad de seronegativización post-ivermectina. Asimismo, ningún estudio previo ha reportado la mediana de tiempo a seronegativización con IC formal ni coeficientes paramétricos de descenso mensual [@buonfrate2015].
+
+La persistencia de títulos elevados podría reflejar células plasmáticas de vida larga, como se ha documentado en Chagas [@cesar2023] y malaria [@yman2019].
+
+**Objetivo primario**: estimar la mediana y cinética de seronegativización (IgG-ELISA < 1,1) tras ivermectina. **Objetivos secundarios**: (a) identificar predictores basales mediante regresión de Cox; (b) modelizar la trayectoria continua de descenso de log(IgG) mediante LMM.
+
+
+# Métodos
+
+## Diseño y participantes
+
+Estudio de cohorte retrospectiva unicéntrica. Se incluyeron pacientes con estrongiloidiasis confirmada tratados con ivermectina en el Hospital Universitario de Guadalajara (España), 2017--2025. Los registros se identificaron cruzando la base del Centro Nacional de Microbiología (2017--2023) con la serología del hospital (2020--2025). El estudio se adhiere a las recomendaciones STROBE [@vonelm2007].
+
+Criterios de inclusión: diagnóstico confirmado de *S. stercoralis* (serología positiva, parasitología positiva o diagnóstico clínico-epidemiológico) y al menos una dosis de ivermectina con seguimiento serológico post-tratamiento. Criterios de exclusión: diagnóstico no confirmado (n = 114/198), ausencia de tratamiento (n = 20), ausencia de seguimiento (n = 19), diagnóstico fuera del centro (n = 1). La cohorte final comprende 44 pacientes (Figura \ref{fig-strobe}).
+
+```{=latex}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.6cm,
+  mainbox/.style={rectangle, rounded corners=3pt, draw=black!60, fill=blue!5,
+    text width=7cm, minimum height=0.8cm, align=center, font=\small},
+  greybox/.style={rectangle, rounded corners=3pt, draw=black!40, fill=black!3,
+    text width=7cm, minimum height=0.8cm, align=center, font=\small},
+  inclbox/.style={rectangle, rounded corners=3pt, draw=green!60!black, fill=green!8,
+    text width=7cm, minimum height=0.8cm, align=center, font=\small},
+  exclbox/.style={rectangle, rounded corners=2pt, draw=red!60!black, fill=red!5,
+    text width=3.5cm, minimum height=0.6cm, align=center, font=\scriptsize,
+    text=red!40!black},
+  arrow/.style={->, >=stealth, thick, draw=black!50},
+  exarrow/.style={->, >=stealth, draw=red!50!black, thin}
+]
+\node[greybox] (screen)
+  {\textbf{Registros cribados}\\
+   {\scriptsize CNM (microbiología, 2017--2023) + HCD (serología, 2020--2025)}};
+\node[greybox, below=0.6cm of screen] (dedup)
+  {\textbf{Tras deduplicación: $\geq$1 positivo} $\cdot$ n = 198};
+\draw[arrow] (screen) -- (dedup);
+\node[exclbox, right=1.2cm of dedup] (exc1)
+  {Dx no confirmado\\\textbf{n = 114} {\tiny(57,6\%)}};
+\draw[exarrow] (dedup) -- (exc1);
+\node[mainbox, below=0.6cm of dedup] (diag)
+  {\textbf{Diagnóstico confirmado} $\cdot$ n = 84 {\scriptsize(42,4\%)}};
+\draw[arrow] (dedup) -- (diag);
+\node[exclbox, right=1.2cm of diag] (exc2)
+  {No tratados con IVM\\\textbf{n = 20} {\tiny(23,8\%)}};
+\draw[exarrow] (diag) -- (exc2);
+\node[mainbox, below=0.6cm of diag] (trat)
+  {\textbf{Tratados con ivermectina} $\cdot$ n = 64};
+\draw[arrow] (diag) -- (trat);
+\node[exclbox, right=1.2cm of trat] (exc3)
+  {Sin seguimiento post-TTO\\\textbf{n = 19} {\tiny(29,7\%)}};
+\draw[exarrow] (trat) -- (exc3);
+\node[exclbox, below=0.25cm of exc3] (exc4)
+  {Sin Dx en HCDGU\\\textbf{n = 1} {\tiny(1,6\%)}};
+\draw[exarrow] (trat.east) -- ++(0.4,0) |- (exc4.west);
+\node[inclbox, below=0.8cm of trat] (cohort)
+  {\textbf{\large COHORTE INCLUIDA · n = 44} {\small(retención 22,2\%)}};
+\draw[arrow] (trat) -- (cohort);
+\end{tikzpicture}
+\caption{Diagrama STROBE de selección de pacientes.}
+\label{fig-strobe}
+\end{figure}
+```
+
+## Variables y endpoint
+
+T~0~ se define como la fecha de la primera dosis de ivermectina. La serología basal es la determinación de IgG-ELISA más próxima a T~0~ (mediana 18 días pre-T~0~, IQR 11--62). Kit ELISA: [pendiente de especificación; se incluye como limitación]. Las covariables se seleccionaron por plausibilidad biológica: edad, sexo, IgG basal, eosinófilos basales e inmunodepresión.
+
+**Endpoint primario**: primera IgG-ELISA < 1,1 (índice) post-T~0~, en una única medición. Este criterio representa la negativización según el *cutoff* del kit, un umbral intermedio entre la seronegativización completa y la reducción relativa $\geq$ 50% OD de Strong Treat [@buonfrate2019; @salvador2014]. Se evaluaron 8 definiciones alternativas como análisis de sensibilidad (Material Suplementario).
+
+## Análisis estadístico
+
+La función de supervivencia se estimó mediante Kaplan-Meier [@kaplan1958] con censura a la derecha. Se reportan *landmark estimates* (6, 12, 18, 24 meses) y tasa de incidencia por persona-año (IC 95% Poisson).
+
+Se ajustó un modelo de Cox por cada una de 15 covariables candidatas [@cox1972], con corrección BH-FDR [@benjamini1995]. El modelo multivariable admite un máximo de 2 covariables ($\geq$ 10 eventos/variable) [@peduzzi1996]. El supuesto de proporcionalidad se evaluó mediante residuos de Schoenfeld [@schoenfeld1982]; las variables que lo violan se manejan por estratificación. Se validó mediante C-statistic y *bootstrap* (1000 réplicas). La potencia post-hoc se calculó con la fórmula de Schoenfeld [@schoenfeld1983].
+
+Se empleó análisis de caso completo (8/44 sin IgG basal cuantitativa, 18%). La plausibilidad de MCAR se evaluó mediante regresión logística [@little1988].
+
+Se ajustó un LMM con intercepto aleatorio por paciente sobre log(IgG) en función del tiempo, restringido a seropositivos, con modelo de interacción por sexo. Se reporta R² de Nakagawa [@nakagawa2013].
+
+**Software**: Python 3.9, lifelines, statsmodels, scipy.
+
+**Ética**: estudio aprobado por el Comité de Ética [nº pendiente].
+
+**Conflictos de interés**: los autores declaran no tener conflictos de interés.
+
+
+# Resultados
+
+## Características de la cohorte
+
+```{python}
+#| label: tab-basales
+#| output: asis
+
+n_total = len(pac)
+n_eos = pac['EOS_BASAL'].notna().sum()
+n_igg = pac['IGG_BASAL'].notna().sum()
+n_serpost = ser_post['ID'].nunique()
+n_fem = (pac['SEXO']=='M').sum()
+
+table_data = [
+    ("Demográficas","","","",True,False),
+    ("Edad, años (mediana, IQR)",str(n_total),med_iqr(pac['EDAD']),rng(pac['EDAD']),False,False),
+    ("Sexo femenino, n (\\%)",str(n_total),n_pct(n_fem,n_total),"---",False,False),
+    ("","","","",False,True), ("Analítica basal","","","",True,False),
+    ("IgG ELISA, índice (mediana, IQR)",str(n_igg),med_iqr(pac['IGG_BASAL'].dropna()),rng(pac['IGG_BASAL'].dropna()),False,False),
+    ("Eosinófilos, $\\times 10^3$/\\textmu L (mediana, IQR)",str(n_eos),med_iqr(pac['EOS_BASAL'].dropna()),rng(pac['EOS_BASAL'].dropna()),False,False),
+    ("Eosinofilia ($\\geq$500 cel/\\textmu L), n (\\%)",str(n_eos),n_pct(int((pac['EOS_BASAL']>=EOS_NEG).sum()),n_eos),"---",False,False),
+    ("","","","",False,True), ("Seguimiento","","","",True,False),
+    ("Seguimiento serológico, meses (mediana, IQR)",str(n_serpost),med_iqr(cens_ser/30.44),rng(cens_ser/30.44),False,False),
+]
+
+print(r"""\begin{table}[H]
+\centering
+\caption{Características basales de la cohorte (n = 44).}
+\label{tab-basales}
+\small
+\begin{tabular}{l c c c}
+\toprule
+\textbf{Variable} & \textbf{n} & \textbf{Valor} & \textbf{Rango} \\
+\midrule""")
+for var, nv, val, rang, is_hdr, is_sep in table_data:
+    if is_sep:
+        print(r"\midrule")
+    elif is_hdr:
+        print(f"\\multicolumn{{4}}{{l}}{{\\textit{{{var}}}}} \\\\")
+    else:
+        print(f"\\quad {var} & {nv} & {val} & {rang} \\\\")
+print(r"""\bottomrule
+\multicolumn{4}{l}{\footnotesize Variables continuas: mediana (IQR P25--P75). Rango = mínimo--máximo.} \\
+\end{tabular}
+\end{table}""")
+```
+
+La edad mediana fue 47,5 años (IQR 36,6--56,2); el 56,8% fueron mujeres. La cohorte es predominantemente latinoamericana (73% América del Sur, 14% América Central). La inmunodepresión estuvo presente en el 9% (4/44). El régimen más frecuente fue monodosis (52%). La IgG basal mediana fue 3,1 (IQR 1,3--6,6; n = 36). La mediana de seguimiento serológico fue 11,7 meses (IQR 3,1--22,2).
+
+## Cinética de seronegativización
+
+```{python}
+#| label: fig-km
+#| fig-cap: "Curva de Kaplan-Meier para seronegativización absoluta (IgG < 1,1). Área sombreada: IC 95%. Marcas verticales: censuras."
+
+km_data = ev[ev['T_SERO_ABS_X1'] > 0].copy()
+kmf = KaplanMeierFitter()
+kmf.fit(km_data['T_SERO_ABS_X1'], km_data['E_SERO_ABS_X1'], label='Neg. serológica absoluta')
+
+fig, ax = plt.subplots(figsize=(10, 6))
+kmf.plot_survival_function(ax=ax, ci_show=True, color=C['blue'], lw=2)
+
+censored = km_data[km_data['E_SERO_ABS_X1'] == 0]
+for _, row in censored.iterrows():
+    ax.plot(row['T_SERO_ABS_X1'],
+            kmf.survival_function_at_times(row['T_SERO_ABS_X1']).values[0],
+            '|', color=C['annot'], ms=8, mew=1.5, zorder=3)
+
+med_km = kmf.median_survival_time_
+_ci_sf = kmf.confidence_interval_survival_function_
+_ci_lo_col = _ci_sf.columns[0]
+_ci_hi_col = _ci_sf.columns[1]
+_ci_lo_cross = _ci_sf[_ci_sf[_ci_hi_col] <= 0.5]
+_ci_hi_cross = _ci_sf[_ci_sf[_ci_lo_col] <= 0.5]
+ci_lo = _ci_lo_cross.index[0] if len(_ci_lo_cross) > 0 else np.nan
+ci_hi = _ci_hi_cross.index[0] if len(_ci_hi_cross) > 0 else np.nan
+if med_km < np.inf:
+    ax.axhline(0.5, color=C['grid'], ls=':', lw=0.8)
+    ax.axvline(med_km, color=C['red'], ls='--', lw=1, alpha=0.7)
+    ci_txt = f'Mediana: {med_km:.0f}d ({med_km/30.44:.1f}m)'
+    if not np.isnan(ci_lo) and not np.isnan(ci_hi):
+        ci_txt += f'\nIC 95%: {ci_lo:.0f}--{ci_hi:.0f}d'
+    ax.text(med_km + 20, 0.55, ci_txt, color=C['red'], fontsize=9, fontweight='bold')
+
+ax.set(xlabel='Días desde T₀', ylabel='P(no negativización)', ylim=(-0.05, 1.05),
+       title=f'Seronegativización absoluta (n={len(km_data)}, eventos={km_data["E_SERO_ABS_X1"].sum()})')
+ax.legend().remove()
+add_at_risk_counts(kmf, ax=ax, rows_to_show=['At risk'])
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: landmarks
+#| output: asis
+
+_landmarks_d = [6*30.44, 12*30.44, 18*30.44, 24*30.44]
+_lm_rows = []
+for _t_lm in _landmarks_d:
+    _s_t = kmf.predict(_t_lm)
+    _neg_pct = (1 - _s_t) * 100
+    _lm_rows.append(f"| {_t_lm/30.44:.0f} | {_neg_pct:.0f} | {_s_t*100:.0f} |")
+print("| Meses | % Seronegativizados | % Persistentes |")
+print("|:---:|:---:|:---:|")
+print("\n".join(_lm_rows))
+
+_person_days = km_data['T_SERO_ABS_X1'].sum()
+_person_years = _person_days / 365.25
+_n_events_s4 = int(km_data['E_SERO_ABS_X1'].sum())
+_rate_py = _n_events_s4 / _person_years
+_rate_lo = poisson.ppf(0.025, _n_events_s4) / _person_years
+_rate_hi = poisson.ppf(0.975, _n_events_s4) / _person_years
+print(f"\n**Tasa de incidencia**: {_rate_py:.2f} seronegativizaciones/persona-año (IC 95%: {_rate_lo:.2f}--{_rate_hi:.2f}; {_person_years:.1f} personas-año).")
+```
+
+La reducción del umbral de 1,1 a 0,9 apenas modificó la cinética (27 *vs* 25 eventos; medianas 8,8 *vs* 10,8 meses), confirmando la robustez del endpoint. La restricción a ventana basal $\leq$ 90 días fue consistente (mediana 7,9 meses).
+
+## Análisis estratificado y Cox univariable
+
+```{python}
+#| label: fig-km-strat
+#| fig-cap: "KM estratificado por variables basales. Rojo: p < 0,05; ámbar: p < 0,20; gris: no significativo."
+
+variables_km = [
+    ('SEXO', 'Sexo (M vs V)'),
+    ('SER_MEDIANA', f'IgG basal ≥ mediana ({igg_med:.1f})'),
+    ('EOS_ALTA', f'Eosinofilia (≥{EOS_NEG} ×10³/µL)'),
+    ('INMUNO_O_COMORB', 'Inmunodepresión o comorbilidad'),
+    ('MONO', 'Dosis única vs múltiple'),
+]
+gl = {
+    'SEXO': {'M':'Mujer','V':'Varón'},
+    'SER_MEDIANA': {0:f'IgG<{igg_med:.1f}', 1:f'IgG≥{igg_med:.1f}'},
+    'EOS_ALTA': {0:f'Eos<{EOS_NEG}', 1:f'Eos≥{EOS_NEG}'},
+    'INMUNO_O_COMORB': {0:'No', 1:'Sí'},
+    'MONO': {0:'Múltiple', 1:'Única'},
+}
+
+_p_order = {}
+for col, _ in variables_km:
+    groups = sorted(km_full[col].dropna().unique())
+    if len(groups) == 2:
+        g0, g1 = km_full[km_full[col]==groups[0]], km_full[km_full[col]==groups[1]]
+        if len(g0) >= 2 and len(g1) >= 2:
+            lr = logrank_test(g0['T_SERO_ABS_X1'], g1['T_SERO_ABS_X1'],
+                              g0['E_SERO_ABS_X1'], g1['E_SERO_ABS_X1'])
+            _p_order[col] = lr.p_value
+        else: _p_order[col] = 1.0
+    else: _p_order[col] = 1.0
+variables_km.sort(key=lambda x: _p_order[x[0]])
+
+n_vars = len(variables_km)
+fig, axes = plt.subplots(2, 3, figsize=(18, 9))
+axes = axes.flatten()
+for idx, (col, titulo) in enumerate(variables_km):
+    ax = axes[idx]
+    groups = sorted(km_full[col].dropna().unique())
+    for i, g in enumerate(groups):
+        sub = km_full[km_full[col] == g]
+        if len(sub) < 2: continue
+        lb = gl.get(col, {}).get(g, str(g))
+        k = KaplanMeierFitter()
+        k.fit(sub['T_SERO_ABS_X1'], sub['E_SERO_ABS_X1'],
+              label=f'{lb} (n={len(sub)}, ev={sub["E_SERO_ABS_X1"].sum()})')
+        k.plot_survival_function(ax=ax, ci_show=True, color=[C['blue'], C['red']][i%2])
+    p = np.nan
+    if len(groups) == 2:
+        g0, g1 = km_full[km_full[col]==groups[0]], km_full[km_full[col]==groups[1]]
+        if len(g0) >= 2 and len(g1) >= 2:
+            lr = logrank_test(g0['T_SERO_ABS_X1'], g1['T_SERO_ABS_X1'],
+                              g0['E_SERO_ABS_X1'], g1['E_SERO_ABS_X1'])
+            p = lr.p_value
+            p_color = C['red'] if p < ALPHA else C['gold'] if p < 0.20 else C['muted']
+            p_txt = f'p = {p:.3f}' + ('' if p < 0.20 else ' (NS)')
+            ax.text(0.95, 0.95, p_txt, transform=ax.transAxes,
+                    ha='right', va='top', fontsize=14, fontweight='bold', color=p_color,
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.9, edgecolor=p_color))
+    ax.set(xlabel='Días desde T₀', ylabel='P(no neg.)', ylim=(-0.05, 1.05), title=titulo)
+    ax.legend(frameon=False, fontsize=7)
+    ax.axhline(0.5, color=C['grid'], ls=':', lw=0.8)
+for idx in range(n_vars, len(axes)):
+    axes[idx].set_visible(False)
+plt.suptitle('Seronegativización absoluta — Análisis estratificado', fontsize=14, y=1.01)
+plt.tight_layout()
+plt.show()
+```
+
+Tres variables mostraron diferencias significativas en log-rank: IgG $\geq$ mediana (p = 0,002), sexo (p = 0,005) y eosinofilia $\geq$ 0,5 (p = 0,022).
+
+```{python}
+#| label: fig-forest
+#| fig-cap: "Forest plot: Cox univariable (variables con p < 0,05). HR > 1 = seronegativización más rápida."
+
+covs_uni = ['SEXO_V','EDAD','EDAD_ALTA','INMUNO_SI','COMORB_SI',
+            'INMUNO_O_COMORB','EOS_ALTA','EOS_MEDIANA','SER_MEDIANA','SER_P75',
+            'IGG_BASAL','EOS_BASAL','MONO','RETRATADO','DX_PARA']
+cox_results = []
+for cov in covs_uni:
+    df = cox_data[['T_SERO_ABS_X1','E_SERO_ABS_X1',cov]].dropna()
+    if df[cov].nunique() < 2 or len(df) < 5: continue
+    try:
+        cph = CoxPHFitter(); cph.fit(df, duration_col='T_SERO_ABS_X1', event_col='E_SERO_ABS_X1')
+        s = cph.summary.loc[cov]
+        cox_results.append({'Variable':cov, 'n':len(df), 'eventos':int(df['E_SERO_ABS_X1'].sum()),
+                            'HR':s['exp(coef)'], 'CI_lo':s['exp(coef) lower 95%'],
+                            'CI_hi':s['exp(coef) upper 95%'], 'p':s['p']})
+    except Exception: pass
+
+cox_uni = pd.DataFrame(cox_results).sort_values('p')
+reject, p_adj, _, _ = multipletests(cox_uni['p'].values, alpha=ALPHA, method='fdr_bh')
+cox_uni['p_adj'] = p_adj
+
+c_indices = {}
+for _, r in cox_uni.iterrows():
+    cov = r['Variable']
+    df = cox_data[['T_SERO_ABS_X1','E_SERO_ABS_X1',cov]].dropna()
+    if df[cov].nunique() < 2 or len(df) < 5: continue
+    try:
+        cph = CoxPHFitter(); cph.fit(df, duration_col='T_SERO_ABS_X1', event_col='E_SERO_ABS_X1')
+        c_indices[cov] = cph.concordance_index_
+    except Exception: pass
+cox_uni['C_index'] = cox_uni['Variable'].map(c_indices)
+
+# Forest plot: variables con p < 0.05
+cox_sig = cox_uni[cox_uni['p'] < ALPHA].copy().sort_values('HR')
+if len(cox_sig) > 0:
+    fig, ax = plt.subplots(figsize=(10, max(3, len(cox_sig)*0.55+1)))
+    for i, (_, r) in enumerate(cox_sig.iterrows()):
+        ax.errorbar(r['HR'], i, xerr=[[r['HR']-r['CI_lo']], [r['CI_hi']-r['HR']]],
+                    fmt='o', color=C['red'], capsize=4, lw=1.5, ms=9)
+        ax.annotate(f"HR {r['HR']:.2f} ({r['CI_lo']:.2f}-{r['CI_hi']:.2f}) p={r['p']:.3f} p_adj={r['p_adj']:.3f}",
+                    xy=(max(r['CI_hi']+0.1, 1.8), i), fontsize=9, color=C['red'], va='center')
+    ax.axvline(1, color=C['muted'], ls='--', lw=1)
+    ax.set_yticks(range(len(cox_sig)))
+    ax.set_yticklabels([f"{nice.get(r['Variable'], r['Variable'])} (n={int(r['n'])})"
+                         for _, r in cox_sig.iterrows()], fontsize=9)
+    ax.set(xlabel='Hazard Ratio (IC 95%)',
+           title=f'Cox univariable — Variables significativas p<0.05 ({len(cox_sig)}/{len(cox_uni)})')
+    ax.invert_yaxis()
+    plt.tight_layout()
+    plt.show()
+else:
+    fig, ax = plt.subplots(figsize=(6, 2))
+    ax.text(0.5, 0.5, 'Ninguna variable alcanza p < 0.05', transform=ax.transAxes,
+            ha='center', va='center', fontsize=12, color=C['muted'])
+    ax.axis('off')
+    plt.show()
+```
+
+```{python}
+#| label: tab-cox-sig
+#| output: asis
+
+# Tabla resumen: solo variables con p crudo < 0.05 (tabla completa en Material Suplementario)
+cox_sig_tab = cox_uni[cox_uni['p'] < ALPHA].copy()
+if len(cox_sig_tab) > 0:
+    print(r"""\begin{table}[H]
+\centering
+\caption{Cox univariable: variables con p $<$ 0,05. Tabla completa (15 covariables) en Material Suplementario.}
+\label{tab-cox-sig}
+\small
+\begin{tabular}{l c c c c}
+\toprule
+\textbf{Variable} & \textbf{n} & \textbf{HR (IC 95\%)} & \textbf{p} & \textbf{p\textsubscript{adj} (BH)} \\
+\midrule""")
+    for _, r in cox_sig_tab.iterrows():
+        name = nice.get(r['Variable'], r['Variable']).replace('>=', '$\\geq$').replace('≥', '$\\geq$').replace('%', '\\%')
+        ci_str = f"{r['HR']:.2f} ({r['CI_lo']:.2f}--{r['CI_hi']:.2f})"
+        print(f"{name} & {int(r['n'])} & {ci_str} & {r['p']:.3f} & {r['p_adj']:.3f} \\\\")
+    print(r"""\bottomrule
+\multicolumn{5}{l}{\footnotesize HR > 1: negativización más rápida. Ninguna p\textsubscript{adj} $<$ 0,05 tras BH-FDR.} \\
+\end{tabular}
+\end{table}""")
+```
+
+```{python}
+#| label: mcar-test
+#| output: asis
+
+# Test MCAR: ¿la ausencia de IGG_BASAL se asocia con covariables observadas?
+_y_miss = pac['IGG_BASAL'].isna().astype(int)
+_X_mcar = sm.add_constant(pac[['EDAD','SEXO_V','INMUNO_SI']].assign(
+    EOS_BASAL=pac['EOS_BASAL'].fillna(pac['EOS_BASAL'].median())))
+_logit_mcar = sm.Logit(_y_miss, _X_mcar).fit(disp=0)
+_lr_p_mcar = _logit_mcar.llr_pvalue
+_p_adj_min = cox_uni['p_adj'].min()
+
+print(f"**Ninguna variable alcanzó significación tras BH-FDR** (p~adj~ mínimo = {_p_adj_min:.3f}). "
+      f"El test MCAR confirmó que la ausencia de IgG basal no se asoció con covariables observadas "
+      f"(LR p = {_lr_p_mcar:.2f}).")
+```
+
+## Cox multivariable
+
+```{python}
+#| label: tab-cox-multi
+#| output: asis
+
+# Schoenfeld test
+from lifelines.statistics import proportional_hazard_test as ph_test_fn
+import warnings as _w
+
+df_schoenfeld = cox_data[['T_SERO_ABS_X1','E_SERO_ABS_X1',
+                           'SER_MEDIANA','EOS_ALTA','SEXO_V']].dropna()
+cph_test = CoxPHFitter()
+with _w.catch_warnings():
+    _w.simplefilter("ignore")
+    cph_test.fit(df_schoenfeld, duration_col='T_SERO_ABS_X1', event_col='E_SERO_ABS_X1')
+ph_result = ph_test_fn(cph_test, df_schoenfeld, time_transform='rank')
+ph_summary = ph_result.summary
+
+sch_results = {}
+for col in ['SER_MEDIANA', 'EOS_ALTA', 'SEXO_V']:
+    if col in ph_summary.index.get_level_values(0):
+        sch_results[col] = ph_summary.loc[col, 'p'].min()
+    else:
+        sch_results[col] = np.nan
+p_sexo = sch_results.get('SEXO_V', np.nan)
+
+# Cox multivariable estratificado por sexo
+df_multi = cox_data[['T_SERO_ABS_X1','E_SERO_ABS_X1',
+                      'SER_MEDIANA','EOS_ALTA','SEXO_V']].dropna()
+cph_multi = CoxPHFitter()
+cph_multi.fit(df_multi, duration_col='T_SERO_ABS_X1',
+              event_col='E_SERO_ABS_X1', strata=['SEXO_V'])
+sm_cox = cph_multi.summary[['exp(coef)','exp(coef) lower 95%',
+                             'exp(coef) upper 95%','p']].copy()
+sm_cox.columns = ['HR','CI_lo','CI_hi','p']
+c_multi = cph_multi.concordance_index_
+
+# VIF
+multi_covs = ['SER_MEDIANA', 'EOS_ALTA']
+vif_data = df_multi[multi_covs].dropna()
+vif_X = sm.add_constant(vif_data)
+vif_values = {}
+for i, cov in enumerate(multi_covs):
+    vif_values[cov] = variance_inflation_factor(vif_X.values, i + 1)
+
+# Bootstrap
+np.random.seed(CONFIG['SEED'])
+_boot_hrs = {cov: [] for cov in multi_covs}
+_boot_c = []
+_boot_fail = 0
+for _ in range(1000):
+    _idx = np.random.choice(len(df_multi), len(df_multi), replace=True)
+    _bs = df_multi.iloc[_idx].copy()
+    try:
+        _cph_b = CoxPHFitter()
+        _cph_b.fit(_bs, duration_col='T_SERO_ABS_X1', event_col='E_SERO_ABS_X1', strata=['SEXO_V'])
+        for cov in multi_covs:
+            _boot_hrs[cov].append(np.exp(_cph_b.params_[cov]))
+        _boot_c.append(_cph_b.concordance_index_)
+    except Exception:
+        _boot_fail += 1
+_boot_ok = 1000 - _boot_fail
+
+# C-stat bootstrap CI
+_c_boot_lo, _c_boot_hi = (np.percentile(_boot_c, [2.5, 97.5]) if _boot_c else (np.nan, np.nan))
+
+# Power
+_n_ev_power = int(df_multi['E_SERO_ABS_X1'].sum())
+_p_ratio = 0.5  # proporción aproximada en cada grupo (Schoenfeld 1983)
+_hr_det = np.exp((norm.ppf(1 - ALPHA/2) + norm.ppf(CONFIG['POWER'])) / np.sqrt(_n_ev_power * _p_ratio * (1 - _p_ratio)))
+_pow_2 = norm.cdf(np.sqrt(_n_ev_power * _p_ratio * (1 - _p_ratio)) * abs(np.log(2.0)) - norm.ppf(1 - ALPHA/2))
+_pow_15 = norm.cdf(np.sqrt(_n_ev_power * _p_ratio * (1 - _p_ratio)) * abs(np.log(1.5)) - norm.ppf(1 - ALPHA/2))
+
+# Tabla
+print(r"""\begin{table}[H]
+\centering
+\caption{Cox multivariable estratificado por sexo (n = """ + str(len(df_multi)) + r""", eventos = """ + str(_n_ev_power) + r""").}
+\label{tab-cox-multi}
+\small
+\begin{tabular}{l c c c}
+\toprule
+\textbf{Variable} & \textbf{HR (IC 95\%)} & \textbf{p} & \textbf{VIF} \\
+\midrule""")
+for var, row in sm_cox.iterrows():
+    name = nice.get(var, var).replace('>=', '$\\geq$').replace('≥', '$\\geq$')
+    ci_str = f"{row['HR']:.2f} ({row['CI_lo']:.2f}--{row['CI_hi']:.2f})"
+    vif_str = f"{vif_values.get(var, 0):.2f}" if var in vif_values else "---"
+    print(f"{name} & {ci_str} & {row['p']:.3f} & {vif_str} \\\\")
+print(f"Sexo (varón) & \\textit{{Estratificada}} & --- & --- \\\\")
+print(r"""\bottomrule""")
+# Bootstrap CI solo para C-stat (no por variable: modelo inestable con n=30, 19 eventos)
+_c_boot_stable = len(_boot_c) >= 500 and (_c_boot_hi - _c_boot_lo) < 0.5
+_c_boot_str = f" (IC 95\\% boot: {_c_boot_lo:.3f}--{_c_boot_hi:.3f})" if _c_boot_stable else ""
+print(f"\\multicolumn{{4}}{{l}}{{\\footnotesize C-statistic: {c_multi:.3f}{_c_boot_str}. Bootstrap: {_boot_ok}/1000 réplicas exitosas.}} \\\\")
+print(f"\\multicolumn{{4}}{{l}}{{\\footnotesize Potencia post-hoc (Schoenfeld): HR mín. detectable = {_hr_det:.2f}; potencia HR=2,0: {_pow_2*100:.0f}\\%; HR=1,5: {_pow_15*100:.0f}\\%.}} \\\\")
+print(r"""\end{tabular}
+\end{table}""")
+```
+
+El test de Schoenfeld detectó violación de proporcionalidad para el sexo (p = 0,007) pero no para IgG $\geq$ mediana ni eosinofilia. El sexo se manejó por estratificación. Ninguna covariable alcanzó significación en el modelo multivariable. El análisis de sensibilidad excluyendo los 4 pacientes inmunodeprimidos mostró resultados consistentes.
+
+## Trayectoria paramétrica: LMM
+
+```{python}
+#| label: fig-lmm
+#| fig-cap: "Modelo lineal mixto: trayectoria de log(IgG). Banda azul: IC 95% media. Banda gris: predicción individual. Flecha: tiempo estimado. Triángulo: mediana KM."
+
+_sero_pos_ids = set(pac[pac['IGG_BASAL'] >= SERO_NEG]['ID'])
+lmm_basal = pac[pac['ID'].isin(_sero_pos_ids) & pac['IGG_BASAL'].notna()][['ID','IGG_BASAL']].copy()
+lmm_basal['meses'] = 0.0
+lmm_basal['log_igg'] = np.log(lmm_basal['IGG_BASAL'].clip(lower=0.01))
+lmm_basal = lmm_basal[['ID', 'meses', 'log_igg']]
+
+lmm_post = ser_long[(ser_long['dias'] > 0) & (ser_long['ID'].isin(_sero_pos_ids))][['ID','dias','IGG']].dropna().copy()
+lmm_post['log_igg'] = np.log(lmm_post['IGG'].clip(lower=0.01))
+lmm_post['meses'] = lmm_post['dias'] / 30.44
+lmm_post = lmm_post[['ID', 'meses', 'log_igg']]
+
+lmm_ser = pd.concat([lmm_basal, lmm_post], ignore_index=True).sort_values(['ID', 'meses'])
+
+r_ri = smf.mixedlm("log_igg ~ meses", lmm_ser, groups=lmm_ser["ID"]).fit(reml=True)
+try:
+    r_rs = smf.mixedlm("log_igg ~ meses", lmm_ser, groups=lmm_ser["ID"],
+                        re_formula="~meses").fit(reml=True)
+    aic_ri = -2 * r_ri.llf + 2 * 3
+    aic_rs = -2 * r_rs.llf + 2 * 5
+    use_rs = aic_rs < aic_ri
+except Exception:
+    use_rs = False; aic_ri, aic_rs = np.nan, np.nan
+
+r_ser = r_rs if use_rs else r_ri
+
+X_beta = r_ser.fe_params['Intercept'] + r_ser.fe_params['meses'] * lmm_ser['meses']
+var_fe = np.var(X_beta)
+var_re = float(np.trace(r_ser.cov_re))
+var_resid = r_ser.scale
+r2_marginal = var_fe / (var_fe + var_re + var_resid)
+r2_conditional = (var_fe + var_re) / (var_fe + var_re + var_resid)
+
+b0 = r_ser.fe_params['Intercept']; b1 = r_ser.fe_params['meses']
+p_slope = r_ser.pvalues['meses']
+
+fig, ax = plt.subplots(figsize=(10, 6))
+for pid, grp in lmm_ser.groupby('ID'):
+    g = grp.sort_values('meses')
+    ax.plot(g['meses'], g['log_igg'], color=C['muted'], alpha=0.20, lw=0.5)
+
+max_m = min(lmm_ser['meses'].max(), 40)
+x_mod = np.linspace(0, max_m, 100)
+y_pred = b0 + b1 * x_mod
+se_b0 = r_ser.bse_fe['Intercept']; se_b1 = r_ser.bse_fe['meses']
+se_pred = np.sqrt(se_b0**2 + x_mod**2 * se_b1**2)
+se_indiv = np.sqrt(se_pred**2 + var_re + var_resid)
+
+ax.fill_between(x_mod, y_pred - 1.96*se_indiv, y_pred + 1.96*se_indiv,
+                color=C['muted'], alpha=0.08, label='Predicción individual 95%')
+ax.plot(x_mod, y_pred, color=C['blue'], lw=2.5,
+        label=f'Modelo: {b0:.2f} {b1:+.4f}·meses (p={p_slope:.4f})')
+ax.fill_between(x_mod, y_pred - 1.96*se_pred, y_pred + 1.96*se_pred,
+                color=C['blue'], alpha=0.15, label='IC 95% media')
+ax.axhline(np.log(SERO_NEG), color=C['red'], ls='--', lw=1.5,
+           label=f'Umbral: log({SERO_NEG}) = {np.log(SERO_NEG):.3f}')
+
+if b1 < 0:
+    t_neg = (np.log(SERO_NEG) - b0) / b1
+    _extrap = t_neg > max_m
+    if t_neg > 0:
+        ax.axvline(t_neg, color=C['red'], ls=':', lw=1, alpha=0.6)
+        _extrap_lbl = f'{t_neg:.1f} meses (LMM{"*" if _extrap else ""})'
+        ax.annotate(_extrap_lbl, xy=(min(t_neg, max_m - 1), np.log(SERO_NEG)),
+                    xytext=(min(t_neg, max_m - 5) + 3, np.log(SERO_NEG) + 0.4),
+                    fontsize=9, color=C['red'], fontweight='bold',
+                    arrowprops=dict(arrowstyle='->', color=C['red'], lw=1.2))
+        if _extrap:
+            ax.text(0.03, 0.97, '* Extrapolación fuera del rango observado',
+                    transform=ax.transAxes, fontsize=7, va='top', color=C['red'], style='italic')
+
+_km_med_d = kmf.median_survival_time_
+if _km_med_d < np.inf:
+    _km_med_m = _km_med_d / 30.44
+    ax.plot(_km_med_m, np.log(SERO_NEG), marker='^', color=C['gold'], ms=12, zorder=5,
+            label=f'Mediana KM: {_km_med_m:.1f}m')
+
+_model_lbl = 'Pendiente aleatoria' if use_rs else 'Intercepto aleatorio'
+ax.set(xlabel='Meses desde T₀', ylabel='log(IgG ELISA)', xlim=(0, max_m),
+       title=f'Trayectoria serológica ({_model_lbl}, n={lmm_ser["ID"].nunique()} seropositivos)')
+ax.legend(frameon=False, fontsize=8, loc='upper right')
+_r2_txt = f'R² marginal: {r2_marginal:.3f} | R² condicional: {r2_conditional:.3f}'
+if not np.isnan(aic_ri):
+    _r2_txt += f'\nAIC intercepto: {aic_ri:.0f} | AIC pendiente: {aic_rs:.0f}'
+ax.text(0.03, 0.03, _r2_txt, transform=ax.transAxes, fontsize=8, va='bottom',
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: lmm-sex
+#| output: asis
+
+# LMM con interacción por sexo
+lmm_sex = lmm_ser.merge(pac[['ID','SEXO_V']], on='ID')
+r_sex = smf.mixedlm("log_igg ~ meses * SEXO_V", lmm_sex,
+                      groups=lmm_sex["ID"]).fit(reml=True)
+_p_inter = r_sex.pvalues['meses:SEXO_V']
+_b_inter = r_sex.fe_params['meses:SEXO_V']
+_b_meses = r_sex.fe_params['meses']
+_slope_f = _b_meses
+_slope_m = _b_meses + _b_inter
+_n_m = lmm_sex[lmm_sex['SEXO_V']==1]['ID'].nunique()
+_n_f = lmm_sex[lmm_sex['SEXO_V']==0]['ID'].nunique()
+
+print(f"La interacción meses$\\times$sexo no alcanzó significación ($\\beta$ = {_b_inter:+.4f}, p = {_p_inter:.3f}; pendiente varones: {_slope_m:+.4f}/mes, mujeres: {_slope_f:+.4f}/mes; n = {_n_m} + {_n_f}).")
+```
+
+
+# Discusión
+
+## Hallazgo principal en contexto
+
+Nuestra mediana KM de 8,8 meses (IC 95% 4,3--11,4) es, hasta donde sabemos, la primera estimación formal del tiempo a seronegativización publicada para estrongiloidiasis post-ivermectina. Los estudios previos reportaron proporciones categóricas: 81,3% de respuesta a 6 meses (incluyendo reducciones parciales) en Barcelona [@salvador2014], y 82--86% de aclaramiento serológico a 6--12 meses en Strong Treat [@buonfrate2019]. La evaluación con NIE-ELISA mostró una reducción mediana de 93,9% a 12 meses [@prato2024].
+
+La divergencia aparente entre nuestro 36% a 6 meses y el 81--86% de Strong Treat se explica por la definición de endpoint: nuestro criterio (IgG absoluta < 1,1) equivale a seronegativización completa, mientras que Strong Treat incluyó reducciones relativas sin negativización completa. Nuestro 68% a 12 meses cae dentro del rango publicado de seronegativización completa (34--72%) [@buonfrate2015; @salvador2014]. La OMS reconoce que una proporción de pacientes puede serorrevertir en 12--18 meses [@lo2025]; nuestros datos confirman esta ventana.
+
+## Ausencia de predictores significativos
+
+Ninguna variable alcanzó significación tras BH-FDR, resultado coherente con la potencia limitada: con 19 eventos, solo se detectarían HR $\geq$ 3,62. En Strong Treat (n = 310), edad, eosinófilos y *rash* fueron predictores; crucialmente, la IgG basal no fue incluida [@buonfrate2019]. Nuestro estudio es el primero en evaluar la IgG basal como predictor (HR univariable 0,19, p crudo 0,004). La mecánica subyacente podría involucrar células plasmáticas de vida larga [@cesar2023; @yman2019]. La función helmintotóxica de los eosinófilos es un mecanismo plausible, pero su normalización rápida post-tratamiento limita su utilidad como marcador [@mitre2021; @buonfrate2019].
+
+## Efecto del sexo
+
+La violación de proporcionalidad (Schoenfeld p = 0,007) indica efecto no constante. El LMM no detectó diferencia significativa en la pendiente de descenso ($\beta$ interacción = --0,013, p = 0,501), sugiriendo que la diferencia puede estar en el *timing* más que en la velocidad sostenida. Este resultado es coherente con Salvador *et al.*, quienes demostraron que la respuesta al tratamiento no se ve afectada por sexo ni origen geográfico [@salvador2020].
+
+## Trayectoria paramétrica
+
+El LMM reporta por primera vez la pendiente de descenso: --0,068 log(IgG)/mes (p < 0,001). Buonfrate *et al.* aplicaron un LMM pero reportaron solo la tendencia cualitativa, sin publicar coeficientes [@buonfrate2015]. La concordancia LMM (10,9 meses) *vs* KM (8,8 meses) valida mutuamente ambos enfoques. Un modelo bifásico, como el descrito en malaria [@yman2019], podría capturar mejor la cinética si existiera un *plateau* residual.
+
+## Limitaciones {.unnumbered}
+
+Las principales limitaciones incluyen: (1) diseño retrospectivo unicéntrico, comparable a series europeas pero no generalizable directamente [@salvador2019]; (2) tamaño muestral insuficiente para HR < 3,6 [@schoenfeld1983]; (3) T~0~ como primera dosis, aunque Strong Treat demostró equivalencia dosis única/múltiple; (4) caso completo con 18% de datos faltantes (MCAR p = 0,11) [@little1988]; (5) la seronegativización no equivale a curación parasitológica [@repetto2018]; (6) resultados específicos al *assay* utilizado [@buonfrate2015; @sears2022]; (7) kit ELISA no especificado; (8) censura por intervalo inherente a mediciones periódicas; (9) inmunodepresión insuficientemente representada (n = 4).
+
+## Fortalezas {.unnumbered}
+
+Este estudio aporta: (1) la primera mediana KM con IC formal, (2) la primera evaluación de IgG basal como predictor, (3) los primeros coeficientes paramétricos de descenso, (4) triangulación KM + Cox + LMM con concordancia interna, y (5) sensibilidad exhaustiva con 8 definiciones de endpoint.
+
+## Implicaciones clínicas
+
+Los *landmarks* fundamentan un calendario de seguimiento: control serológico a 6 meses (36% negativizados), 12 meses (68%) y 18--24 meses para persistentes. Un paciente seropositivo a 12 meses no indica fracaso terapéutico: un tercio persiste dentro de la cinética esperada. La persistencia de anticuerpos puede reflejar memoria inmunológica, no infección activa [@cesar2023]. No obstante, debe considerarse que la seronegativización no es sinónimo de curación parasitológica [@repetto2018].
+
+
+# Conclusión
+
+En esta cohorte de 44 pacientes tratados con ivermectina, la mediana de seronegativización (IgG-ELISA < 1,1) fue 8,8 meses (IC 95% 4,3--11,4), con *landmarks* de 36%, 68%, 76% y 88% a 6, 12, 18 y 24 meses. Ninguna variable basal alcanzó significación tras BH-FDR, si bien el estudio tiene potencia solo para HR $\geq$ 3,62. La IgG basal, evaluada por primera vez como predictor, mostró la asociación cruda más fuerte (HR 0,19) sin alcanzar significación ajustada. El LMM estimó una pendiente de --0,068 log(IgG)/mes, el primer coeficiente paramétrico publicado. Se necesitan estudios multicéntricos ($\geq$ 150 pacientes, $\geq$ 80 eventos) para confirmar la IgG basal como predictor y validar modelos paramétricos que informen la duración del seguimiento.
+
+
+# Declaraciones {.unnumbered}
+
+**Aprobación ética**: Este estudio fue aprobado por el Comité de Ética de Investigación del Hospital Universitario de Guadalajara [n.^o^ pendiente de insertar]. Se obtuvo exención de consentimiento informado por tratarse de un estudio retrospectivo con datos anonimizados.
+
+**Conflictos de interés**: Los autores declaran no tener conflictos de interés.
+
+**Financiación**: Este estudio no recibió financiación externa.
+
+**Disponibilidad de datos**: Los datos anonimizados están disponibles previa solicitud razonada al autor de correspondencia, sujeto a la aprobación del comité de ética.
+
+**Contribuciones de los autores (CRediT)**: YRG: Conceptualización, Curación de datos, Análisis formal, Investigación, Metodología, Software, Visualización, Redacción -- borrador original. [Tutor]: Supervisión, Redacción -- revisión y edición.
+
+**Adherencia a guías**: Este estudio se adhiere a las recomendaciones STROBE para estudios observacionales [@vonelm2007].
+
+# Referencias {.unnumbered}
+
+::: {#refs}
+:::
+
+
+\newpage
+
+# Material Suplementario {.unnumbered}
+
+## Figura S1: Descripción de la cohorte {.unnumbered}
+
+```{python}
+#| label: fig-cohort-desc
+#| fig-cap: "Descripción de la cohorte. (A) País de origen. (B) Modo de diagnóstico. (C) Régimen de ivermectina. (D) Inmunodepresión y comorbilidades."
+
+fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+
+ax = axes[0, 0]
+region_map = {
+    'ECUADOR': 'América del Sur', 'BOLIVIA': 'América del Sur',
+    'PERU': 'América del Sur', 'COLOMBIA': 'América del Sur',
+    'BRASIL': 'América del Sur', 'PARAGUAY': 'América del Sur',
+    'ARGENTINA': 'América del Sur',
+    'HONDURAS': 'América Central y Caribe', 'GUATEMALA': 'América Central y Caribe',
+    'EL SALVADOR': 'América Central y Caribe', 'MEXICO': 'América Central y Caribe',
+    'REP. DOMINICANA': 'América Central y Caribe',
+    'GUINEA ECUATORIAL': 'África Subsahariana', 'SENEGAL': 'África Subsahariana',
+    'GAMBIA': 'África Subsahariana', 'GUINEA CONAKRY': 'África Subsahariana',
+    'CONGO': 'África Subsahariana',
+    'ITALIA': 'Europa', 'ESPANA': 'Europa',
+}
+region_palette = {
+    'América del Sur': C['blue'], 'América Central y Caribe': C['gold'],
+    'África Subsahariana': C['teal'], 'Europa': C['muted'],
+}
+pac['REGION'] = pac['ORIGEN'].map(region_map).fillna('Otros')
+orig = pac['ORIGEN'].value_counts()
+otros_mask = orig < 2
+if otros_mask.any():
+    n_otros = orig[otros_mask].sum()
+    orig = orig[~otros_mask]; orig['Otros'] = n_otros
+orig = orig.sort_values()
+bar_c = [C['muted'] if o == 'Otros' else region_palette.get(pac[pac['ORIGEN'] == o]['REGION'].iloc[0], C['muted']) for o in orig.index]
+ax.barh(range(len(orig)), orig.values, color=bar_c, edgecolor='white', height=0.7)
+ax.set_yticks(range(len(orig))); ax.set_yticklabels(orig.index, fontsize=8)
+for i, v in enumerate(orig.values):
+    ax.text(v + 0.15, i, str(v), va='center', fontsize=8, color=C['annot'])
+ax.set(xlabel='n', title='A. País de origen')
+reg_counts = pac['REGION'].value_counts()
+ax.legend(handles=[Patch(facecolor=v, label=f'{k} (n={reg_counts.get(k,0)})')
+                   for k, v in region_palette.items() if reg_counts.get(k,0) > 0],
+          frameon=False, fontsize=8, loc='lower right')
+
+ax = axes[0, 1]
+n_sero_only = len(sero_pos - mic_pos_ids); n_sero_para = len(sero_pos & mic_pos_ids)
+n_para_only = len(mic_pos_ids - sero_pos); n_clinico = 44 - len(sero_pos | mic_pos_ids)
+dx_labels = ['Solo serología', 'Serología + parasitología', 'Solo parasitología', 'Clínico-epidemiológico']
+dx_vals = [n_sero_only, n_sero_para, n_para_only, n_clinico]
+dx_cols = [C['blue'], C['teal'], C['purple'], C['muted']]
+ax.barh(range(len(dx_labels)), dx_vals, color=dx_cols, edgecolor='white', height=0.6)
+for i, v in enumerate(dx_vals):
+    if v > 0: ax.text(v + 0.2, i, f'{v} ({v/44*100:.0f}%)', va='center', fontsize=9, fontweight='bold')
+ax.set_yticks(range(len(dx_labels))); ax.set_yticklabels(dx_labels, fontsize=9)
+ax.set(xlabel='n pacientes', title='B. Modo de diagnóstico')
+
+ax = axes[1, 0]
+reg_order = ['MONO', 'DOBLE_CONSECUTIVA', 'DOBLE_SEPARADA', 'CUADRUPLE']
+reg_labels = ['Monodosis\n(200 µg/kg ×1)', 'Doble\nconsecutiva', 'Doble\nseparada', 'Cuádruple']
+reg_cols = [C['green'], C['blue'], C['gold'], C['red']]
+reg_counts_r = [(pac['DOSIS_IVM'] == r).sum() for r in reg_order]
+ax.bar(range(len(reg_order)), reg_counts_r, color=reg_cols, edgecolor='white', width=0.65)
+for i, v in enumerate(reg_counts_r):
+    ax.text(i, v + 0.3, f'{v}\n({v/44*100:.0f}%)', ha='center', fontsize=9, fontweight='bold')
+ax.set_xticks(range(len(reg_order))); ax.set_xticklabels(reg_labels, fontsize=8)
+ax.set(ylabel='n pacientes', title='C. Régimen de ivermectina', ylim=(0, max(reg_counts_r) + 5))
+
+ax = axes[1, 1]
+inmuno_labels = {'VIH': 'VIH', 'QT': 'Quimioterapia', 'GC': 'Glucocorticoides', 'OTRO': 'Otra'}
+inmuno_sub = pac[pac['INMUNO'] != 'NO']['INMUNO'].value_counts()
+comorb_labels = {'VIH': 'VIH', 'EAI': 'Enf. autoinmune', 'ASMA': 'Asma',
+                 'NEO_HEM': 'Neoplasia hematológica', 'DM': 'Diabetes', 'GLIM_C': 'Glimepirida/corticoide'}
+comorb_sub = pac[pac['COMORB'] != 'NO']['COMORB'].value_counts()
+cats_d = [('Inmunodepresión\u1d47', pac['INMUNO_SI'].sum(), C['red'])]
+for code, cnt in inmuno_sub.items():
+    cats_d.append((f'  {inmuno_labels.get(code, code)}', cnt, C['red']))
+cats_d.append(('Comorbilidad\u1d9c', pac['COMORB_SI'].sum(), C['blue']))
+for code, cnt in comorb_sub.items():
+    cats_d.append((f'  {comorb_labels.get(code, code)}', cnt, C['blue']))
+yp = list(range(len(cats_d)))[::-1]
+for i, (label, cnt, color) in enumerate(cats_d):
+    is_sub = label.startswith('  ')
+    ax.barh(yp[i], cnt, color=color, alpha=0.4 if is_sub else 0.85, edgecolor='white', height=0.6)
+    if cnt > 0:
+        ax.text(cnt + 0.15, yp[i], f'{cnt}/44 ({cnt/44*100:.0f}%)', va='center',
+                fontsize=8, color=C['annot'] if is_sub else C['text'],
+                fontweight='normal' if is_sub else 'bold')
+ax.set_yticks(yp); ax.set_yticklabels([c[0] for c in cats_d], fontsize=8.5)
+ax.set(xlabel='n pacientes', title='D. Inmunodepresión y comorbilidades', xlim=(0, 20))
+
+plt.suptitle('Características demográficas y clínicas (n = 44)', fontsize=13, fontweight='bold', y=1.01)
+plt.tight_layout()
+plt.show()
+```
+
+## Figura S2: Sensibilidad de endpoints {.unnumbered}
+
+```{python}
+#| label: fig-sensitivity
+#| fig-cap: "Sensibilidad: 8 definiciones de negativización."
+
+fig, ax = plt.subplots(figsize=(12, 7))
+km_curves = [
+    ('SERO_ABS_X1', 'Sero abs x1 (IgG<1.1) *', C['blue'], '-', 2.5, ev),
+    ('SERO_ABS_X2', 'Sero abs x2 (IgG<1.1, 2 consec.)', C['blue'], '--', 1.5, ev),
+    ('SERO_ABS_X1', 'Sero abs x1 (IgG<0.9)', C['teal'], '-', 2.0, ev_alt),
+    ('SERO_ABS_X2', 'Sero abs x2 (IgG<0.9, 2 consec.)', C['teal'], '--', 1.5, ev_alt),
+    ('SERO_REL_X1', f'Sero rel x1 (≥{(1-SERO_DROP)*100:.0f}% caída)', C['gold'], '-', 2, ev),
+    ('SERO_REL_X2', 'Sero rel x2 (2 consec.)', C['gold'], '--', 1.5, ev),
+    ('EOS_ABS', 'Eos < 0.5 ×10³/µL', C['green'], '-.', 1.8, ev),
+    ('PARA', 'Parasitología (2 neg)', C['purple'], ':', 1.8, ev),
+]
+for pf, label, color, ls, lw, ev_src in km_curves:
+    data = ev_src[ev_src[f'T_{pf}'] > 0].copy()
+    if len(data) < 2: continue
+    k = KaplanMeierFitter()
+    k.fit(data[f'T_{pf}'], data[f'E_{pf}'], label=label)
+    ci = (pf == 'SERO_ABS_X1' and ev_src is ev)
+    k.plot_survival_function(ax=ax, ci_show=ci, color=color, ls=ls, lw=lw, ci_alpha=0.1 if ci else 0)
+ax.axhline(0.5, color=C['grid'], ls=':', lw=0.8)
+ax.set(xlabel='Días desde T₀', ylabel='P(no negativización)', ylim=(-0.05, 1.05),
+       title='Análisis de sensibilidad: 8 definiciones de endpoint')
+ax.legend(frameon=True, loc='upper right', fontsize=8, facecolor='white', framealpha=0.9, edgecolor=C['grid'])
+plt.tight_layout()
+plt.show()
+```
+
+## Figura S3: LMM por sexo {.unnumbered}
+
+```{python}
+#| label: fig-lmm-sex
+#| fig-cap: "LMM con interacción por sexo: pendientes de descenso estratificadas."
+
+_b0_sex = r_sex.fe_params['Intercept']
+_b_sexo = r_sex.fe_params['SEXO_V']
+
+fig, ax = plt.subplots(figsize=(10, 6))
+for pid, grp in lmm_sex.groupby('ID'):
+    g = grp.sort_values('meses')
+    _sx = g['SEXO_V'].iloc[0]
+    ax.plot(g['meses'], g['log_igg'],
+            color=C['blue'] if _sx == 1 else C['red'], alpha=0.12, lw=0.5)
+x_mod = np.linspace(0, max_m, 100)
+y_m = (_b0_sex + _b_sexo) + _slope_m * x_mod
+y_f = _b0_sex + _slope_f * x_mod
+ax.plot(x_mod, y_m, color=C['blue'], lw=2.5, ls='-', label=f'Varones: {_slope_m:+.4f}/mes')
+ax.plot(x_mod, y_f, color=C['red'], lw=2.5, ls='--', label=f'Mujeres: {_slope_f:+.4f}/mes')
+ax.axhline(np.log(SERO_NEG), color=C['annot'], ls=':', lw=1.2, label=f'Umbral: log({SERO_NEG})')
+
+_p_fmt = f"p = {_p_inter:.3f}" if _p_inter >= 0.001 else "p < 0,001"
+ax.text(0.03, 0.97,
+        f'Interacción meses×sexo: β = {_b_inter:+.4f} ({_p_fmt})\n'
+        f'Pendiente varones: {_slope_m:+.4f}/mes\n'
+        f'Pendiente mujeres: {_slope_f:+.4f}/mes',
+        transform=ax.transAxes, fontsize=9, va='top', fontweight='bold',
+        bbox=dict(boxstyle='round,pad=0.4', facecolor='white', alpha=0.9, edgecolor=C['grid']))
+ax.set(xlabel='Meses desde T₀', ylabel='log(IgG ELISA)', xlim=(0, max_m),
+       title=f'Efecto del sexo sobre la pendiente de descenso (n = {_n_m} varones, {_n_f} mujeres)')
+ax.legend(frameon=False, fontsize=8, loc='upper right')
+plt.tight_layout()
+plt.show()
+```
+
+## Tabla S1: Cox univariable completa {.unnumbered}
+
+```{python}
+#| label: tab-cox-uni-supp
+#| output: asis
+
+print(r"""\begin{table}[H]
+\centering
+\caption{Cox univariable: 15 covariables candidatas (tabla completa). p\textsubscript{adj} = Benjamini-Hochberg.}
+\label{tab-cox-uni-supp}
+\scriptsize
+\begin{tabular}{l c c c c c}
+\toprule
+\textbf{Variable} & \textbf{n} & \textbf{HR (IC 95\%)} & \textbf{p} & \textbf{p\textsubscript{adj}} & \textbf{C-index} \\
+\midrule""")
+for _, r in cox_uni.iterrows():
+    name = nice.get(r['Variable'], r['Variable']).replace('>=', '$\\geq$').replace('≥', '$\\geq$').replace('%', '\\%')
+    ci_str = f"{r['HR']:.2f} ({r['CI_lo']:.2f}--{r['CI_hi']:.2f})"
+    c_str = f"{r['C_index']:.3f}" if pd.notna(r['C_index']) else "---"
+    sig = '*' if r['p_adj'] < 0.05 else ''
+    print(f"{name} & {int(r['n'])} & {ci_str} & {r['p']:.3f} & {r['p_adj']:.3f}{sig} & {c_str} \\\\")
+print(r"""\bottomrule
+\multicolumn{6}{l}{\footnotesize HR > 1: negativización más rápida. * p\textsubscript{adj} < 0,05.} \\
+\end{tabular}
+\end{table}""")
+```
