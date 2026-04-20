@@ -11,7 +11,7 @@ format:
     documentclass: article
     papersize: a4
     fontsize: 12pt
-    mainfont: "Times New Roman"
+    mainfont: "TeX Gyre Termes"
     linestretch: 1.5
     geometry:
       - margin=2.5cm
@@ -22,9 +22,6 @@ format:
     fig-pos: 'H'
     include-in-header:
       text: |
-        \usepackage[utf8]{inputenc}
-        \usepackage{textgreek}
-        \DeclareUnicodeCharacter{00B5}{\textmu}
         \usepackage{lineno}
         \linenumbers
         \usepackage{booktabs}

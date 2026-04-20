@@ -43,7 +43,7 @@ exec(open('code/_data.py').read())
 
 # Diseño del estudio
 
-Se realizó un estudio observacional retrospectivo (2015–2025) en el Hospital Central de la Defensa Gómez Ulla (Madrid, España) que incluyó adultos con diagnóstico confirmado de S. stercoralis (coprocultivo, PCR o serología >1,1 con clínica/epidemiología compatible) tratados con ivermectina (200 μg/kg). El seguimiento consistió en determinaciones basales y controles post-tratamiento a los 3, 6, 12, 18 y 24 meses.  
+Se realizó un estudio observacional retrospectivo (2015–2025) en el Hospital Central de la Defensa Gómez Ulla (Madrid, España) que incluyó adultos con diagnóstico confirmado de *S. stercoralis* (coprocultivo, PCR o serología >1,1 con clínica/epidemiología compatible) tratados con ivermectina (200 μg/kg). El seguimiento consistió en determinaciones basales y controles post-tratamiento a los 3, 6, 12, 18 y 24 meses.  
 De los 44 pacientes incluidos (Figura 1), 39 conformaron la cohorte evaluable para el análisis de supervivencia (Kaplan-Meier y Cox). La ausencia de IgG basal en el 18% de la muestra se consideró aleatoria (Prueba de Little, p = 0,11). El criterio de valoración primario fue la seronegativización absoluta (IgG-ELISA < 1,1). Se emplearon modelos de riesgos proporcionales de Cox para identificar predictores basales y modelos lineales mixtos (LMM) para caracterizar la pendiente de descenso de log(IgG), asumiendo una cinética de primer orden.
 
 ```{=latex}
@@ -65,7 +65,7 @@ De los 44 pacientes incluidos (Figura 1), 39 conformaron la cohorte evaluable pa
 ]
 \node[greybox] (screen)
   {\textbf{Registros cribados}\\
-   {\scriptsize CNM (microbiología, 2017--2023) + HCD (serología, 2020--2025)}};
+   {\scriptsize CNM (serología, 2017--2023) + HCDGU (serología/parasitología, 2017--2025)}};
 \node[greybox, below=0.6cm of screen] (dedup)
   {\textbf{Tras deduplicación: $\geq$1 positivo} $\cdot$ n = 198};
 \draw[arrow] (screen) -- (dedup);

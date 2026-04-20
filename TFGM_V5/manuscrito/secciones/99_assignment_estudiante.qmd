@@ -29,7 +29,7 @@ La reproducibilidad se ha priorizado mediante versionado del código (Python + Q
 
 - Ampliación de la cohorte a multicéntrica con incorporación de inmunodeprimidos (no infrarrepresentados) para valorar el efecto de la inmunosupresión sobre la cinética de aclaramiento. [NO_CITE]
 - Validación prospectiva de la IgG basal como predictor y exploración de covariables no evaluadas (carga parasitaria cuantitativa por qPCR, subclases de IgG). [NO_CITE]
-- Evaluación de la concordancia entre kits ELISA (Strongyloides ratti antigen-based vs antígenos recombinantes). [NO_CITE]
+- Evaluación de la concordancia entre kits ELISA (*Strongyloides ratti* antigen-based vs antígenos recombinantes). [NO_CITE]
 
 ### Autoevaluación
 
