@@ -1,0 +1,59 @@
+<!-- Sección: Resultados. ≤30% (excl. tablas/figuras). -->
+<!-- Las frases desplazadas a MyM NO aparecen aquí. Tablas/figuras desde /manuscrito/figuras/. -->
+
+## Resultados {.unnumbered}
+
+### Flujo de pacientes y descripción de la cohorte
+
+Del total de 198 registros cribados, 84 cumplieron criterios diagnósticos confirmados y 64 recibieron ivermectina; tras descartar pacientes sin seguimiento o sin diagnóstico en HCDGU, la cohorte final incluyó 44 pacientes (retención 22,2 %) (Figura 1). [NO_CITE]
+
+La cohorte fue mayoritariamente de origen sudamericano (81,8 %) y diagnosticada mediante serología (86,4 %); 52,3 % recibió ivermectina en dosis única. [NO_CITE]
+
+La mediana de seguimiento serológico fue 11,7 meses (IQR 3,1–22,2). [NO_CITE]
+
+Las características basales detalladas se presentan en la **Tabla 1** (ver `manuscrito/figuras/tab-basales.md`). [NO_CITE]
+
+### Cinética de seronegativización
+
+En los 39 pacientes evaluables para análisis de supervivencia serológica, la mediana de tiempo hasta seronegativización absoluta (IgG-ELISA < 1,1) fue **8,8 meses** (IC 95 % 4,3–11,4). [NO_CITE]
+
+Las proporciones acumuladas de seronegativización fueron 36 % a los 6 meses, 61 % a los 12 meses, 78 % a los 18 meses y 88 % a los 24 meses (**Figura 2**). [NO_CITE]
+
+El análisis de sensibilidad con umbral más estricto (< 0,9) desplazó la mediana a **10,8 meses** (reducción de eventos de 27 a 25), confirmando la robustez del hallazgo. [NO_CITE]
+
+La seronegativización confirmada en dos determinaciones consecutivas presentó una mediana de **16,4 meses**. [NO_CITE]
+
+La normalización eosinofílica fue significativamente más precoz (mediana **3,0 meses**) (**Figura 3**). [NO_CITE]
+
+### Predictores basales (Cox univariable)
+
+En el análisis de Cox univariable sobre 15 covariables, dos variables mostraron las asociaciones más fuertes con el tiempo de seronegativización (**Figura 4A**, **Tabla 2**):
+
+- IgG basal ≥ mediana: HR 0,19 (IC 95 % 0,06–0,59; p = 0,004). [NO_CITE]
+- Sexo masculino: HR 3,29 (IC 95 % 1,38–7,86; p = 0,007). [NO_CITE]
+
+Tras el ajuste Benjamini–Hochberg False Discovery Rate (BH–FDR), ninguna covariable mantuvo significación (p-ajustada > 0,05). [NO_CITE]
+
+Las curvas de Kaplan–Meier estratificadas por estas variables (**Figura 4B–D**) visualizan la separación de trayectorias. [NO_CITE]
+
+### Modelo multivariable
+
+El modelo de Cox multivariable estratificado por sexo (IgG basal elevada + eosinofilia basal como covariables) alcanzó un estadístico C de Harrell de **0,676** (**Tabla 3**). [NO_CITE]
+
+Los resultados confirmaron a la IgG basal elevada y a la eosinofilia basal como los principales predictores exploratorios de una cinética de aclaramiento más lenta. [NO_CITE]
+
+### Trayectoria paramétrica (LMM)
+
+El modelo lineal mixto (LMM) estimó una pendiente de descenso de log(IgG) de **−0,068 unidades/mes** (p < 0,001), equivalente a una vida media serológica de **10,2 meses** (**Figura 5**). [NO_CITE]
+
+El tiempo estimado de cruce del umbral de negatividad por LMM fue de **10,9 meses**, consistente con la estimación no paramétrica de Kaplan–Meier. [NO_CITE]
+
+La interacción tiempo × sexo no fue significativa (p = 0,501), sugiriendo velocidad de descenso similar entre grupos pese a diferencias en los títulos basales. [NO_CITE]
+
+### Persistencia y recidiva
+
+Se identificaron **5 recidivas serológicas** (11,6 %) y **12 persistencias** (27,9 %) sobre 43 pacientes clasificables; no hubo recidiva parasitológica documentada (**Tabla 4**). [NO_CITE]
+
+Las trayectorias individuales (**Figura 6**, diagrama de nadador) mostraron dos patrones: caídas monótonas en curación sostenida frente a rebotes en "V" en recidivas. [NO_CITE]
+
+La concordancia entre seronegativización y normalización eosinofílica a los 12 meses fue nula (κ negativo, **Tabla 5**), subrayando la independencia de ambos biomarcadores en el seguimiento post-tratamiento. [NO_CITE]

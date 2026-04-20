@@ -1,0 +1,25 @@
+<!-- Sección: Abreviaturas/glosario. Página 3. -->
+<!-- Zero-tolerance §2.3: cada sigla/abreviatura debe definirse también en 1ª aparición del cuerpo. -->
+
+## Abreviaturas y glosario {.unnumbered}
+
+| Abreviatura | Definición |
+|---|---|
+| BH–FDR | Benjamini–Hochberg False Discovery Rate (ajuste por comparaciones múltiples) |
+| CNM | Centro Nacional de Microbiología (Instituto de Salud Carlos III) |
+| CSL | Citation Style Language |
+| ELISA | Enzyme-Linked ImmunoSorbent Assay |
+| HCDGU | Hospital Central de la Defensa "Gómez Ulla" |
+| HR | Hazard Ratio |
+| IC | Intervalo de Confianza |
+| IgG | Inmunoglobulina G |
+| IQR | Rango intercuartílico (*Interquartile Range*) |
+| IVM | Ivermectina |
+| KM | Kaplan–Meier |
+| LMM | Linear Mixed Model (modelo lineal mixto) |
+| MICE | *Multiple Imputation by Chained Equations* |
+| MyM | Material y Métodos |
+| PCR | Reacción en cadena de la polimerasa |
+| STROBE | *Strengthening the Reporting of Observational Studies in Epidemiology* |
+| TFG | Trabajo Fin de Grado |
+| UAH | Universidad de Alcalá |

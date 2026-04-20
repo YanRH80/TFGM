@@ -1,0 +1,26 @@
+<!-- Sección: portada según ANEXO (II o III - pendiente confirmar con tutor/a). -->
+<!-- El PDF de plantilla está en /manuscrito/Anexo-II.-Portada-TI-TFGM.pdf. -->
+<!-- Al render final se insertará la portada como página aparte (ver main.qmd). -->
+
+\thispagestyle{empty}
+
+\begin{center}
+\vspace*{2cm}
+
+{\Large\textbf{UNIVERSIDAD DE ALCALÁ}}\\[0.5em]
+{\large Facultad de Medicina y Ciencias de la Salud}\\[2cm]
+
+{\huge\textbf{TRABAJO FIN DE GRADO}}\\[2cm]
+
+{\LARGE\textbf{Cinética de seronegativización por IgG-ELISA tras ivermectina en estrongiloidiasis}}\\[0.5em]
+{\Large Cohorte retrospectiva (HCDGU, 2015–2025)}\\[3cm]
+
+{\large\textbf{Autor/a:} Yan Rodríguez Hachimaru}\\[0.5em]
+{\large\textbf{Tutor/a:} [PENDIENTE]}\\[0.5em]
+{\large\textbf{Curso académico:} 2025–2026}\\[2cm]
+
+{\normalsize Alcalá de Henares, [mes] de 2026}
+
+\end{center}
+
+\newpage

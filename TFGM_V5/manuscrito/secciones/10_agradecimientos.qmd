@@ -1,0 +1,13 @@
+<!-- Sección: Agradecimientos. -->
+
+## Agradecimientos {.unnumbered}
+
+A los equipos de Medicina Interna, Enfermedades Infecciosas y Microbiología del Hospital Central de la Defensa "Gómez Ulla" por el mantenimiento de las bases de datos clínicas y serológicas que han hecho posible este trabajo. [NO_CITE]
+
+Al Centro Nacional de Microbiología (Instituto de Salud Carlos III) por la realización de la serología IgG-ELISA durante el periodo de estudio. [NO_CITE]
+
+A [TUTOR/A PENDIENTE] por la dirección académica del trabajo y la revisión crítica del manuscrito. [NO_CITE]
+
+A la Facultad de Medicina y Ciencias de la Salud de la Universidad de Alcalá por el marco formativo del Trabajo Fin de Grado. [NO_CITE]
+
+Los autores declaran no tener conflictos de interés. El estudio no recibió financiación externa. [NO_CITE]

@@ -1,0 +1,46 @@
+<!-- Sección: Introducción y objetivos. ≤20% del total. -->
+<!-- Cada línea = una idea. Marcador bibliográfico obligatorio. -->
+<!-- Fuentes: preguntas_opev.md Q01–Q04, Q06, Q15. -->
+
+## Introducción {.unnumbered}
+
+### Contexto epidemiológico
+
+La estrongiloidiasis humana es una infección crónica causada por el nematodo *Strongyloides stercoralis*, con una prevalencia global estimada de 300–600 millones de personas, principalmente en regiones tropicales y subtropicales. [CITE?:buonfrate_2023_cmr]
+
+En Europa y en otros países no endémicos, la enfermedad se diagnostica predominantemente en población migrante procedente de América Latina, África subsahariana y Asia. [CITED:asundi_2019_lancetgh]
+
+Series españolas multicéntricas recientes describen una cohorte predominantemente masculina (54–72 %) y de origen sudamericano, con una prevalencia de inmunosupresión basal del 6,4 %. [CITED:salvador_2019_redivi]
+
+La presentación clínica más frecuente es asintomática o inespecífica, lo que obliga a estrategias de cribado serológico en poblaciones de riesgo. [CITED:salvador_2020_systematic]
+
+### Justificación clínica
+
+*S. stercoralis* puede persistir décadas en el hospedador mediante auto-infección endógena, con riesgo de hiperinfestación y estrongiloidiasis diseminada en pacientes inmunodeprimidos (letalidad > 60 %). [CITED:czeresnia_2022_lung]
+
+La ivermectina a 200 μg/kg en dosis única es el tratamiento de elección en el paciente inmunocompetente, con tasas de curación > 90 % en ensayos controlados. [CITED:buonfrate_2019_strongtreat]
+
+La confirmación de curación tras ivermectina se basa habitualmente en serología IgG-ELISA, dado que el rendimiento parasitológico (coprocultivo, Baermann, PCR) es bajo en infecciones crónicas de baja carga. [CITED:buonfrate_2023_cmr]
+
+### Problema a abordar
+
+La cinética del descenso serológico post-tratamiento no está completamente caracterizada en cohortes europeas no endémicas. [CITE?:repetto_2018_longterm]
+
+Los estudios publicados aportan tiempos medianos de seronegativización heterogéneos (6–24 meses) y emplean umbrales de "negatividad" variables según el fabricante del kit y la definición operativa del equipo asistencial. [CITE?:bisoffi_2014_salvador]
+
+Los predictores basales del tiempo hasta seronegativización (edad, sexo, título basal, eosinofilia, inmunosupresión, carga parasitológica) han sido evaluados de forma dispersa y sin correción por comparaciones múltiples en cohortes pequeñas. [CITE?:gamez_2022_spanish]
+
+Existe por tanto una necesidad clínica de describir con precisión la dinámica de aclaramiento serológico en la práctica real española y de identificar, en modo exploratorio, marcadores basales que informen el protocolo de seguimiento. [NO_CITE]
+
+### Objetivos
+
+**Objetivo principal.** Caracterizar el tiempo hasta la seronegativización absoluta (IgG-ELISA < 1,1) en una cohorte retrospectiva de adultos tratados con ivermectina en el Hospital Central de la Defensa "Gómez Ulla" (Madrid, 2015–2025). [NO_CITE]
+
+**Objetivos secundarios.**
+
+1. Estimar tasas de seronegativización a 6, 12, 18 y 24 meses mediante análisis de Kaplan–Meier. [NO_CITE]
+2. Explorar predictores basales (demográficos, inmunológicos, serológicos, parasitológicos, terapéuticos) mediante modelos de Cox univariables con ajuste Benjamini–Hochberg False Discovery Rate (BH–FDR). [NO_CITE]
+3. Cuantificar la pendiente de descenso de log(IgG) y la vida media serológica mediante un modelo lineal mixto (LMM) con cinética de primer orden. [NO_CITE]
+4. Describir la persistencia serológica y los casos de recidiva sin evidencia parasitológica. [NO_CITE]
+
+**Encuadre.** Estudio piloto exploratorio, no diseñado para inferencia causal; los hallazgos se interpretan como generadores de hipótesis para cohortes mayores. [NO_CITE]

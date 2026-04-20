@@ -1,0 +1,38 @@
+<!-- Sección: valor docente TFG. SE ELIMINA en rama journal/. -->
+<!-- Justificación: ANECA + normativa UAH valoran la reflexión metodológica y la autoevaluación de competencias. -->
+
+## Anexo académico — Reflexión para la evaluación del TFG {.unnumbered}
+
+*Esta sección pertenece exclusivamente a la versión académica del trabajo (TFG) y no se incluirá en la versión enviada a revistas científicas.*
+
+### Competencias movilizadas
+
+- **CB1–CB5** (competencias básicas del título): integración de conocimientos clínicos (helmintiasis importada), metodología epidemiológica (STROBE, Kaplan–Meier, Cox, LMM) y difusión científica (manuscrito estructurado según normas ICMJE). [NO_CITE]
+- **CG1, CG7** (generales): capacidad de análisis crítico de la literatura y aplicación de modelos estadísticos a datos reales. [NO_CITE]
+- **CE1, CE5, CE10** (específicas de Medicina): razonamiento diagnóstico, manejo farmacológico (ivermectina) y diseño de protocolos de seguimiento. [NO_CITE]
+
+### Reflexión metodológica
+
+El trabajo ha requerido equilibrar la exigencia estadística (comparaciones múltiples, modelos mixtos) con las limitaciones de tamaño muestral de una cohorte monocéntrica (n=44). [NO_CITE]
+
+Se ha adoptado un enfoque de **estudio piloto exploratorio**, evitando el cherry-picking metodológico y manteniendo la distinción entre endpoint primario pre-especificado (seronegativización absoluta) y análisis de sensibilidad (umbrales alternativos, confirmación repetida, biomarcadores secundarios). [NO_CITE]
+
+La reproducibilidad se ha priorizado mediante versionado del código (Python + Quarto) y trazabilidad de decisiones (`prompt.md`, auditorías). [NO_CITE]
+
+### Limitaciones como aprendizaje
+
+- La gestión de datos ausentes (18 % IgG basal) ha obligado a considerar MCAR/MAR y la eventual aplicación de imputación múltiple (MICE), descartada por impacto marginal sobre el endpoint primario. [NO_CITE]
+- La heterogeneidad técnica (cambio de kit ELISA) ha forzado un análisis de sensibilidad adicional no anticipado. [NO_CITE]
+- La escasa potencia estadística tras ajuste BH–FDR es una lección sobre la planificación a priori del tamaño muestral en estudios de carácter exploratorio. [NO_CITE]
+
+### Líneas de continuidad
+
+- Ampliación de la cohorte a multicéntrica con incorporación de inmunodeprimidos (no infrarrepresentados) para valorar el efecto de la inmunosupresión sobre la cinética de aclaramiento. [NO_CITE]
+- Validación prospectiva de la IgG basal como predictor y exploración de covariables no evaluadas (carga parasitaria cuantitativa por qPCR, subclases de IgG). [NO_CITE]
+- Evaluación de la concordancia entre kits ELISA (Strongyloides ratti antigen-based vs antígenos recombinantes). [NO_CITE]
+
+### Autoevaluación
+
+El grado de consecución de los objetivos pre-especificados ha sido alto para los objetivos descriptivos (KM, LMM) y moderado para los predictivos (Cox con ajuste BH–FDR), con resultados consistentes pero limitados por tamaño muestral. [NO_CITE]
+
+La principal aportación personal es la integración de un pipeline reproducible (datos + código + manuscrito bajo control de versiones) que soporta futuras ampliaciones y auditorías. [NO_CITE]

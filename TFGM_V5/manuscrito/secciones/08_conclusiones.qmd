@@ -1,0 +1,15 @@
+<!-- Sección: Conclusiones. Narrativa/conceptual, NO resumen de resultados. -->
+
+## Conclusiones {.unnumbered}
+
+1. La seronegativización por IgG-ELISA tras ivermectina en adultos con estrongiloidiasis sigue una cinética de primer orden, con una vida media serológica aproximada de 10 meses en un entorno no endémico. [NO_CITE]
+
+2. La mayor parte de los pacientes inmunocompetentes alcanzan la negativización serológica dentro de los 24 meses post-tratamiento, lo que sitúa la ventana razonable de seguimiento en dicho intervalo. [NO_CITE]
+
+3. La IgG basal elevada y, de forma secundaria, la eosinofilia basal emergen como marcadores exploratorios de aclaramiento más lento, con implicaciones prácticas para individualizar la duración del seguimiento. [NO_CITE]
+
+4. La discordancia temporal entre normalización eosinofílica y seronegativización obliga a valorar ambos biomarcadores de manera independiente en el control postratamiento. [NO_CITE]
+
+5. Los hallazgos, generadores de hipótesis en un piloto monocéntrico (n=44), deben replicarse en cohortes prospectivas mayores y multicéntricas antes de modificar protocolos clínicos. [NO_CITE]
+
+6. El trabajo contribuye al cuerpo de evidencia sobre la práctica real del seguimiento serológico de estrongiloidiasis importada en España y aporta una trazabilidad metodológica reproducible (código y datos versionados). [NO_CITE]

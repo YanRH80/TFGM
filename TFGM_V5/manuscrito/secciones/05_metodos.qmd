@@ -1,0 +1,70 @@
+<!-- Sección: Material y Métodos. ≤30% del total. -->
+<!-- Incluye las frases desplazadas desde el Resultados.qmd original por corrección. -->
+
+## Material y métodos {.unnumbered}
+
+### Diseño y ámbito
+
+Se realizó un estudio observacional retrospectivo en el Hospital Central de la Defensa "Gómez Ulla" (HCDGU, Madrid, España) sobre el periodo 2015–2025. [NO_CITE]
+
+Se incluyeron adultos (≥18 años) con diagnóstico confirmado de *S. stercoralis* y tratamiento con ivermectina oral 200 μg/kg (dosis única o pauta múltiple en casos de inmunosupresión o carga parasitaria elevada). [NO_CITE]
+
+El seguimiento protocolizado contemplaba determinaciones basales y controles post-tratamiento a los 3, 6, 12, 18 y 24 meses. [NO_CITE]
+
+El estudio siguió las recomendaciones STROBE para estudios observacionales. [CITED:vonelm_2007_strobe]
+
+### Diagnóstico y definición operativa
+
+El diagnóstico se estableció por al menos uno de los siguientes criterios: (a) coprocultivo positivo, (b) PCR positiva en heces, o (c) serología IgG-ELISA > 1,1 con clínica o epidemiología compatible. [NO_CITE]
+
+La serología se realizó mediante IgG-ELISA comercial (*Strongyloides ratti* antigen-based) en el CNM (Centro Nacional de Microbiología) y en el servicio de Microbiología del HCDGU. [CITE?:bisoffi_2014_salvador]
+
+Se registró el cambio de kit ELISA durante el periodo de estudio como posible fuente de variabilidad técnica. [NO_CITE]
+
+La ausencia de IgG basal en el 18 % de la muestra (8 de 44) se consideró aleatoria (prueba de Little, p = 0,11); no se aplicaron técnicas de imputación múltiple. [NO_CITE]
+
+### Exposición y endpoints
+
+La exposición principal fue la administración de ivermectina 200 μg/kg (mono-dosis o pautas múltiples). [NO_CITE]
+
+El **criterio de valoración primario** fue la seronegativización absoluta, definida como el primer descenso de IgG-ELISA por debajo de 1,1 en cualquier determinación post-tratamiento. [NO_CITE]
+
+Los criterios de valoración secundarios (análisis de sensibilidad) incluyeron:
+
+- Seronegativización con umbral más estricto (< 0,9). [NO_CITE]
+- Seronegativización confirmada en dos determinaciones consecutivas (×2). [NO_CITE]
+- Seronegativización relativa (descenso ≥ 40 % desde basal), según el umbral Salvador. [CITE?:bisoffi_2014_salvador]
+- Normalización eosinofílica (< 0,5 × 10³/μL). [NO_CITE]
+- Seronegativización parasitológica (dos coprocultivos o PCR negativos consecutivos). [NO_CITE]
+
+### Covariables basales
+
+Se registraron: edad al diagnóstico, sexo, origen geográfico (clasificado por región), inmunodepresión basal, comorbilidad significativa, IgG basal (continua y categorizada por mediana/P75/terciles), eosinofilia basal (continua y umbral ≥ 0,5 × 10³/μL), resultado parasitológico basal, pauta terapéutica (mono vs múltiple) y retratamiento. [NO_CITE]
+
+### Análisis estadístico
+
+Las variables continuas se expresaron como mediana (rango intercuartílico, IQR) y las categóricas como frecuencias absolutas y relativas. [NO_CITE]
+
+Se construyeron curvas de Kaplan–Meier (KM) con intervalo de confianza 95 % calculado por el método de Greenwood. [CITE?:kaplan_meier_1958]
+
+Los predictores basales se evaluaron mediante modelos de Cox univariables sobre 15 covariables, con ajuste por comparaciones múltiples mediante el procedimiento Benjamini–Hochberg False Discovery Rate (BH–FDR, α = 0,05). [CITED:benjamini_1995_fdr]
+
+Un modelo de Cox multivariable estratificado por sexo se ajustó con las variables que presentaron p < 0,05 en el análisis univariable, evaluando el estadístico C de Harrell. [CITE?:harrell_1996_c]
+
+La cinética paramétrica de descenso serológico se modeló mediante un LMM sobre log(IgG) con intercepto aleatorio por paciente y tiempo como efecto fijo, asumiendo cinética de primer orden. [CITE?:laird_ware_1982_lmm]
+
+Se exploró la interacción tiempo × sexo en el LMM. [NO_CITE]
+
+La vida media serológica se derivó como t₁/₂ = ln(2) / pendiente. [NO_CITE]
+
+Se consideró significación estadística para p < 0,05 (bilateral). [NO_CITE]
+
+El análisis se realizó en Python 3.14 con las librerías `pandas`, `statsmodels` y `lifelines`; el código completo es reproducible a partir del repositorio del proyecto. [NO_CITE]
+
+### Aspectos éticos
+
+El protocolo fue evaluado por el Comité de Ética de la Investigación con Medicamentos (CEIM) del HCDGU (referencia PENDIENTE). [NO_CITE]
+
+Al tratarse de un estudio retrospectivo con datos anonimizados, se solicitó la exención del consentimiento informado individual, de acuerdo con el Reglamento (UE) 2016/679 y la Ley Orgánica 3/2018. [NO_CITE]
+
+<!-- TODO: confirmar número de expediente CEIM -->

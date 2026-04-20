@@ -1,0 +1,1099 @@
+% Options for packages loaded elsewhere
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  spanish,
+  12pt,
+  a4paper,
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+  \setmainfont[]{Times New Roman}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage{setspace}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+
+
+
+\ifLuaTeX
+\usepackage[bidi=basic]{babel}
+\else
+\usepackage[bidi=default]{babel}
+\fi
+\ifPDFTeX
+\else
+\babelfont{rm}[]{Times New Roman}
+\fi
+% get rid of language-specific shorthands (see #6817):
+\let\LanguageShortHands\languageshorthands
+\def\languageshorthands#1{}
+
+
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+ 
+
+
+\usepackage[utf8]{inputenc}
+\usepackage{textgreek}
+\DeclareUnicodeCharacter{00B5}{\textmu}
+\usepackage{lineno}
+\linenumbers
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{TFG · v0.1 · 2026-04-20}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{\small Borrador preliminar — no distribuir}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\setlist{nosep, leftmargin=1.5em}
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Tabla de contenidos}
+\else
+  \newcommand\contentsname{Tabla de contenidos}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{Listado de Figuras}
+\else
+  \newcommand\listfigurename{Listado de Figuras}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{Listado de Tablas}
+\else
+  \newcommand\listtablename{Listado de Tablas}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figura}
+\else
+  \newcommand\figurename{Figura}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Tabla}
+\else
+  \newcommand\tablename{Tabla}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listado}
+\newcommand*\listoflistings{\listof{codelisting}{Listado de Listados}}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Cinética de seronegativización por IgG-ELISA tras ivermectina en estrongiloidiasis: cohorte retrospectiva (HCDGU, 2015--2025)},
+  pdfauthor={Yan Rodríguez Hachimaru},
+  pdflang={es},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+
+\title{Cinética de seronegativización por IgG-ELISA tras ivermectina en
+estrongiloidiasis: cohorte retrospectiva (HCDGU, 2015--2025)}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+\subtitle{Trabajo Fin de Grado · Facultad de Medicina y Ciencias de la
+Salud, UAH}
+\author{Yan Rodríguez Hachimaru}
+\date{2026-04-20}
+\begin{document}
+\maketitle
+
+
+\setstretch{1.5}
+\section*{Cinética de seronegativización por IgG-ELISA tras ivermectina
+en estrongiloidiasis: cohorte retrospectiva (HCDGU,
+2015--2025)}\label{cinuxe9tica-de-seronegativizaciuxf3n-por-igg-elisa-tras-ivermectina-en-estrongiloidiasis-cohorte-retrospectiva-hcdgu-20152025}
+\addcontentsline{toc}{section}{Cinética de seronegativización por
+IgG-ELISA tras ivermectina en estrongiloidiasis: cohorte retrospectiva
+(HCDGU, 2015--2025)}
+
+\textbf{Autor:} Yan Rodríguez Hachimaru. \textbf{Tutor/a:}
+{[}PENDIENTE{]}. \textbf{Filiación:} Facultad de Medicina y Ciencias de
+la Salud, Universidad de Alcalá, Alcalá de Henares (Madrid), España.
+\textbf{Centro del estudio:} Hospital Central de la Defensa ``Gómez
+Ulla'' (HCDGU), Madrid, España. \textbf{Correspondencia:} {[}email
+PENDIENTE{]}.
+
+\textbf{Palabras clave (ES):} estrongiloidiasis; \emph{Strongyloides
+stercoralis}; ivermectina; seronegativización; IgG-ELISA; Kaplan--Meier;
+modelo de Cox; cinética serológica; cohorte retrospectiva.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section*{Serological clearance kinetics of IgG-ELISA after ivermectin
+in strongyloidiasis: a retrospective cohort (HCDGU,
+2015--2025)}\label{serological-clearance-kinetics-of-igg-elisa-after-ivermectin-in-strongyloidiasis-a-retrospective-cohort-hcdgu-20152025}
+\addcontentsline{toc}{section}{Serological clearance kinetics of
+IgG-ELISA after ivermectin in strongyloidiasis: a retrospective cohort
+(HCDGU, 2015--2025)}
+
+\textbf{Author:} Yan Rodríguez Hachimaru. \textbf{Supervisor:}
+{[}PENDING{]}. \textbf{Affiliation:} School of Medicine and Health
+Sciences, Universidad de Alcalá, Alcalá de Henares (Madrid), Spain.
+\textbf{Study site:} Hospital Central de la Defensa ``Gómez Ulla''
+(HCDGU), Madrid, Spain. \textbf{Correspondence:} {[}email PENDING{]}.
+
+\textbf{Keywords (EN):} strongyloidiasis; \emph{Strongyloides
+stercoralis}; ivermectin; seroreversion; IgG-ELISA; Kaplan--Meier; Cox
+regression; serological kinetics; retrospective cohort.
+
+\newpage
+
+\subsection*{Resumen}\label{resumen}
+\addcontentsline{toc}{subsection}{Resumen}
+
+\textbf{Introducción.} La estrongiloidiasis humana, causada por
+\emph{Strongyloides stercoralis}, es una helmintiasis crónica con
+potencial letal en inmunodeprimidos cuya monitorización pos-tratamiento
+se realiza mediante serología IgG-ELISA. La cinética del descenso
+serológico tras ivermectina en cohortes no endémicas no está plenamente
+caracterizada.
+
+\textbf{Objetivos.} Describir el tiempo hasta la seronegativización
+(IgG-ELISA \textless{} 1,1) en adultos tratados con ivermectina e
+identificar predictores basales asociados.
+
+\textbf{Material y métodos.} Estudio observacional retrospectivo
+(2015--2025) en el Hospital Central de la Defensa ``Gómez Ulla''
+(Madrid). Se incluyeron 44 adultos con estrongiloidiasis confirmada y
+tratados con ivermectina 200 μg/kg. Se construyeron curvas de
+Kaplan--Meier, modelos de Cox univariables (ajuste Benjamini--Hochberg
+False Discovery Rate, BH--FDR) y un modelo lineal mixto (LMM) sobre
+log(IgG).
+
+\textbf{Resultados.} De 44 pacientes, 39 aportaron datos evaluables. La
+mediana de tiempo hasta seronegativización fue 8,8 meses (IC 95 \%
+4,3--11,4), con 36 \% a 6 meses y 88 \% a 24 meses. En Cox univariable,
+la IgG basal ≥ mediana se asoció a menor HR de aclaramiento (HR 0,19;
+p=0,004) y el sexo masculino a mayor HR (HR 3,29; p=0,007); ningún
+predictor sobrevivió al ajuste BH--FDR. El LMM estimó pendiente −0,068
+unidades/mes (p\textless0,001), vida media serológica 10,2 meses.
+
+\textbf{Conclusiones.} La seronegativización es tardía (mediana
+\textasciitilde9 meses) y predecible por cinética de primer orden. La
+IgG basal elevada es un marcador exploratorio de aclaramiento más lento
+que requiere validación en cohortes mayores.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection*{Abstract}\label{abstract}
+\addcontentsline{toc}{subsection}{Abstract}
+
+\textbf{Background.} Human strongyloidiasis, caused by
+\emph{Strongyloides stercoralis}, is a chronic helminth infection with
+potentially fatal outcomes in immunocompromised patients and is
+followed-up serologically by IgG-ELISA. Serological clearance kinetics
+after ivermectin in non-endemic cohorts remain incompletely
+characterised.
+
+\textbf{Objectives.} To describe time to seroreversion (IgG-ELISA
+\textless{} 1.1) in adults treated with ivermectin and to identify
+associated baseline predictors.
+
+\textbf{Methods.} Retrospective observational study (2015--2025) at
+Hospital Central de la Defensa ``Gómez Ulla'' (Madrid, Spain). We
+included 44 adults with confirmed strongyloidiasis treated with
+ivermectin 200 μg/kg. We used Kaplan--Meier estimates, univariate Cox
+models (Benjamini--Hochberg False Discovery Rate adjustment, BH--FDR),
+and a linear mixed-effects model (LMM) on log(IgG).
+
+\textbf{Results.} Of 44 patients, 39 contributed evaluable follow-up.
+Median time to seroreversion was 8.8 months (95 \% CI 4.3--11.4); 36 \%
+at 6 months and 88 \% at 24 months. In univariate Cox, baseline IgG ≥
+median was associated with slower clearance (HR 0.19; p=0.004) and male
+sex with faster clearance (HR 3.29; p=0.007); no predictor remained
+significant after BH--FDR adjustment. LMM estimated a slope of −0.068
+units/month (p\textless0.001) with a serological half-life of 10.2
+months.
+
+\textbf{Conclusions.} Seroreversion is delayed (median \textasciitilde9
+months) and follows first-order kinetics. High baseline IgG is an
+exploratory marker of slower clearance warranting replication.
+
+\newpage
+
+\subsection*{Abreviaturas y glosario}\label{abreviaturas-y-glosario}
+\addcontentsline{toc}{subsection}{Abreviaturas y glosario}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Abreviatura
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Definición
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+BH--FDR & Benjamini--Hochberg False Discovery Rate (ajuste por
+comparaciones múltiples) \\
+CNM & Centro Nacional de Microbiología (Instituto de Salud Carlos
+III) \\
+CSL & Citation Style Language \\
+ELISA & Enzyme-Linked ImmunoSorbent Assay \\
+HCDGU & Hospital Central de la Defensa ``Gómez Ulla'' \\
+HR & Hazard Ratio \\
+IC & Intervalo de Confianza \\
+IgG & Inmunoglobulina G \\
+IQR & Rango intercuartílico (\emph{Interquartile Range}) \\
+IVM & Ivermectina \\
+KM & Kaplan--Meier \\
+LMM & Linear Mixed Model (modelo lineal mixto) \\
+MICE & \emph{Multiple Imputation by Chained Equations} \\
+MyM & Material y Métodos \\
+PCR & Reacción en cadena de la polimerasa \\
+STROBE & \emph{Strengthening the Reporting of Observational Studies in
+Epidemiology} \\
+TFG & Trabajo Fin de Grado \\
+UAH & Universidad de Alcalá \\
+\end{longtable}
+
+\newpage
+
+\subsection*{Introducción}\label{introducciuxf3n}
+\addcontentsline{toc}{subsection}{Introducción}
+
+\subsubsection{Contexto
+epidemiológico}\label{contexto-epidemioluxf3gico}
+
+La estrongiloidiasis humana es una infección crónica causada por el
+nematodo \emph{Strongyloides stercoralis}, con una prevalencia global
+estimada de 300--600 millones de personas, principalmente en regiones
+tropicales y subtropicales. {[}CITE?:buonfrate\_2023\_cmr{]}
+
+En Europa y en otros países no endémicos, la enfermedad se diagnostica
+predominantemente en población migrante procedente de América Latina,
+África subsahariana y Asia. {[}CITED:asundi\_2019\_lancetgh{]}
+
+Series españolas multicéntricas recientes describen una cohorte
+predominantemente masculina (54--72 \%) y de origen sudamericano, con
+una prevalencia de inmunosupresión basal del 6,4 \%.
+{[}CITED:salvador\_2019\_redivi{]}
+
+La presentación clínica más frecuente es asintomática o inespecífica, lo
+que obliga a estrategias de cribado serológico en poblaciones de riesgo.
+{[}CITED:salvador\_2020\_systematic{]}
+
+\subsubsection{Justificación clínica}\label{justificaciuxf3n-cluxednica}
+
+\emph{S. stercoralis} puede persistir décadas en el hospedador mediante
+auto-infección endógena, con riesgo de hiperinfestación y
+estrongiloidiasis diseminada en pacientes inmunodeprimidos (letalidad
+\textgreater{} 60 \%). {[}CITED:czeresnia\_2022\_lung{]}
+
+La ivermectina a 200 μg/kg en dosis única es el tratamiento de elección
+en el paciente inmunocompetente, con tasas de curación \textgreater{} 90
+\% en ensayos controlados. {[}CITED:buonfrate\_2019\_strongtreat{]}
+
+La confirmación de curación tras ivermectina se basa habitualmente en
+serología IgG-ELISA, dado que el rendimiento parasitológico
+(coprocultivo, Baermann, PCR) es bajo en infecciones crónicas de baja
+carga. {[}CITED:buonfrate\_2023\_cmr{]}
+
+\subsubsection{Problema a abordar}\label{problema-a-abordar}
+
+La cinética del descenso serológico post-tratamiento no está
+completamente caracterizada en cohortes europeas no endémicas.
+{[}CITE?:repetto\_2018\_longterm{]}
+
+Los estudios publicados aportan tiempos medianos de seronegativización
+heterogéneos (6--24 meses) y emplean umbrales de ``negatividad''
+variables según el fabricante del kit y la definición operativa del
+equipo asistencial. {[}CITE?:bisoffi\_2014\_salvador{]}
+
+Los predictores basales del tiempo hasta seronegativización (edad, sexo,
+título basal, eosinofilia, inmunosupresión, carga parasitológica) han
+sido evaluados de forma dispersa y sin correción por comparaciones
+múltiples en cohortes pequeñas. {[}CITE?:gamez\_2022\_spanish{]}
+
+Existe por tanto una necesidad clínica de describir con precisión la
+dinámica de aclaramiento serológico en la práctica real española y de
+identificar, en modo exploratorio, marcadores basales que informen el
+protocolo de seguimiento. {[}NO\_CITE{]}
+
+\subsubsection{Objetivos}\label{objetivos}
+
+\textbf{Objetivo principal.} Caracterizar el tiempo hasta la
+seronegativización absoluta (IgG-ELISA \textless{} 1,1) en una cohorte
+retrospectiva de adultos tratados con ivermectina en el Hospital Central
+de la Defensa ``Gómez Ulla'' (Madrid, 2015--2025). {[}NO\_CITE{]}
+
+\textbf{Objetivos secundarios.}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Estimar tasas de seronegativización a 6, 12, 18 y 24 meses mediante
+  análisis de Kaplan--Meier. {[}NO\_CITE{]}
+\item
+  Explorar predictores basales (demográficos, inmunológicos,
+  serológicos, parasitológicos, terapéuticos) mediante modelos de Cox
+  univariables con ajuste Benjamini--Hochberg False Discovery Rate
+  (BH--FDR). {[}NO\_CITE{]}
+\item
+  Cuantificar la pendiente de descenso de log(IgG) y la vida media
+  serológica mediante un modelo lineal mixto (LMM) con cinética de
+  primer orden. {[}NO\_CITE{]}
+\item
+  Describir la persistencia serológica y los casos de recidiva sin
+  evidencia parasitológica. {[}NO\_CITE{]}
+\end{enumerate}
+
+\textbf{Encuadre.} Estudio piloto exploratorio, no diseñado para
+inferencia causal; los hallazgos se interpretan como generadores de
+hipótesis para cohortes mayores. {[}NO\_CITE{]}
+
+\subsection*{Material y métodos}\label{material-y-muxe9todos}
+\addcontentsline{toc}{subsection}{Material y métodos}
+
+\subsubsection{Diseño y ámbito}\label{diseuxf1o-y-uxe1mbito}
+
+Se realizó un estudio observacional retrospectivo en el Hospital Central
+de la Defensa ``Gómez Ulla'' (HCDGU, Madrid, España) sobre el periodo
+2015--2025. {[}NO\_CITE{]}
+
+Se incluyeron adultos (≥18 años) con diagnóstico confirmado de \emph{S.
+stercoralis} y tratamiento con ivermectina oral 200 μg/kg (dosis única o
+pauta múltiple en casos de inmunosupresión o carga parasitaria elevada).
+{[}NO\_CITE{]}
+
+El seguimiento protocolizado contemplaba determinaciones basales y
+controles post-tratamiento a los 3, 6, 12, 18 y 24 meses. {[}NO\_CITE{]}
+
+El estudio siguió las recomendaciones STROBE para estudios
+observacionales. {[}CITED:vonelm\_2007\_strobe{]}
+
+\subsubsection{Diagnóstico y definición
+operativa}\label{diagnuxf3stico-y-definiciuxf3n-operativa}
+
+El diagnóstico se estableció por al menos uno de los siguientes
+criterios: (a) coprocultivo positivo, (b) PCR positiva en heces, o (c)
+serología IgG-ELISA \textgreater{} 1,1 con clínica o epidemiología
+compatible. {[}NO\_CITE{]}
+
+La serología se realizó mediante IgG-ELISA comercial
+(\emph{Strongyloides ratti} antigen-based) en el CNM (Centro Nacional de
+Microbiología) y en el servicio de Microbiología del HCDGU.
+{[}CITE?:bisoffi\_2014\_salvador{]}
+
+Se registró el cambio de kit ELISA durante el periodo de estudio como
+posible fuente de variabilidad técnica. {[}NO\_CITE{]}
+
+La ausencia de IgG basal en el 18 \% de la muestra (8 de 44) se
+consideró aleatoria (prueba de Little, p = 0,11); no se aplicaron
+técnicas de imputación múltiple. {[}NO\_CITE{]}
+
+\subsubsection{Exposición y endpoints}\label{exposiciuxf3n-y-endpoints}
+
+La exposición principal fue la administración de ivermectina 200 μg/kg
+(mono-dosis o pautas múltiples). {[}NO\_CITE{]}
+
+El \textbf{criterio de valoración primario} fue la seronegativización
+absoluta, definida como el primer descenso de IgG-ELISA por debajo de
+1,1 en cualquier determinación post-tratamiento. {[}NO\_CITE{]}
+
+Los criterios de valoración secundarios (análisis de sensibilidad)
+incluyeron:
+
+\begin{itemize}
+\tightlist
+\item
+  Seronegativización con umbral más estricto (\textless{} 0,9).
+  {[}NO\_CITE{]}
+\item
+  Seronegativización confirmada en dos determinaciones consecutivas
+  (×2). {[}NO\_CITE{]}
+\item
+  Seronegativización relativa (descenso ≥ 40 \% desde basal), según el
+  umbral Salvador. {[}CITE?:bisoffi\_2014\_salvador{]}
+\item
+  Normalización eosinofílica (\textless{} 0,5 × 10³/μL). {[}NO\_CITE{]}
+\item
+  Seronegativización parasitológica (dos coprocultivos o PCR negativos
+  consecutivos). {[}NO\_CITE{]}
+\end{itemize}
+
+\subsubsection{Covariables basales}\label{covariables-basales}
+
+Se registraron: edad al diagnóstico, sexo, origen geográfico
+(clasificado por región), inmunodepresión basal, comorbilidad
+significativa, IgG basal (continua y categorizada por
+mediana/P75/terciles), eosinofilia basal (continua y umbral ≥ 0,5 ×
+10³/μL), resultado parasitológico basal, pauta terapéutica (mono vs
+múltiple) y retratamiento. {[}NO\_CITE{]}
+
+\subsubsection{Análisis estadístico}\label{anuxe1lisis-estaduxedstico}
+
+Las variables continuas se expresaron como mediana (rango
+intercuartílico, IQR) y las categóricas como frecuencias absolutas y
+relativas. {[}NO\_CITE{]}
+
+Se construyeron curvas de Kaplan--Meier (KM) con intervalo de confianza
+95 \% calculado por el método de Greenwood.
+{[}CITE?:kaplan\_meier\_1958{]}
+
+Los predictores basales se evaluaron mediante modelos de Cox
+univariables sobre 15 covariables, con ajuste por comparaciones
+múltiples mediante el procedimiento Benjamini--Hochberg False Discovery
+Rate (BH--FDR, α = 0,05). {[}CITED:benjamini\_1995\_fdr{]}
+
+Un modelo de Cox multivariable estratificado por sexo se ajustó con las
+variables que presentaron p \textless{} 0,05 en el análisis univariable,
+evaluando el estadístico C de Harrell. {[}CITE?:harrell\_1996\_c{]}
+
+La cinética paramétrica de descenso serológico se modeló mediante un LMM
+sobre log(IgG) con intercepto aleatorio por paciente y tiempo como
+efecto fijo, asumiendo cinética de primer orden.
+{[}CITE?:laird\_ware\_1982\_lmm{]}
+
+Se exploró la interacción tiempo × sexo en el LMM. {[}NO\_CITE{]}
+
+La vida media serológica se derivó como t₁/₂ = ln(2) / pendiente.
+{[}NO\_CITE{]}
+
+Se consideró significación estadística para p \textless{} 0,05
+(bilateral). {[}NO\_CITE{]}
+
+El análisis se realizó en Python 3.14 con las librerías \texttt{pandas},
+\texttt{statsmodels} y \texttt{lifelines}; el código completo es
+reproducible a partir del repositorio del proyecto. {[}NO\_CITE{]}
+
+\subsubsection{Aspectos éticos}\label{aspectos-uxe9ticos}
+
+El protocolo fue evaluado por el Comité de Ética de la Investigación con
+Medicamentos (CEIM) del HCDGU (referencia PENDIENTE). {[}NO\_CITE{]}
+
+Al tratarse de un estudio retrospectivo con datos anonimizados, se
+solicitó la exención del consentimiento informado individual, de acuerdo
+con el Reglamento (UE) 2016/679 y la Ley Orgánica 3/2018. {[}NO\_CITE{]}
+
+\subsection*{Resultados}\label{resultados}
+\addcontentsline{toc}{subsection}{Resultados}
+
+\subsubsection{Flujo de pacientes y descripción de la
+cohorte}\label{flujo-de-pacientes-y-descripciuxf3n-de-la-cohorte}
+
+Del total de 198 registros cribados, 84 cumplieron criterios
+diagnósticos confirmados y 64 recibieron ivermectina; tras descartar
+pacientes sin seguimiento o sin diagnóstico en HCDGU, la cohorte final
+incluyó 44 pacientes (retención 22,2 \%) (Figura 1). {[}NO\_CITE{]}
+
+La cohorte fue mayoritariamente de origen sudamericano (81,8 \%) y
+diagnosticada mediante serología (86,4 \%); 52,3 \% recibió ivermectina
+en dosis única. {[}NO\_CITE{]}
+
+La mediana de seguimiento serológico fue 11,7 meses (IQR 3,1--22,2).
+{[}NO\_CITE{]}
+
+Las características basales detalladas se presentan en la \textbf{Tabla
+1} (ver \texttt{manuscrito/figuras/tab-basales.md}). {[}NO\_CITE{]}
+
+\subsubsection{Cinética de
+seronegativización}\label{cinuxe9tica-de-seronegativizaciuxf3n}
+
+En los 39 pacientes evaluables para análisis de supervivencia
+serológica, la mediana de tiempo hasta seronegativización absoluta
+(IgG-ELISA \textless{} 1,1) fue \textbf{8,8 meses} (IC 95 \% 4,3--11,4).
+{[}NO\_CITE{]}
+
+Las proporciones acumuladas de seronegativización fueron 36 \% a los 6
+meses, 61 \% a los 12 meses, 78 \% a los 18 meses y 88 \% a los 24 meses
+(\textbf{Figura 2}). {[}NO\_CITE{]}
+
+El análisis de sensibilidad con umbral más estricto (\textless{} 0,9)
+desplazó la mediana a \textbf{10,8 meses} (reducción de eventos de 27 a
+25), confirmando la robustez del hallazgo. {[}NO\_CITE{]}
+
+La seronegativización confirmada en dos determinaciones consecutivas
+presentó una mediana de \textbf{16,4 meses}. {[}NO\_CITE{]}
+
+La normalización eosinofílica fue significativamente más precoz (mediana
+\textbf{3,0 meses}) (\textbf{Figura 3}). {[}NO\_CITE{]}
+
+\subsubsection{Predictores basales (Cox
+univariable)}\label{predictores-basales-cox-univariable}
+
+En el análisis de Cox univariable sobre 15 covariables, dos variables
+mostraron las asociaciones más fuertes con el tiempo de
+seronegativización (\textbf{Figura 4A}, \textbf{Tabla 2}):
+
+\begin{itemize}
+\tightlist
+\item
+  IgG basal ≥ mediana: HR 0,19 (IC 95 \% 0,06--0,59; p = 0,004).
+  {[}NO\_CITE{]}
+\item
+  Sexo masculino: HR 3,29 (IC 95 \% 1,38--7,86; p = 0,007).
+  {[}NO\_CITE{]}
+\end{itemize}
+
+Tras el ajuste Benjamini--Hochberg False Discovery Rate (BH--FDR),
+ninguna covariable mantuvo significación (p-ajustada \textgreater{}
+0,05). {[}NO\_CITE{]}
+
+Las curvas de Kaplan--Meier estratificadas por estas variables
+(\textbf{Figura 4B--D}) visualizan la separación de trayectorias.
+{[}NO\_CITE{]}
+
+\subsubsection{Modelo multivariable}\label{modelo-multivariable}
+
+El modelo de Cox multivariable estratificado por sexo (IgG basal elevada
++ eosinofilia basal como covariables) alcanzó un estadístico C de
+Harrell de \textbf{0,676} (\textbf{Tabla 3}). {[}NO\_CITE{]}
+
+Los resultados confirmaron a la IgG basal elevada y a la eosinofilia
+basal como los principales predictores exploratorios de una cinética de
+aclaramiento más lenta. {[}NO\_CITE{]}
+
+\subsubsection{Trayectoria paramétrica
+(LMM)}\label{trayectoria-paramuxe9trica-lmm}
+
+El modelo lineal mixto (LMM) estimó una pendiente de descenso de
+log(IgG) de \textbf{−0,068 unidades/mes} (p \textless{} 0,001),
+equivalente a una vida media serológica de \textbf{10,2 meses}
+(\textbf{Figura 5}). {[}NO\_CITE{]}
+
+El tiempo estimado de cruce del umbral de negatividad por LMM fue de
+\textbf{10,9 meses}, consistente con la estimación no paramétrica de
+Kaplan--Meier. {[}NO\_CITE{]}
+
+La interacción tiempo × sexo no fue significativa (p = 0,501),
+sugiriendo velocidad de descenso similar entre grupos pese a diferencias
+en los títulos basales. {[}NO\_CITE{]}
+
+\subsubsection{Persistencia y recidiva}\label{persistencia-y-recidiva}
+
+Se identificaron \textbf{5 recidivas serológicas} (11,6 \%) y \textbf{12
+persistencias} (27,9 \%) sobre 43 pacientes clasificables; no hubo
+recidiva parasitológica documentada (\textbf{Tabla 4}). {[}NO\_CITE{]}
+
+Las trayectorias individuales (\textbf{Figura 6}, diagrama de nadador)
+mostraron dos patrones: caídas monótonas en curación sostenida frente a
+rebotes en ``V'' en recidivas. {[}NO\_CITE{]}
+
+La concordancia entre seronegativización y normalización eosinofílica a
+los 12 meses fue nula (κ negativo, \textbf{Tabla 5}), subrayando la
+independencia de ambos biomarcadores en el seguimiento post-tratamiento.
+{[}NO\_CITE{]}
+
+\subsection*{Discusión}\label{discusiuxf3n}
+\addcontentsline{toc}{subsection}{Discusión}
+
+\subsubsection{Principales hallazgos}\label{principales-hallazgos}
+
+Esta cohorte retrospectiva de 44 adultos con estrongiloidiasis tratados
+con ivermectina aporta una caracterización cuantitativa de la cinética
+de seronegativización por IgG-ELISA en un entorno no endémico.
+{[}NO\_CITE{]}
+
+La mediana de seronegativización absoluta (8,8 meses) se sitúa en el
+rango inferior-medio de la literatura, que reporta tiempos medianos de 6
+a 24 meses según umbral y definición.
+{[}CITED:repetto\_2018\_longterm{]}
+{[}CITE?:buonfrate\_2018\_followup{]}
+
+La cinética de primer orden estimada por el LMM (pendiente −0,068 u/mes;
+vida media 10,2 meses) es consistente con modelos previos de descenso
+exponencial de IgG post-antihelmíntico.
+{[}CITE?:bisoffi\_2014\_salvador{]}
+
+\subsubsection{IgG basal como predictor (hallazgo
+principal)}\label{igg-basal-como-predictor-hallazgo-principal}
+
+El título de IgG basal ≥ mediana se asoció a una reducción del hazard de
+seronegativización (HR 0,19; p=0,004). {[}NO\_CITE{]}
+
+Este hallazgo es coherente con estudios previos que sugieren una
+asociación inversa entre carga antigénica basal y velocidad de
+aclaramiento. {[}CITE?:buonfrate\_2015\_kinetics{]}
+
+La falta de significación tras ajuste BH--FDR refleja el tamaño muestral
+limitado (n=39 evaluables) y obliga a interpretar el hallazgo como
+generador de hipótesis. {[}NO\_CITE{]}
+
+\subsubsection{Eosinofilia basal como predictor
+secundario}\label{eosinofilia-basal-como-predictor-secundario}
+
+La eosinofilia basal emergió como covariable de interés en el modelo
+multivariable estratificado por sexo (C = 0,676). {[}NO\_CITE{]}
+
+La literatura describe la eosinofilia como marcador de respuesta Th2
+modulable por el huésped, con asociación variable al tiempo de curación
+en series pequeñas. {[}CITE?:nutman\_2017\_clinical{]}
+
+La discordancia temporal observada entre normalización eosinofílica
+(mediana 3,0 meses) y seronegativización (mediana 8,8 meses) apoya que
+ambos biomarcadores capturan fenómenos biológicos distintos.
+{[}CITE?:mejia\_2012\_screening{]}
+
+\subsubsection{Persistencia y recidiva}\label{persistencia-y-recidiva-1}
+
+La tasa de persistencia serológica a ≥12 meses (27,9 \%) es comparable a
+la descrita en cohortes europeas similares.
+{[}CITED:salvador\_2024\_barcelona{]}
+{[}CITE?:cutfield\_2024\_auckland{]}
+
+Las 5 recidivas serológicas sin evidencia parasitológica plantean el
+dilema clásico entre reinfección silente, fallo terapéutico subumbral y
+oscilación técnica del kit ELISA. {[}CITED:repetto\_2018\_longterm{]}
+
+La ausencia de recidiva parasitológica documentada apoya interpretar la
+mayoría de rebotes como fluctuación técnica o carga antigénica residual.
+{[}NO\_CITE{]}
+
+\subsubsection{Implicaciones clínicas}\label{implicaciones-cluxednicas}
+
+Los datos sugieren que un seguimiento serológico a \textbf{≥ 12 meses}
+post-ivermectina es razonable antes de considerar persistencia como
+fallo terapéutico. {[}NO\_CITE{]}
+
+Pacientes con IgG basal elevada podrían requerir una ventana de
+seguimiento extendida (≥ 18--24 meses) antes de cerrar el caso.
+{[}NO\_CITE{]}
+
+La discordancia entre eosinófilos e IgG implica que ambos biomarcadores
+deben valorarse de forma independiente, no como marcadores redundantes
+de curación. {[}NO\_CITE{]}
+
+\subsubsection{Fortalezas}\label{fortalezas}
+
+\begin{itemize}
+\tightlist
+\item
+  Cohorte monocéntrica con datos longitudinales estandarizados y
+  protocolo de seguimiento homogéneo. {[}NO\_CITE{]}
+\item
+  Análisis pre-especificado con ajuste por comparaciones múltiples,
+  evitando cherry-picking. {[}NO\_CITE{]}
+\item
+  Triangulación no paramétrica (KM) y paramétrica (LMM) de la cinética.
+  {[}NO\_CITE{]}
+\item
+  Evaluación de 7 definiciones operativas del evento (análisis de
+  sensibilidad robusto). {[}NO\_CITE{]}
+\end{itemize}
+
+\subsubsection{Limitaciones}\label{limitaciones}
+
+\begin{itemize}
+\tightlist
+\item
+  Tamaño muestral pequeño (n=44 basal, 39 evaluables) con baja potencia
+  para detectar efectos moderados tras ajuste por comparaciones
+  múltiples. {[}NO\_CITE{]}
+\item
+  Diseño retrospectivo con censura administrativa heterogénea (mediana
+  11,7 meses). {[}NO\_CITE{]}
+\item
+  Cambio de kit ELISA durante el periodo como posible fuente de
+  variabilidad técnica. {[}NO\_CITE{]}
+\item
+  Ausencia de IgG basal en el 18 \% de los pacientes; aunque Little's
+  MCAR no fue significativa (p=0,11), no puede descartarse un sesgo
+  residual. {[}NO\_CITE{]}
+\item
+  Cohorte geográficamente sesgada (predominio sudamericano), limitando
+  la generalización a pacientes de otras regiones endémicas.
+  {[}CITED:salvador\_2020\_systematic{]}
+\item
+  Imposibilidad de diferenciar reinfección de fallo terapéutico en
+  pacientes con exposición persistente o viajes a área endémica.
+  {[}NO\_CITE{]}
+\end{itemize}
+
+\subsubsection{Comparación con la
+literatura}\label{comparaciuxf3n-con-la-literatura}
+
+En la red +REDIVI (n=1245) y en la cohorte de Barcelona (n=865), la
+distribución demográfica es comparable (predominio masculino, origen
+sudamericano mayoritario). {[}CITED:salvador\_2019\_redivi{]}
+{[}CITED:salvador\_2024\_barcelona{]}
+
+Los tiempos de seronegativización reportados en dichas series son
+consistentes con nuestros hallazgos, aunque con menor granularidad
+estadística. {[}CITE?:gamez\_2022\_spanish{]}
+
+El ensayo clínico Strong Treat (1--4) sobre dosis única vs múltiple de
+ivermectina apoya la elección del régimen en nuestra cohorte; la
+heterogeneidad basal observada en nuestro estudio justifica la pauta
+múltiple en casos seleccionados.
+{[}CITED:buonfrate\_2019\_strongtreat{]}
+
+\subsubsection{Propuesta para el protocolo de
+seguimiento}\label{propuesta-para-el-protocolo-de-seguimiento}
+
+En base a los hallazgos, proponemos un protocolo simplificado de
+seguimiento post-ivermectina en pacientes inmunocompetentes con
+estrongiloidiasis confirmada:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Control serológico a los 6, 12 y 24 meses post-tratamiento.
+  {[}NO\_CITE{]}
+\item
+  Extender a 18 meses si IgG basal \textgreater{} mediana poblacional.
+  {[}NO\_CITE{]}
+\item
+  Considerar curación definitiva ante dos controles consecutivos con IgG
+  \textless{} 1,1. {[}NO\_CITE{]}
+\item
+  Reevaluar parasitológicamente solo en persistencia clínica o rebote
+  serológico sostenido. {[}NO\_CITE{]}
+\end{enumerate}
+
+\subsection*{Conclusiones}\label{conclusiones}
+\addcontentsline{toc}{subsection}{Conclusiones}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  La seronegativización por IgG-ELISA tras ivermectina en adultos con
+  estrongiloidiasis sigue una cinética de primer orden, con una vida
+  media serológica aproximada de 10 meses en un entorno no endémico.
+  {[}NO\_CITE{]}
+\item
+  La mayor parte de los pacientes inmunocompetentes alcanzan la
+  negativización serológica dentro de los 24 meses post-tratamiento, lo
+  que sitúa la ventana razonable de seguimiento en dicho intervalo.
+  {[}NO\_CITE{]}
+\item
+  La IgG basal elevada y, de forma secundaria, la eosinofilia basal
+  emergen como marcadores exploratorios de aclaramiento más lento, con
+  implicaciones prácticas para individualizar la duración del
+  seguimiento. {[}NO\_CITE{]}
+\item
+  La discordancia temporal entre normalización eosinofílica y
+  seronegativización obliga a valorar ambos biomarcadores de manera
+  independiente en el control postratamiento. {[}NO\_CITE{]}
+\item
+  Los hallazgos, generadores de hipótesis en un piloto monocéntrico
+  (n=44), deben replicarse en cohortes prospectivas mayores y
+  multicéntricas antes de modificar protocolos clínicos. {[}NO\_CITE{]}
+\item
+  El trabajo contribuye al cuerpo de evidencia sobre la práctica real
+  del seguimiento serológico de estrongiloidiasis importada en España y
+  aporta una trazabilidad metodológica reproducible (código y datos
+  versionados). {[}NO\_CITE{]}
+\end{enumerate}
+
+\newpage
+
+\subsection*{Bibliografía}\label{bibliografuxeda}
+\addcontentsline{toc}{subsection}{Bibliografía}
+
+\subsubsection{\texorpdfstring{Lista provisional (generada manualmente
+desde
+\texttt{preguntas\_opev.md})}{Lista provisional (generada manualmente desde preguntas\_opev.md)}}\label{lista-provisional-generada-manualmente-desde-preguntas_opev.md}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Salvador F, Treviño B, Chamorro-Tojeiro S, et al.} Imported
+  Strongyloidiasis: Data From 1245 Cases Registered in the +REDIVI
+  Spanish Collaborative Network (2009--2017). \emph{PLoS Negl Trop Dis.}
+  2019;13(5):e0007399. doi:10.1371/journal.pntd.0007399. {[}key:
+  \texttt{salvador\_2019\_redivi}{]}
+\item
+  \textbf{Asundi A, Beliavsky A, Liu XJ, et al.} Prevalence of
+  Strongyloidiasis and Schistosomiasis Among Migrants: A Systematic
+  Review and Meta-Analysis. \emph{Lancet Glob Health.}
+  2019;7(2):e236--e248. doi:10.1016/S2214-109X(18)30490-X. {[}key:
+  \texttt{asundi\_2019\_lancetgh}{]}
+\item
+  \textbf{Salvador F, Treviño B, Bosch-Nicolau P, et al.}
+  Strongyloidiasis Screening in Migrants Living in Spain: Systematic
+  Review and Meta-Analysis. \emph{Trop Med Int Health.}
+  2020;25(3):281--290. doi:10.1111/tmi.13352. {[}key:
+  \texttt{salvador\_2020\_systematic}{]}
+\item
+  \textbf{Salvador F, Treviño B, Sulleiro E, et al.} Epidemiological and
+  Clinical Trends of Imported Strongyloidiasis in a Referral
+  International Health Unit, Barcelona, Spain. \emph{Travel Med Infect
+  Dis.} 2024;58:102690. doi:10.1016/j.tmaid.2024.102690. {[}key:
+  \texttt{salvador\_2024\_barcelona}{]}
+\item
+  \textbf{Cutfield T, Motuhifonua SK, Blakiston M, et al.}
+  Strongyloidiasis in Auckland: A Ten-Year Retrospective Study.
+  \emph{PLoS Negl Trop Dis.} 2024;18(3):e0012045.
+  doi:10.1371/journal.pntd.0012045. {[}key:
+  \texttt{cutfield\_2024\_auckland}{]}
+\item
+  \textbf{Buonfrate D, Bradbury RS, Watts MR, Bisoffi Z.} Human
+  Strongyloidiasis: Complexities and Pathways Forward. \emph{Clin
+  Microbiol Rev.} 2023;36(4):e0003323. doi:10.1128/cmr.00033-23. {[}key:
+  \texttt{buonfrate\_2023\_cmr}{]}
+\item
+  \textbf{Czeresnia JM, Weiss LM.} \emph{Strongyloides stercoralis.
+  Lung.} 2022;200(2):141--148. doi:10.1007/s00408-022-00528-z. {[}key:
+  \texttt{czeresnia\_2022\_lung}{]}
+\item
+  \textbf{Buonfrate D, Salas-Coronas J, Muñoz J, et al.} Multiple-Dose
+  Versus Single-Dose Ivermectin for \emph{Strongyloides stercoralis}
+  Infection (Strong Treat 1 to 4). \emph{Lancet Infect Dis.}
+  2019;19(11):1181--1190. doi:10.1016/S1473-3099(19)30289-0. {[}key:
+  \texttt{buonfrate\_2019\_strongtreat}{]}
+\item
+  \textbf{Repetto SA, Ruybal P, Batalla E, et al.} Strongyloidiasis
+  Outside Endemic Areas: Long-Term Parasitological and Clinical
+  Follow-Up After Ivermectin Treatment. \emph{Clin Infect Dis.}
+  2018;66(10):1558--1565. doi:10.1093/cid/cix1069. {[}key:
+  \texttt{repetto\_2018\_longterm}{]}
+\item
+  \textbf{Benjamini Y, Hochberg Y.} Controlling the False Discovery
+  Rate: a Practical and Powerful Approach to Multiple Testing. \emph{J R
+  Stat Soc Ser B.} 1995;57(1):289--300. {[}key:
+  \texttt{benjamini\_1995\_fdr}{]}
+\item
+  \textbf{von Elm E, Altman DG, Egger M, et al.} The Strengthening the
+  Reporting of Observational Studies in Epidemiology (STROBE) Statement.
+  \emph{Lancet.} 2007;370(9596):1453--1457.
+  doi:10.1016/S0140-6736(07)61602-X. {[}key:
+  \texttt{vonelm\_2007\_strobe}{]}
+\item
+  \textbf{Inagaki K, Bradbury RS, Hobbs CV.} Hospitalizations Associated
+  With Strongyloidiasis in the United States, 2003--2018. \emph{Clin
+  Infect Dis.} 2022;75(9):1548--1555. doi:10.1093/cid/ciac220. {[}key:
+  \texttt{inagaki\_2022\_hospitalizations}{]}
+\end{enumerate}
+
+\newpage
+
+\subsection*{Agradecimientos}\label{agradecimientos}
+\addcontentsline{toc}{subsection}{Agradecimientos}
+
+A los equipos de Medicina Interna, Enfermedades Infecciosas y
+Microbiología del Hospital Central de la Defensa ``Gómez Ulla'' por el
+mantenimiento de las bases de datos clínicas y serológicas que han hecho
+posible este trabajo. {[}NO\_CITE{]}
+
+Al Centro Nacional de Microbiología (Instituto de Salud Carlos III) por
+la realización de la serología IgG-ELISA durante el periodo de estudio.
+{[}NO\_CITE{]}
+
+A {[}TUTOR/A PENDIENTE{]} por la dirección académica del trabajo y la
+revisión crítica del manuscrito. {[}NO\_CITE{]}
+
+A la Facultad de Medicina y Ciencias de la Salud de la Universidad de
+Alcalá por el marco formativo del Trabajo Fin de Grado. {[}NO\_CITE{]}
+
+Los autores declaran no tener conflictos de interés. El estudio no
+recibió financiación externa. {[}NO\_CITE{]}
+
+\newpage
+
+\subsection*{Anexo académico --- Reflexión para la evaluación del
+TFG}\label{anexo-acaduxe9mico-reflexiuxf3n-para-la-evaluaciuxf3n-del-tfg}
+\addcontentsline{toc}{subsection}{Anexo académico --- Reflexión para la
+evaluación del TFG}
+
+\emph{Esta sección pertenece exclusivamente a la versión académica del
+trabajo (TFG) y no se incluirá en la versión enviada a revistas
+científicas.}
+
+\subsubsection{Competencias movilizadas}\label{competencias-movilizadas}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{CB1--CB5} (competencias básicas del título): integración de
+  conocimientos clínicos (helmintiasis importada), metodología
+  epidemiológica (STROBE, Kaplan--Meier, Cox, LMM) y difusión científica
+  (manuscrito estructurado según normas ICMJE). {[}NO\_CITE{]}
+\item
+  \textbf{CG1, CG7} (generales): capacidad de análisis crítico de la
+  literatura y aplicación de modelos estadísticos a datos reales.
+  {[}NO\_CITE{]}
+\item
+  \textbf{CE1, CE5, CE10} (específicas de Medicina): razonamiento
+  diagnóstico, manejo farmacológico (ivermectina) y diseño de protocolos
+  de seguimiento. {[}NO\_CITE{]}
+\end{itemize}
+
+\subsubsection{Reflexión
+metodológica}\label{reflexiuxf3n-metodoluxf3gica}
+
+El trabajo ha requerido equilibrar la exigencia estadística
+(comparaciones múltiples, modelos mixtos) con las limitaciones de tamaño
+muestral de una cohorte monocéntrica (n=44). {[}NO\_CITE{]}
+
+Se ha adoptado un enfoque de \textbf{estudio piloto exploratorio},
+evitando el cherry-picking metodológico y manteniendo la distinción
+entre endpoint primario pre-especificado (seronegativización absoluta) y
+análisis de sensibilidad (umbrales alternativos, confirmación repetida,
+biomarcadores secundarios). {[}NO\_CITE{]}
+
+La reproducibilidad se ha priorizado mediante versionado del código
+(Python + Quarto) y trazabilidad de decisiones (\texttt{prompt.md},
+auditorías). {[}NO\_CITE{]}
+
+\subsubsection{Limitaciones como
+aprendizaje}\label{limitaciones-como-aprendizaje}
+
+\begin{itemize}
+\tightlist
+\item
+  La gestión de datos ausentes (18 \% IgG basal) ha obligado a
+  considerar MCAR/MAR y la eventual aplicación de imputación múltiple
+  (MICE), descartada por impacto marginal sobre el endpoint primario.
+  {[}NO\_CITE{]}
+\item
+  La heterogeneidad técnica (cambio de kit ELISA) ha forzado un análisis
+  de sensibilidad adicional no anticipado. {[}NO\_CITE{]}
+\item
+  La escasa potencia estadística tras ajuste BH--FDR es una lección
+  sobre la planificación a priori del tamaño muestral en estudios de
+  carácter exploratorio. {[}NO\_CITE{]}
+\end{itemize}
+
+\subsubsection{Líneas de continuidad}\label{luxedneas-de-continuidad}
+
+\begin{itemize}
+\tightlist
+\item
+  Ampliación de la cohorte a multicéntrica con incorporación de
+  inmunodeprimidos (no infrarrepresentados) para valorar el efecto de la
+  inmunosupresión sobre la cinética de aclaramiento. {[}NO\_CITE{]}
+\item
+  Validación prospectiva de la IgG basal como predictor y exploración de
+  covariables no evaluadas (carga parasitaria cuantitativa por qPCR,
+  subclases de IgG). {[}NO\_CITE{]}
+\item
+  Evaluación de la concordancia entre kits ELISA (Strongyloides ratti
+  antigen-based vs antígenos recombinantes). {[}NO\_CITE{]}
+\end{itemize}
+
+\subsubsection{Autoevaluación}\label{autoevaluaciuxf3n}
+
+El grado de consecución de los objetivos pre-especificados ha sido alto
+para los objetivos descriptivos (KM, LMM) y moderado para los
+predictivos (Cox con ajuste BH--FDR), con resultados consistentes pero
+limitados por tamaño muestral. {[}NO\_CITE{]}
+
+La principal aportación personal es la integración de un pipeline
+reproducible (datos + código + manuscrito bajo control de versiones) que
+soporta futuras ampliaciones y auditorías. {[}NO\_CITE{]}
+
+
+
+
+\end{document}

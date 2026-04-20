@@ -1,0 +1,29 @@
+<!-- Sección: Bibliografía. Render automático desde references.bib + vancouver.csl. -->
+<!-- Lista provisional curada desde preguntas_opev.md (Q01–Q15). Pendiente export oficial desde Zotero. -->
+
+## Bibliografía {.unnumbered}
+
+<!-- Cuando references.bib esté completo y el CSL configurado, esta sección
+     se generará automáticamente por Quarto a partir de los `[CITED:key]`
+     empleados en el manuscrito. Por ahora se deja un placeholder y
+     una lista provisional legible para revisión humana. -->
+
+### Lista provisional (generada manualmente desde `preguntas_opev.md`)
+
+1. **Salvador F, Treviño B, Chamorro-Tojeiro S, et al.** Imported Strongyloidiasis: Data From 1245 Cases Registered in the +REDIVI Spanish Collaborative Network (2009–2017). *PLoS Negl Trop Dis.* 2019;13(5):e0007399. doi:10.1371/journal.pntd.0007399. [key: `salvador_2019_redivi`]
+2. **Asundi A, Beliavsky A, Liu XJ, et al.** Prevalence of Strongyloidiasis and Schistosomiasis Among Migrants: A Systematic Review and Meta-Analysis. *Lancet Glob Health.* 2019;7(2):e236–e248. doi:10.1016/S2214-109X(18)30490-X. [key: `asundi_2019_lancetgh`]
+3. **Salvador F, Treviño B, Bosch-Nicolau P, et al.** Strongyloidiasis Screening in Migrants Living in Spain: Systematic Review and Meta-Analysis. *Trop Med Int Health.* 2020;25(3):281–290. doi:10.1111/tmi.13352. [key: `salvador_2020_systematic`]
+4. **Salvador F, Treviño B, Sulleiro E, et al.** Epidemiological and Clinical Trends of Imported Strongyloidiasis in a Referral International Health Unit, Barcelona, Spain. *Travel Med Infect Dis.* 2024;58:102690. doi:10.1016/j.tmaid.2024.102690. [key: `salvador_2024_barcelona`]
+5. **Cutfield T, Motuhifonua SK, Blakiston M, et al.** Strongyloidiasis in Auckland: A Ten-Year Retrospective Study. *PLoS Negl Trop Dis.* 2024;18(3):e0012045. doi:10.1371/journal.pntd.0012045. [key: `cutfield_2024_auckland`]
+6. **Buonfrate D, Bradbury RS, Watts MR, Bisoffi Z.** Human Strongyloidiasis: Complexities and Pathways Forward. *Clin Microbiol Rev.* 2023;36(4):e0003323. doi:10.1128/cmr.00033-23. [key: `buonfrate_2023_cmr`]
+7. **Czeresnia JM, Weiss LM.** *Strongyloides stercoralis. Lung.* 2022;200(2):141–148. doi:10.1007/s00408-022-00528-z. [key: `czeresnia_2022_lung`]
+8. **Buonfrate D, Salas-Coronas J, Muñoz J, et al.** Multiple-Dose Versus Single-Dose Ivermectin for *Strongyloides stercoralis* Infection (Strong Treat 1 to 4). *Lancet Infect Dis.* 2019;19(11):1181–1190. doi:10.1016/S1473-3099(19)30289-0. [key: `buonfrate_2019_strongtreat`]
+9. **Repetto SA, Ruybal P, Batalla E, et al.** Strongyloidiasis Outside Endemic Areas: Long-Term Parasitological and Clinical Follow-Up After Ivermectin Treatment. *Clin Infect Dis.* 2018;66(10):1558–1565. doi:10.1093/cid/cix1069. [key: `repetto_2018_longterm`]
+10. **Benjamini Y, Hochberg Y.** Controlling the False Discovery Rate: a Practical and Powerful Approach to Multiple Testing. *J R Stat Soc Ser B.* 1995;57(1):289–300. [key: `benjamini_1995_fdr`]
+11. **von Elm E, Altman DG, Egger M, et al.** The Strengthening the Reporting of Observational Studies in Epidemiology (STROBE) Statement. *Lancet.* 2007;370(9596):1453–1457. doi:10.1016/S0140-6736(07)61602-X. [key: `vonelm_2007_strobe`]
+12. **Inagaki K, Bradbury RS, Hobbs CV.** Hospitalizations Associated With Strongyloidiasis in the United States, 2003–2018. *Clin Infect Dis.* 2022;75(9):1548–1555. doi:10.1093/cid/ciac220. [key: `inagaki_2022_hospitalizations`]
+
+<!-- Refs adicionales a resolver [CITE?] en próxima iteración:
+     bisoffi_2014_salvador (umbral 0.60), kaplan_meier_1958, harrell_1996_c,
+     laird_ware_1982_lmm, buonfrate_2015_kinetics, nutman_2017_clinical,
+     mejia_2012_screening, buonfrate_2018_followup, gamez_2022_spanish -->

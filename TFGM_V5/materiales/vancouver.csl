@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl"
+       class="in-text"
+       version="1.0"
+       demote-non-dropping-particle="sort-only"
+       default-locale="en-US">
+
+  <info>
+    <title>Vancouver Superscript — NLM/ICMJE (for Quarto/citeproc)</title>
+    <id>vancouver-superscript-quarto</id>
+    <link href="https://www.icmje.org/recommendations/" rel="documentation"/>
+    <author>
+      <name>Adapted for Quarto citeproc</name>
+    </author>
+    <category citation-format="numeric"/>
+    <category field="medicine"/>
+    <updated>2026-03-07T00:00:00+00:00</updated>
+    <rights license="http://creativecommons.org/licenses/by-sa/3.0/">
+      Creative Commons Attribution-ShareAlike 3.0
+    </rights>
+  </info>
+
+  <!-- ============================================================
+       MACROS
+  ============================================================ -->
+
+  <!-- AUTHORS: Surname AB, surname initials, max 6 then et al -->
+  <macro name="author">
+    <names variable="author">
+      <name form="long"
+            initialize-with=""
+            delimiter=", "
+            delimiter-precedes-last="always"
+            name-as-sort-order="all"
+            sort-separator=" ">
+        <name-part name="family" font-weight="normal"/>
+        <name-part name="given"  font-variant="normal"/>
+      </name>
+      <et-al term="et-al" font-style="normal"/>
+      <label form="short" prefix=", "/>
+      <substitute>
+        <names variable="editor"/>
+        <text macro="title"/>
+      </substitute>
+    </names>
+  </macro>
+
+  <!-- EDITOR -->
+  <macro name="editor">
+    <names variable="editor">
+      <name form="long"
+            initialize-with=""
+            delimiter=", "
+            name-as-sort-order="all"
+            sort-separator=" "/>
+      <label form="short" prefix=", " suffix="."/>
+    </names>
+  </macro>
+
+  <!-- TITLE -->
+  <macro name="title">
+    <choose>
+      <if type="bill book graphic legal_case legislation motion_picture report song" match="any">
+        <text variable="title"/>
+      </if>
+      <else>
+        <text variable="title"/>
+      </else>
+    </choose>
+  </macro>
+
+  <!-- JOURNAL: abbreviated title preferred, full title fallback -->
+  <macro name="container-title">
+    <choose>
+      <if type="article-journal article-magazine article-newspaper" match="any">
+        <choose>
+          <if variable="container-title-short">
+            <text variable="container-title-short" strip-periods="true"/>
+          </if>
+          <else>
+            <text variable="container-title" strip-periods="true"/>
+          </else>
+        </choose>
+      </if>
+      <else>
+        <text variable="container-title"/>
+      </else>
+    </choose>
+  </macro>
+
+  <!-- DATE: Year only for journals -->
+  <macro name="date">
+    <choose>
+      <if type="article-journal article-magazine" match="any">
+        <date variable="issued">
+          <date-part name="year"/>
+        </date>
+        <choose>
+          <if variable="issue volume" match="none">
+            <date variable="issued">
+              <date-part name="month" prefix=" " form="short"/>
+              <date-part name="day" prefix=" "/>
+            </date>
+          </if>
+        </choose>
+      </if>
+      <else-if type="book chapter" match="any">
+        <date variable="issued">
+          <date-part name="year"/>
+        </date>
+      </else-if>
+      <else>
+        <date variable="issued">
+          <date-part name="year"/>
+        </date>
+      </else>
+    </choose>
+  </macro>
+
+  <!-- VOLUME + ISSUE + PAGES -->
+  <macro name="volume-issue-page">
+    <group delimiter=":">
+      <group delimiter=";">
+        <text macro="date"/>
+        <group>
+          <text variable="volume"/>
+          <text variable="issue" prefix="(" suffix=")"/>
+        </group>
+      </group>
+      <text variable="page"/>
+    </group>
+  </macro>
+
+  <!-- DOI -->
+  <macro name="doi">
+    <choose>
+      <if variable="DOI">
+        <text variable="DOI" prefix="doi:"/>
+      </if>
+    </choose>
+  </macro>
+
+  <!-- PUBLISHER PLACE + PUBLISHER (for books) -->
+  <macro name="publisher">
+    <group delimiter=": ">
+      <text variable="publisher-place"/>
+      <text variable="publisher"/>
+    </group>
+  </macro>
+
+  <!-- ACCESS (URL fallback when no DOI) -->
+  <macro name="access">
+    <choose>
+      <if variable="DOI" match="none">
+        <choose>
+          <if variable="URL">
+            <group delimiter=". ">
+              <text variable="URL" prefix="Available from: "/>
+              <group>
+                <text term="accessed" text-case="capitalize-first" suffix=" "/>
+                <date variable="accessed">
+                  <date-part name="year"/>
+                  <date-part name="month" form="short" prefix=" "/>
+                  <date-part name="day" prefix=" "/>
+                </date>
+              </group>
+            </group>
+          </if>
+        </choose>
+      </if>
+    </choose>
+  </macro>
+
+  <!-- ============================================================
+       CITATION (inline — superscript number)
+  ============================================================ -->
+  <citation
+    collapse="citation-number"
+    et-al-min="3"
+    et-al-use-first="1">
+    <sort>
+      <key variable="citation-number"/>
+    </sort>
+    <layout vertical-align="sup" delimiter="," prefix="" suffix="">
+      <text variable="citation-number"/>
+    </layout>
+  </citation>
+
+  <!-- ============================================================
+       BIBLIOGRAPHY
+  ============================================================ -->
+  <bibliography
+    et-al-min="7"
+    et-al-use-first="6"
+    second-field-align="flush"
+    entry-spacing="0"
+    line-spacing="1">
+    <layout suffix=".">
+
+      <!-- NUMBER -->
+      <text variable="citation-number" suffix=". "/>
+
+      <!-- AUTHORS -->
+      <text macro="author" suffix=". "/>
+
+      <!-- TITLE -->
+      <text macro="title" suffix=". "/>
+
+      <!-- JOURNAL ARTICLE -->
+      <choose>
+        <if type="article-journal article-magazine" match="any">
+          <group delimiter=". ">
+            <text macro="container-title"/>
+            <text macro="volume-issue-page"/>
+            <text macro="doi"/>
+          </group>
+        </if>
+
+        <!-- BOOK CHAPTER -->
+        <else-if type="chapter">
+          <group delimiter=". ">
+            <group>
+              <text term="in" text-case="capitalize-first" suffix=": "/>
+              <text macro="editor" suffix=", editors. "/>
+              <text variable="container-title"/>
+            </group>
+            <text macro="publisher"/>
+            <group delimiter=":">
+              <text macro="date"/>
+              <text variable="page"/>
+            </group>
+          </group>
+        </else-if>
+
+        <!-- BOOK -->
+        <else-if type="book">
+          <group delimiter=". ">
+            <text variable="edition" suffix=" ed"/>
+            <text macro="publisher"/>
+            <text macro="date"/>
+          </group>
+        </else-if>
+
+        <!-- WEBSITE / OTHER -->
+        <else>
+          <group delimiter=". ">
+            <text macro="container-title"/>
+            <text macro="date"/>
+            <text macro="access"/>
+          </group>
+        </else>
+      </choose>
+
+    </layout>
+  </bibliography>
+
+</style>

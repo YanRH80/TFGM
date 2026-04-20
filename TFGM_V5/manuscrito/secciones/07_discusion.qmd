@@ -1,0 +1,77 @@
+<!-- Sección: Discusión. ≤30%. -->
+<!-- Contextualiza hallazgos vs Q01–Q15 de preguntas_opev.md. -->
+
+## Discusión {.unnumbered}
+
+### Principales hallazgos
+
+Esta cohorte retrospectiva de 44 adultos con estrongiloidiasis tratados con ivermectina aporta una caracterización cuantitativa de la cinética de seronegativización por IgG-ELISA en un entorno no endémico. [NO_CITE]
+
+La mediana de seronegativización absoluta (8,8 meses) se sitúa en el rango inferior-medio de la literatura, que reporta tiempos medianos de 6 a 24 meses según umbral y definición. [CITED:repetto_2018_longterm] [CITE?:buonfrate_2018_followup]
+
+La cinética de primer orden estimada por el LMM (pendiente −0,068 u/mes; vida media 10,2 meses) es consistente con modelos previos de descenso exponencial de IgG post-antihelmíntico. [CITE?:bisoffi_2014_salvador]
+
+### IgG basal como predictor (hallazgo principal)
+
+El título de IgG basal ≥ mediana se asoció a una reducción del hazard de seronegativización (HR 0,19; p=0,004). [NO_CITE]
+
+Este hallazgo es coherente con estudios previos que sugieren una asociación inversa entre carga antigénica basal y velocidad de aclaramiento. [CITE?:buonfrate_2015_kinetics]
+
+La falta de significación tras ajuste BH–FDR refleja el tamaño muestral limitado (n=39 evaluables) y obliga a interpretar el hallazgo como generador de hipótesis. [NO_CITE]
+
+### Eosinofilia basal como predictor secundario
+
+La eosinofilia basal emergió como covariable de interés en el modelo multivariable estratificado por sexo (C = 0,676). [NO_CITE]
+
+La literatura describe la eosinofilia como marcador de respuesta Th2 modulable por el huésped, con asociación variable al tiempo de curación en series pequeñas. [CITE?:nutman_2017_clinical]
+
+La discordancia temporal observada entre normalización eosinofílica (mediana 3,0 meses) y seronegativización (mediana 8,8 meses) apoya que ambos biomarcadores capturan fenómenos biológicos distintos. [CITE?:mejia_2012_screening]
+
+### Persistencia y recidiva
+
+La tasa de persistencia serológica a ≥12 meses (27,9 %) es comparable a la descrita en cohortes europeas similares. [CITED:salvador_2024_barcelona] [CITE?:cutfield_2024_auckland]
+
+Las 5 recidivas serológicas sin evidencia parasitológica plantean el dilema clásico entre reinfección silente, fallo terapéutico subumbral y oscilación técnica del kit ELISA. [CITED:repetto_2018_longterm]
+
+La ausencia de recidiva parasitológica documentada apoya interpretar la mayoría de rebotes como fluctuación técnica o carga antigénica residual. [NO_CITE]
+
+### Implicaciones clínicas
+
+Los datos sugieren que un seguimiento serológico a **≥ 12 meses** post-ivermectina es razonable antes de considerar persistencia como fallo terapéutico. [NO_CITE]
+
+Pacientes con IgG basal elevada podrían requerir una ventana de seguimiento extendida (≥ 18–24 meses) antes de cerrar el caso. [NO_CITE]
+
+La discordancia entre eosinófilos e IgG implica que ambos biomarcadores deben valorarse de forma independiente, no como marcadores redundantes de curación. [NO_CITE]
+
+### Fortalezas
+
+- Cohorte monocéntrica con datos longitudinales estandarizados y protocolo de seguimiento homogéneo. [NO_CITE]
+- Análisis pre-especificado con ajuste por comparaciones múltiples, evitando cherry-picking. [NO_CITE]
+- Triangulación no paramétrica (KM) y paramétrica (LMM) de la cinética. [NO_CITE]
+- Evaluación de 7 definiciones operativas del evento (análisis de sensibilidad robusto). [NO_CITE]
+
+### Limitaciones
+
+- Tamaño muestral pequeño (n=44 basal, 39 evaluables) con baja potencia para detectar efectos moderados tras ajuste por comparaciones múltiples. [NO_CITE]
+- Diseño retrospectivo con censura administrativa heterogénea (mediana 11,7 meses). [NO_CITE]
+- Cambio de kit ELISA durante el periodo como posible fuente de variabilidad técnica. [NO_CITE]
+- Ausencia de IgG basal en el 18 % de los pacientes; aunque Little's MCAR no fue significativa (p=0,11), no puede descartarse un sesgo residual. [NO_CITE]
+- Cohorte geográficamente sesgada (predominio sudamericano), limitando la generalización a pacientes de otras regiones endémicas. [CITED:salvador_2020_systematic]
+- Imposibilidad de diferenciar reinfección de fallo terapéutico en pacientes con exposición persistente o viajes a área endémica. [NO_CITE]
+
+### Comparación con la literatura
+
+En la red +REDIVI (n=1245) y en la cohorte de Barcelona (n=865), la distribución demográfica es comparable (predominio masculino, origen sudamericano mayoritario). [CITED:salvador_2019_redivi] [CITED:salvador_2024_barcelona]
+
+Los tiempos de seronegativización reportados en dichas series son consistentes con nuestros hallazgos, aunque con menor granularidad estadística. [CITE?:gamez_2022_spanish]
+
+El ensayo clínico Strong Treat (1–4) sobre dosis única vs múltiple de ivermectina apoya la elección del régimen en nuestra cohorte; la heterogeneidad basal observada en nuestro estudio justifica la pauta múltiple en casos seleccionados. [CITED:buonfrate_2019_strongtreat]
+
+### Propuesta para el protocolo de seguimiento
+
+En base a los hallazgos, proponemos un protocolo simplificado de seguimiento post-ivermectina en pacientes inmunocompetentes con estrongiloidiasis confirmada:
+
+1. Control serológico a los 6, 12 y 24 meses post-tratamiento. [NO_CITE]
+2. Extender a 18 meses si IgG basal > mediana poblacional. [NO_CITE]
+3. Considerar curación definitiva ante dos controles consecutivos con IgG < 1,1. [NO_CITE]
+4. Reevaluar parasitológicamente solo en persistencia clínica o rebote serológico sostenido. [NO_CITE]

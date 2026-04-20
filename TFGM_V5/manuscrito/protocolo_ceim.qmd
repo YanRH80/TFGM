@@ -1,0 +1,241 @@
+Versión 2.0 de 24/11/2025
+**Código:** 80/25 TFG  
+**Investigador principal** : Yan Rodríguez Hachimaru  
+**Investigador de contacto** : Yan Rodríguez Hachimaru  
+	Tfno: 623040121  
+	Mail: [yanrh80@gmail.com](mailto:yanrh80@gmail.com)  
+**Tutor :** Germán Ramírez Olivencia  
+**Promotor :** Germán Ramírez Olivencia  
+**Servicio/Unidad** : Servicio de Enfermedades Infecciosas, Hospital Gómez Ulla   
+**Título** : Cinética de la seronegativización de IgG anti-Strongyloides stercoralis tras tratamiento con ivermectina: estudio de cohorte retrospectivo a 10 años
+
+# Introducción
+
+---
+Strongyloides stercoralis es un helminto intestinal con distribución global, endémico en regiones tropicales y subtropicales, cuya presencia se ha expandido a áreas templadas debido a la migración y el cambio climático \[1\]. Su ciclo de vida complejo incluye una fase parasitaria y otra de vida libre. La infección comienza cuándo las larvas filariformes del suelo penetran la piel humana. Posteriormente, migran vía linfática y sanguínea a los pulmones, son expectoradas, deglutidas y alcanzan el intestino delgado, dónde maduran a adultos \[2\]. Un atributo único de S. stercoralis es su ciclo autoinfectivo, dónde las larvas rabditiformes se transforman en filariformes dentro del huésped, permitiendo la reinfección y la persistencia de la infección durante décadas sin nueva exposición ambiental \[3\].
+La presentación clínica es heterogénea, desde casos asintomáticos o con síntomas inespecíficos (erupciones cutáneas, tos, molestias gastrointestinales) hasta la hiperinfección y diseminación sistémica en pacientes inmunocomprometidos, cuadro asociado a una mortalidad qué supera el 85% \[4, 5\]. Factores de riesgo para formas graves incluyen la terapia corticoidea, trasplantes de órganos y coinfecciones cómo el virus linfotrópico de células T humanas tipo 1 (HTLV-1) \[5\].
+La estrongiloidiasis es una Enfermedad Tropical Desatendida con una prevalencia global subestimada, qué afectaría entre 386 y 614 millones de personas, muy por encima de estimaciones históricas \[6, 7, 8\]. La pobreza, el saneamiento deficiente y las prácticas agrícolas son factores de riesgo clave \[9\].
+
+**Situación en Europa y España**
+Europa enfrenta un panorama dinámico, con casos importados en migrantes y viajeros, y transmisión autóctona documentada en regiones mediterráneas y rurales \[10-12\]. ésto ha motivado la recomendación de cribado sistemático en pacientes inmunocomprometidos \[13\].
+En España, S. stercoralis es el segundo helminto más frecuente en estudios recientes \[14\]. Si bien la transmisión autóctona tradicional ha disminuido, persisten focos en áreas cómo Valencia y se han descrito nuevos focos en Asturias, a menudo ligados a exposición ambiental no profesional \[15, 16\]. Paralelamente, la estrongiloidiasis importada en migrantes de África subsahariana y Latinoamérica presenta una alta seroprevalencia (14-20%), con más del 50% de los casos asintomáticos \[17, 18\]. El diagnóstico suele ser tardío (media de 48 meses tras la llegada), reflejando el curso crónico y latente de la infección \[18\].
+**Diagnóstico y Seguimiento**
+El diagnóstico carece de un estándar de oro universal. Los métodos parasitológicos directos (coprocultivo, concentración) tienen baja sensibilidad (\<30% en infecciones crónicas) \[19, 20\]. Las pruebas serológicas (ELISA) son más sensibles (71-93%) y se recomiendan para cribado, pero no distinguen entre infección activa y pasada y pueden presentar reacciones cruzadas \[21-23\]. Las técnicas moleculares (PCR, ddPCR) ofrecen alta sensibilidad y especificidad, aunque su acceso no es universal \[24, 25\].
+La eosinofilia es un hallazgo común (70% de los casos crónicos), pero es inespecífica y puede estar ausente en inmunocomprometidos, lo qué limita su valor cómo marcador aislado \[26-28\]. La ivermectina es el tratamiento de primera línea, con una eficacia superior al 85% \[29\].
+La confirmación de la erradicación postratamiento es un desafío. Se recomienda un seguimiento multimodal qué combine serología, parasitología y, si es posible, métodos moleculares \[30\]. La monitorización serológica postratamiento es fundamental, observándose típicamente una reducción de los títulos de anticuerpos entre los 3 y 12 meses. Sin embargo, no existe consenso sobre el protocolo óptimo ni la duración del seguimiento necesario para detectar recurrencias tardías \[30-32\].
+**Brechas en la Evidencia y Justificación**
+Existen lagunas críticas de evidencia qué obstaculizan el manejo clínico. La principal es la ausencia de un estándar de oro diagnóstico \[24, 25, 33\]. Además, existe una notable heterogeneidad y falta de consenso respecto al protocolo y la duración del seguimiento postratamiento. No hay evidencia robusta qué compare la utilidad de un seguimiento a largo plazo (\>24 meses) frente a uno a corto plazo (6-12 meses) para detectar recurrencias tardías \[40-42\]. El valor pronóstico de la eosinofilia más allá de los 6 meses postratamiento tampoco está bien establecido \[32-34\].
+En el contexto del Hospital Gómez Ulla, con un volumen creciente de pacientes inmunodeprimidos y migrantes de áreas endémicas \[19, 20\], la implementación de un protocolo de cribado y manejo estandarizado es una necesidad prioritaria. La alta prevalencia de infección en estas poblaciones \[19\] y el riesgo de formas diseminadas mortales \[3, 5, 35\] justifican un diagnóstico precoz y un seguimiento eficaz. La incertidumbre actual sobre la cinética serológica postratamiento y los factores asociados a la persistencia o recidiva genera variabilidad en el manejo, pudiendo conducir a un seguimiento insuficiente con riesgo de reactivación tardía, o a una monitorización excesiva.
+Por lo tanto, se hace imperante generar evidencia local qué caracterice la cinética de la serología IgG postratamiento para establecer un protocolo de seguimiento riguroso, eficiente y adaptado al perfil de riesgo de la población atendida. éste estudio pretende llenar éste vacío determinando el tiempo hasta la seronegativización y los factores asociados, con el objetivo último de mejorar los resultados en salud y prevenir las graves complicaciones de la estrongiloidiasis.
+
+## Hipótesis de trabajo
+
+---
+Las **variables basales** eosinofilia (\>500 células/µL), título serológico inicial elevado, coprocultivo positivo al diagnóstico y estado de inmunosupresión son **predictores independientes** de un mayor **tiempo hasta la seronegativización** de anticuerpos IgG anti-Strongyloides stercoralis tras la terapia con ivermectina.
+
+## Objetivos
+
+---
+**Objetivo Principal**
+Analizar la asociación independiente de variables basales específicas (eosinofilia \>500 células/µL, título serológico inicial elevado, coprocultivo positivo al diagnóstico y estado de inmunosupresión) con el tiempo hasta la seronegativización de anticuerpos IgG anti-Strongyloides stercoralis tras el tratamiento con ivermectina en pacientes adultos.
+
+**Objetivos Específicos**
+1. Comparar la probabilidad acumulada de seronegativización entre subgrupos de pacientes definidos por variables basales:  
+	* Demográficas: Sexo (hombres vs. mujeres), Procedencia. 
+	* Analíticas: Presencia o ausencia de eosinofilia (\>500 células/µL) al diagnóstico.  
+	* Inmunológicas: Nivel de los títulos serológicos iniciales (elevados vs. normales, utilizando una mediana o percentil 75 cómo punto de corte).  
+	* Parasitológicas: Resultado positivo o negativo en el examen microscópico de heces (coprocultivo/concentrado) al diagnóstico.  
+	* Clínicas: Presencia o ausencia de inmunosupresión/comorbilidad significativa.  
+2. Cuantificar la asociación cruda entre cada variable basal y el ritmo (hazard) de seronegativización.  
+3. Describir la cinética temporal de los títulos de IgG cuantitativos tras el tratamiento y explorar su asociación con las variables basales.  
+4. Estimar la tasa de recidiva/persistencia a los 24 meses y explorar su asociación con las variables basales mediante análisis univariables.
+
+## Materiales y métodos
+
+---
+**Diseño del estudio**
+* Tipo:   
+  * EOM (RD 957/2020).   
+  * Unicéntrico.   
+  * Investigación Independiente y sin ánimo comercial.  
+* Duración: 10 años (01/01/2014 \- 31/12/2024)  
+* Ubicación : Hospital Central de la Defensa Gómez Ulla  
+* Población : Adultos con diagnóstico confirmado de infección por *Strongyloides stercoralis*, tratados con ivermectina.  
+* Tipo de muestreo : Muestreo consecutivo de todos los casos qué cumplan criterios de inclusión identificados mediante búsqueda sistemática en bases de datos de microbiología del hospital.
+
+**Criterios de inclusión**
+* Edad ≥18 años al momento del diagnóstico.  
+* Serología positiva por ELISA IgG contra *Strongyloides stercoralis*.  
+* Diagnóstico realizado en HDCGU entre el 01/01/2014 y el 31/12/2024  
+* Adherencia a tratamiento óptimo\* con Ivermectina
+
+**Criterios de exclusión**
+* Coinfección documentada con otros helmintos.  
+* Embarazo o lactancia en el momento del tratamiento.
+
+**Procedimientos**
+Se generará una base de datos a partir de los resultados de búsqueda de números de historia clínica en el sistema informático Cajal, asociadas a un resultado positivo en coprocultivo, concentrado de parásitos en heces o serología de estrongiloidiasis. 
+La búsqueda y acceso a los datos de los pacientes serán realizados exclusivamente por el tutor, el Dr. Germán Ramírez Olivencia.
+Los métodos diagnósticos qué se utilizan habitualmente en el HCDGU para la estrongiloidiasis son:
+* Coprocultivo en agar: Sensibilidad 96%   
+* Serología (IgG ELISA DRG International): Sensibilidad 83–93%, Especificidad 89-99%  
+* Concentrado de parásitos en heces y observación directa (Mini Parasep SF) : Sensibilidad 6-28%, Especificidad 100%  
+* Eosinofilia
+En la práctica clínica habitual de nuestro centro, el seguimiento serológico de estos pacientes se realizaba/realiza en los siguientes puntos temporales: basal (pretratamiento), 6, 12, 18 y 24 meses post-tratamiento, y posteriormente según criterio clínico.
+
+| Variables basales                                           |                           |                                                                                                                                                                 |
+| ----------------------------------------------------------- | :------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nombre**                                                  | **Categoría y dimensión** | **Valores**                                                                                                                                                     |
+| Fecha de diagnóstico                                        | Cuantitativa Discreta     | dd/mm/yy                                                                                                                                                        |
+| Edad                                                        | Cuantitativa Discreta     | Edad en años                                                                                                                                                    |
+| Sexo                                                        | Cualitativa Dicotómica    | Mujer, Varón                                                                                                                                                    |
+| Procedencia                                                 | Cualitativa Politómica    | Nación (texto)                                                                                                                                                  |
+| Tiempo de residencia en España                              | Cuantitativa Discreta     | Años \+ meses                                                                                                                                                   |
+| Variables clínicas                                          |                           |                                                                                                                                                                 |
+| **Nombre**                                                  | **Categoría y dimensión** | **Valores**                                                                                                                                                     |
+| Servicio diagnóstico                                        | Cualitativa Politómica    | Servicio (texto)                                                                                                                                                |
+| Comorbilidades significativas                               | Cualitativa Dicotómica    | Sí, No                                                                                                                                                          |
+|                                                             | Cualitativa Politómica    | No <br>Corticoides \>20 mg/día ×2 semanas <br>Quimioterapia <br>VIH con CD4 \<200 células/μL) <br>Trasplante en los últimos 6 meses                             |
+| Estado inmunosupresor                                       | Cualitativa Dicotómica    | Inmunocompetente, Inmunodeprimido                                                                                                                               |
+|                                                             | Cualitativa Politómica    | No <br>Neoplasia hematológica <br>Infección por VIH / HTLV-1<br>Asma, EPOC <br>Cirrosis hepática <br>Diabetes, Insuficiencia cardíaca, Enfermedad renal crónica |
+| Variables parasitológicas                                   |                           |                                                                                                                                                                 |
+| **Nombre**                                                  | **Categoría y dimensión** | **Valores**                                                                                                                                                     |
+| Serología                                                   | Cuantitativa Continua     | IV (Índice de valor)                                                                                                                                            |
+| Eosinofilia                                                 | Cuantitativa Discreta     | Células/µL                                                                                                                                                      |
+| Coprocultivo                                                | Cualitativa Dicotómica    | Positivo, Negativo                                                                                                                                              |
+| Concentrado en heces                                        | Cualitativa Dicotómica    | Positivo, Negativo                                                                                                                                              |
+| Fecha de realización de prueba  (asociada a cada resultado) | Cuantitativa discreta     | dd/yy/mm                                                                                                                                                        |
+
+**Definiciones**
+* tratamiento óptimo   
+  * Inmunocompetentes e inmunodeprimidos en ausencia de Enfermedad diseminada / Hiperinfección : Ivermectina oral, 200 μg/kg monodosis. \[33\]  
+  * Enfermedad diseminada / Hiperinfección : Ivermectina oral, 200 μg/kg/día, hasta al menos 2 semanas después de la negativización de larvas en fluidos biológicos.  
+* Diagnóstico confirmado  
+  * Coprocultivo en agar, Concentrado en heces o PCR (+)  
+  * Serología positiva (índice \>1.1) asociada a contexto epidemiológico/clínico compatible  
+* Recidiva   
+  * **Parasitológica**: Coprocultivo en agar, concentrado en heces o PCR (+), posterior a un período ≥3 semanas de negativización.  
+  * **Serológica**: Serología con aumento ≥50% del título basal, posterior a un período ≥3 semanas de negativización.  
+* Recaída Clínica  
+  * Aparición de síntomas compatibles con estrongiloidiasis (e.g., larva currens, tos, dolor abdominal diarreico, o síndrome de hiperinfección) en ausencia de otro diagnóstico alternativo qué lo justifique.  
+* Persistencia  
+  * Positividad parasitológica/serológica a las 3 semanas sin negativización previa.  
+* Negativización  
+  * Post-tratamiento \+   
+    * Coprocultivo / Concentrado en heces negativo x2 , 7-21 días  
+    * PCR negativa x1, 7-21 días   
+    * ELISA IgG por debajo del punto de corte de positividad (IV \<0.9) en dos mediciones consecutivas o al final del seguimiento.  
+* Eosinofilia   
+  * \> 500 Eosinófilos/μL  
+* Eosinofilia persistente  
+  * Eosinofilia \> 500 células/μL más allá de los 6 meses post-tratamiento.  
+* Inmunosupresión significativa  
+  * Corticoides \>20 mg/día ×2 semanas  
+  * Quimioterapia  
+  * VIH con CD4 \<200 células/μL)  
+  * Trasplante en los últimos 6 meses  
+* Comorbilidad significativa  
+  * Neoplasia hematológica  
+  * Infección por VIH / HTLV-1  
+  * Asma, EPOC  
+  * Cirrosis hepática  
+  * Diabetes, Insuficiencia cardíaca, Enfermedad renal crónica
+
+## Análisis estadístico
+
+---
+Dado el tamaño muestral limitado esperado, el análisis estadístico tendrá un carácter exploratorio e hipótesis-generador, priorizando métodos univariables y análisis descriptivos. Todos los análisis se realizarán utilizando Stata versión 18.0 (StataCorp LLC, College Station, TX, USA), con un nivel de significación bilateral de α \= 0.05.
+**Análisis Descriptivo**: Las variables categóricas se describirán con frecuencias (n, %) y las continuas con medianas y rangos intercuartílicos, debido a la probable no-normalidad de los datos.
+**Análisis de la Seronegativización** (Enfoque Principal):
+* **Variable de Resultado**: Tiempo (meses) desde la administración de la primera dosis de ivermectina hasta la seronegativización confirmada. Los datos se censurarán en la última fecha de seguimiento para los pacientes qué no alcancen el evento.  
+* **Método Principal de comparación**: La probabilidad acumulada de seronegativización se estimará mediante curvas de Kaplan-Meier. Las diferencias entre subgrupos binarios predefinidos (Sexo, Eosinofilia al diagnóstico, Coprocultivo inicial, etc.) se compararán mediante la prueba de log-rank.  
+* **Cuantificación de Asociaciones**: Para cada variable basal de interés, se ajustará un modelo de regresión de Cox univariable para calcular el Hazard Ratio (HR) crudo con su intervalo de confianza del 95% (IC 95%). Un HR \< 1 indicaría qué la variable (ej., eosinofilia presente) se asocia con un menor ritmo (hazard) de seronegativización, es decir, un mayor tiempo hasta alcanzarla.
+**Análisis Exploratorio de Tendencias:**
+Dado el probable tamaño muestral limitado, un modelo multivariable completo no sería robusto. Sin embargo, se propone un enfoque exploratorio:  
+Se ajustará un modelo de Cox multivariable limitado qué incluya las variables qué en el análisis univariable hayan mostrado una asociación sugerente (definida cómo un valor p del log-rank \< 0.15 o 0.20) Y qué clínicamente se consideren fundamentales (ej., título inicial alto e inmunosupresión).  
+El objetivo de éste modelo no es encontrar predictores independientes definitivos, sino explorar si las asociaciones crudas se mantienen tras ajustar por factores de confusión clave y estimar Hazard Ratios ajustados (aHR). Se monitorizará cuidadosamente el número de eventos por variable (mínimo 10 eventos por variable es una guía común) para evitar un sobreajuste.
+**Análisis de la Cinética Serológica Cuantitativa:**
+La evolución de los títulos de IgG se analizará mediante modelos lineales de efectos mixtos para datos longitudinales, con el fin de describir las trayectorias medias de descenso y evaluar la asociación univariable con cada factor basal. La reducción ≥50% del título basal cómo criterio de seronegativización se analizará dentro de éste marco cómo un objetivo secundario.
+**Análisis de Recidivas:**
+Se calculará la tasa acumulada de recidiva/persistencia a los 24 meses. La asociación con factores basales se explorará mediante regresión logística binaria univariable, calculando Odds Ratios (OR) crudos con su IC 95%.
+**Análisis de Sensibilidad:**
+Se realizarán análisis considerando diferentes definiciones de seronegativización (corte estándar vs. reducción ≥50% del título basal).
+**Limitaciones**
+1. Limitaciones diagnósticas: Reactividad cruzada en serología y persistencia de anticuerpos post-erradicación  
+2. Factores de confusión: Posible reexposición en zonas endémicas y variables no medidas qué afectan la respuesta inmune  
+3. Limitaciones del diseño: Tamaño muestral limitado, sesgo de selección hacia pacientes con seguimiento prolongado, y variabilidad en intervalos de seguimiento inherente a la práctica clínica real  
+4. Poder estadístico: Capacidad limitada para detectar asociaciones de magnitud pequeña a moderada en análisis multivariable
+
+## Aspectos éticos y legales
+
+---
+* El estudio se realizará conforme a la **Declaración de Helsinki**, el Reglamento General de Protección de Datos (**UE 2016/679**), la **Ley Orgánica 3/2018** de Protección de Datos Personales y garantía de los derechos digitales, y el **Real Decreto 957/2020**, por el qué se regulan los estudios observacionales con medicamentos de uso humano.  
+* Se requerirá la aprobación previa y un dictamen favorable del Comité de Ética de Investigación con Medicamentos (**CEIm**) del Hospital Central de la Defensa Gómez Ulla para iniciar el reclutamiento y el acceso a los datos.  
+* Debido al diseño retrospectivo, se solicitará la exención del consentimiento informado individual, de acuerdo con la **Ley 14/2007** de Investigación Biomédica.   
+* El Dr. Germán Ramírez Olivencia (**tutor**) será el único responsable de acceder a la Historia Clínica, extraer los datos necesarios y proporcionarlos al estudiante de forma anonimizada para su análisis  
+* Se implementará un **sistema de seudonimización** qué reemplazará los números de historia clínica por códigos únicos secuenciales (ej. ESTR-001).  
+* El archivo de concordancia se almacenará de forma independiente, protegido con cifrado y custodiado por una tercera persona, ajena al estudio. El equipo de investigación no tendrá acceso a éste archivo en el curso normal del análisis.  
+* La base de datos seudonimizada se alojará en un entorno seguro con acceso restringido mediante autenticación de doble factor. Los datos se conservarán durante 5 años tras la finalización del estudio, procediéndose luego a su destrucción segura.  
+* Los resultados se comunicarán exclusivamente mediante **datos agregados**, garantizando la imposibilidad de identificación individual.  
+* Al tratarse de un estudio qué evalúa el uso de ivermectina en práctica clínica habitual, se notificará a la **AEMPS** cualquier reacción adversa relevante detectada, a través del sistema oficial de Notificación Electrónica.  
+* Los investigadores declaran la **ausencia de conflictos de interés** relevantes para la realización de éste estudio.
+
+## Interferencia con los hábitos de prescripción
+
+---
+éste estudio es observacional y retrospectivo, por lo qué no influirá en las decisiones terapéuticas ni en los hábitos de prescripción de los facultativos, ya qué se analizarán datos de tratamientos ya administrados en el pasado.
+
+## Memoria Económica y Seguros
+
+---
+El presente es un estudio clínico de investigación independiente y no comercial con memoria económica cero. El estudio no tiene ninguna vinculación con promotores con potenciales intereses comerciales. Al tratarse de un Estudio Observacional con Medicamentos (EOM) y no un Ensayo Clínico, no se requiere la contratación de un seguro de responsabilidad civil o indemnización específico.
+
+## Medios y Recursos Materiales Disponibles
+
+---
+Se hace constar qué el Hospital Central de la Defensa Gómez Ulla cuenta con los recursos humanos, equipamiento e instalaciones necesarios para la correcta ejecución del presente estudio.
+
+## Anexos
+
+---
+1. Cuaderno de recogida de datos  
+2. Documento de idoneidad de instalaciones  
+3. Documento de idoneidad del investigador  
+4. Solicitud de exención de tasas
+
+## Referencias
+
+---
+1\. Alam AM, Ozdemir C, Reza N. Strongyloides stercoralis infection in the UK: A systematic review and meta-analysis of published cases. Clin Med (Lond). 2024 Jul;24(4):100227.
+2\. Centers for Disease Control and Prevention. CDC Yellow Book 2025: Post-Travel Parasitic Disease Including Evaluation of Eosinophilia. Atlanta: CDC; 2025\.
+3\. Buonfrate D, Bradbury RS, Watts MR, Bisoffi Z. Human strongyloidiasis: complexities and pathways forward. Clin Microbiol Rev. 2023;36(4):e0003323.
+4\. Gordon CA, Utzinger J, Muhi S, et al. Strongyloidiasis. Nat Rev Dis Primers. 2024;10(1):6.
+5\. Keiser PB, Nutman TB. Strongyloides stercoralis in the immunocompromised population. Clin Microbiol Rev. 2024;37(1):e0009823.
+6\. Buonfrate D, Rodari P, Barda B, Page W, Einsiedel L, Watts MR. The global prevalence of Strongyloides stercoralis infection. Pathogens. 2020;9(6):468.
+7\. Fleitas PE, Kehl SD, Lopez W, Travacio M, Nieves E, Gil JF, et al. Mapping the global distribution of Strongyloides stercoralis and hookworms by ecological niche modeling. Parasit Vectors. 2022;15(1):197.
+8\. Eslahi AV, Badri M, Nahavandi KH, et al. Prevalence of strongyloidiasis in the general population of the world: a systematic review and meta-analysis. Pathog Glob Health. 2021;115(1):7-20.
+9\. Garn JV, Wilkers JL, Meehan AA, et al. Interventions to improve water, sanitation, and hygiene for preventing soil-transmitted helminth infection. Cochrane Database Syst Rev. 2022;6:CD012199.
+10\. Rodríguez-Pérez M, Rivaya B, Vazquez F, et al. First evidence of significant autochthonous transmission of strongyloidiasis in Northern Spain: a retrospective study from Asturias, Spain. Travel Med Infect Dis. 2025;58:102900.
+11\. Balen Topić M, Marjanović E, Tomasović D, Sviben M. Is strongyloidiasis currently autochthonous in Croatia? A retrospective study. Trans R Soc Trop Med Hyg. 2021;115(11):1298-303.
+12\. Bustamante J, Pérez-Muñoz S, Sainz T, et al. Is there autochthonous strongyloidiasis in Spanish children? Eur J Pediatr. 2021;180(5):1641-5.
+13\. Te Linde E, van Roeden SE, Verduyn Lunel FM, Visser LG, Bruns AHW. Diagnostic yield of Strongyloides stercoralis screening in immunocompromised patients and those with anticipated immunocompromise in a Dutch tertiary hospital: a retrospective cohort study. Am J Trop Med Hyg. 2025;102(1):150-5.
+14\. Ligero-López J, Corbacho-Loarte MD, Antón-Berenguer V, et al. A 14-year review (2007-2020) of helminthiasis epidemiology in a hospital in Southern Madrid, Spain. Eur J Clin Microbiol Infect Dis. 2024;43(4):659-71.
+15\. Salvador F, Treviño B, Sulleiro E, et al. Epidemiological and clinical trends of imported strongyloidiasis in a referral international health unit, Barcelona, Spain: a 12-year period experience. Travel Med Infect Dis. 2024;58:102690.
+16\. Barroso M, Salvador F, Sánchez-Montalvá A, Bosch-Nicolau P, Molina I. Strongyloides stercoralis infection: a systematic review of endemic cases in Spain. PLoS Negl Trop Dis. 2019;13(3):e0007230.
+17\. Salvador F, Treviño B, Bosch-Nicolau P, et al. Strongyloidiasis screening in migrants living in Spain: systematic review and meta-analysis. Trop Med Int Health. 2020;25(3):281-90.
+18\. Cruz A, Sequeira-Aymar E, Gonçalves AQ, et al. Epidemiology of infectious diseases in migrant populations from endemic or high-endemic countries: a multicentric primary care-based study in Spain. Trop Med Int Health. 2024;29(9):820-32.
+19\. Fleitas PE, Floridia-Yapur N, Nieves EE, et al. Strongyloides stercoralis and Trypanosoma cruzi coinfections in a highly endemic area in Argentina. PLoS Negl Trop Dis. 2022;16(2):e0010179.
+20\. Hailu T, Amor A, Nibret E, et al. Evaluation of five diagnostic methods for Strongyloides stercoralis infection in Amhara National Regional State, Northwest Ethiopia. BMC Infect Dis. 2022;22(1):297.
+21\. Zainol DA, Anuar NS, Abdul Halim NSS, et al. Systematic review of Strongyloides stercoralis infection diagnosis in Southeast Asia: insights from parasitological, molecular, and serological approaches. Am J Trop Med Hyg. 2024;111(4):724-35.
+22\. Tamarozzi F, Guevara ÁG, Anselmi M, et al. Accuracy, acceptability, and feasibility of diagnostic tests for the screening of Strongyloides stercoralis in the field (ESTRELLA): a cross-sectional study in Ecuador. Lancet Glob Health. 2023;11(5):e740-8.
+23\. Wongphutorn P, Noordin R, Anuar NS, et al. Examination of diagnostic performance of new IgG4 rapid test compared with IgG- and IgG4-ELISAs to investigate epidemiology of strongyloidiasis in Northeast Thailand. Am J Trop Med Hyg. 2024;110(2):254-62.
+24\. Kalantari N, Chehrazi M, Ghaffari S, Gorgani-Firouzjaee T. Serological assays for the diagnosis of Strongyloides stercoralis infection: a systematic review and meta-analysis of diagnostic test accuracy. Trans R Soc Trop Med Hyg. 2020;114(6):459-69.
+25\. Zainol DA, Rahumatullah A, Anuar NS, Raaj S. Molecular detection of Strongyloides stercoralis: emerging factors and diagnostic utility. Clin Chim Acta. 2025;569:120184.
+26\. Swan C, Phan T, McKew G. Clinical performance of real-time polymerase chain reaction for Strongyloides stercoralis compared with serology in a nonendemic setting. Am J Trop Med Hyg. 2022;107(2):355-8.
+27\. Buonfrate D, Fittipaldo A, Vlieghe E, Bottieau E. Clinical and laboratory features of Strongyloides stercoralis infection at diagnosis and after treatment: a systematic review and meta-analysis. Clin Microbiol Infect. 2021;27(11):1621-8.
+28\. Ashiri A, Rafiei A, Ansari B, Beiromvand M. Is eosinophilia a reliable diagnostic clue for chronic strongyloidiasis? A case series from Khuzestan Province, Iran. BMC Infect Dis. 2025;25(1):828.
+29\. Repetto SA, Ruybal P, Batalla E, et al. Strongyloidiasis outside endemic areas: long-term parasitological and clinical follow-up after ivermectin treatment. Clin Infect Dis. 2018;66(10):1558-65.
+30\. Ashiri A, Rafiei A, Beiromvand M, Khanzadeh A, Alghasi A. Case report: challenges for the diagnosis and treatment of Strongyloides stercoralis in chronic obstructive pulmonary disease patients. Am J Trop Med Hyg. 2021;106(2):695-9.
+31\. Prato M, Tamarozzi F, Tais S, et al. Evaluation of the SsIR/NIE recombinant antigen ELISA for the follow up of patients infected by Strongyloides stercoralis: a diagnostic study. Parasitology. 2024;151(3):295-9.
+32\. Buonfrate D, Sequi M, Mejia R, et al. Accuracy of five serologic tests for the follow up of Strongyloides stercoralis infection. PLoS Negl Trop Dis. 2015;9(2):e0003491.
+33\. Buonfrate D, Salas-Coronas J, Muñoz J, Maruri BT, Rodari P, Castelli F, et al. Multiple-dose versus single-dose ivermectin for Strongyloides stercoralis infection (Strong Treat 1 to 4): a multicentre, open-label, phase 3, randomised controlled superiority trial. Lancet Infect Dis. 2019;19(11):1181-90.

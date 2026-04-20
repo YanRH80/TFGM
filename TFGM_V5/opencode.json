@@ -1,0 +1,55 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/kimi-k2.5",
+  "small_model": "opencode/kimi-k2.5",
+  "agent": {
+    "build": {
+      "model": "opencode/kimi-k2.5",
+      "prompt": "{file:.opencode/agents/code.md}"
+    },
+    "plan": {
+      "model": "opencode/kimi-k2.6"
+    },
+    "manuscript": {
+      "description": "Escritura y revision del manuscrito TFG (solo /manuscrito)",
+      "mode": "primary",
+      "model": "opencode/kimi-k2.6",
+      "temperature": 0.2,
+      "prompt": "{file:.opencode/agents/manuscript.md}",
+      "permission": {
+        "edit": "ask",
+        "bash": {
+          "quarto render *": "allow",
+          "wc *": "allow",
+          "*": "ask"
+        }
+      }
+    },
+    "auditor": {
+      "description": "Auditoria independiente del manuscrito (solo lectura)",
+      "mode": "subagent",
+      "model": "opencode/kimi-k2.6",
+      "temperature": 0.0,
+      "prompt": "{file:.opencode/agents/auditor.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "webfetch": "allow"
+      }
+    }
+  },
+  "permission": {
+    "edit": "ask",
+    "bash": "ask"
+  },
+  "instructions": ["AGENTS.md"],
+  "watcher": {
+    "ignore": [
+      "_legacy/**",
+      "archivo/**",
+      "manuscrito/main_files/**",
+      "manuscrito/main.log",
+      "manuscrito/main.tex"
+    ]
+  }
+}

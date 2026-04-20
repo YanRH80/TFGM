@@ -1,0 +1,24 @@
+<!-- Sección: Título, autor/es, filiación, palabras clave (ES + EN) -->
+<!-- Normativa UAH §2.1: 6–10 keywords, bilingüe, página 1. -->
+
+# Cinética de seronegativización por IgG-ELISA tras ivermectina en estrongiloidiasis: cohorte retrospectiva (HCDGU, 2015–2025) {.unnumbered}
+
+**Autor:** Yan Rodríguez Hachimaru.
+**Tutor/a:** [PENDIENTE].
+**Filiación:** Facultad de Medicina y Ciencias de la Salud, Universidad de Alcalá, Alcalá de Henares (Madrid), España.
+**Centro del estudio:** Hospital Central de la Defensa "Gómez Ulla" (HCDGU), Madrid, España.
+**Correspondencia:** [email PENDIENTE].
+
+**Palabras clave (ES):** estrongiloidiasis; *Strongyloides stercoralis*; ivermectina; seronegativización; IgG-ELISA; Kaplan–Meier; modelo de Cox; cinética serológica; cohorte retrospectiva.
+
+---
+
+# Serological clearance kinetics of IgG-ELISA after ivermectin in strongyloidiasis: a retrospective cohort (HCDGU, 2015–2025) {.unnumbered}
+
+**Author:** Yan Rodríguez Hachimaru.
+**Supervisor:** [PENDING].
+**Affiliation:** School of Medicine and Health Sciences, Universidad de Alcalá, Alcalá de Henares (Madrid), Spain.
+**Study site:** Hospital Central de la Defensa "Gómez Ulla" (HCDGU), Madrid, Spain.
+**Correspondence:** [email PENDING].
+
+**Keywords (EN):** strongyloidiasis; *Strongyloides stercoralis*; ivermectin; seroreversion; IgG-ELISA; Kaplan–Meier; Cox regression; serological kinetics; retrospective cohort.

@@ -1,0 +1,31 @@
+<!-- Sección: Resumen ES + EN. Máximo 250 palabras cada uno. Página 2. -->
+
+## Resumen {.unnumbered}
+
+**Introducción.** La estrongiloidiasis humana, causada por *Strongyloides stercoralis*, es una helmintiasis crónica con potencial letal en inmunodeprimidos cuya monitorización pos-tratamiento se realiza mediante serología IgG-ELISA. La cinética del descenso serológico tras ivermectina en cohortes no endémicas no está plenamente caracterizada.
+
+**Objetivos.** Describir el tiempo hasta la seronegativización (IgG-ELISA < 1,1) en adultos tratados con ivermectina e identificar predictores basales asociados.
+
+**Material y métodos.** Estudio observacional retrospectivo (2015–2025) en el Hospital Central de la Defensa "Gómez Ulla" (Madrid). Se incluyeron 44 adultos con estrongiloidiasis confirmada y tratados con ivermectina 200 μg/kg. Se construyeron curvas de Kaplan–Meier, modelos de Cox univariables (ajuste Benjamini–Hochberg False Discovery Rate, BH–FDR) y un modelo lineal mixto (LMM) sobre log(IgG).
+
+**Resultados.** De 44 pacientes, 39 aportaron datos evaluables. La mediana de tiempo hasta seronegativización fue 8,8 meses (IC 95 % 4,3–11,4), con 36 % a 6 meses y 88 % a 24 meses. En Cox univariable, la IgG basal ≥ mediana se asoció a menor HR de aclaramiento (HR 0,19; p=0,004) y el sexo masculino a mayor HR (HR 3,29; p=0,007); ningún predictor sobrevivió al ajuste BH–FDR. El LMM estimó pendiente −0,068 unidades/mes (p<0,001), vida media serológica 10,2 meses.
+
+**Conclusiones.** La seronegativización es tardía (mediana ~9 meses) y predecible por cinética de primer orden. La IgG basal elevada es un marcador exploratorio de aclaramiento más lento que requiere validación en cohortes mayores.
+
+<!-- TODO: word-count ES actual (objetivo ≤250). -->
+
+---
+
+## Abstract {.unnumbered}
+
+**Background.** Human strongyloidiasis, caused by *Strongyloides stercoralis*, is a chronic helminth infection with potentially fatal outcomes in immunocompromised patients and is followed-up serologically by IgG-ELISA. Serological clearance kinetics after ivermectin in non-endemic cohorts remain incompletely characterised.
+
+**Objectives.** To describe time to seroreversion (IgG-ELISA < 1.1) in adults treated with ivermectin and to identify associated baseline predictors.
+
+**Methods.** Retrospective observational study (2015–2025) at Hospital Central de la Defensa "Gómez Ulla" (Madrid, Spain). We included 44 adults with confirmed strongyloidiasis treated with ivermectin 200 μg/kg. We used Kaplan–Meier estimates, univariate Cox models (Benjamini–Hochberg False Discovery Rate adjustment, BH–FDR), and a linear mixed-effects model (LMM) on log(IgG).
+
+**Results.** Of 44 patients, 39 contributed evaluable follow-up. Median time to seroreversion was 8.8 months (95 % CI 4.3–11.4); 36 % at 6 months and 88 % at 24 months. In univariate Cox, baseline IgG ≥ median was associated with slower clearance (HR 0.19; p=0.004) and male sex with faster clearance (HR 3.29; p=0.007); no predictor remained significant after BH–FDR adjustment. LMM estimated a slope of −0.068 units/month (p<0.001) with a serological half-life of 10.2 months.
+
+**Conclusions.** Seroreversion is delayed (median ~9 months) and follows first-order kinetics. High baseline IgG is an exploratory marker of slower clearance warranting replication.
+
+<!-- TODO: word-count EN actual (objetivo ≤250). -->
